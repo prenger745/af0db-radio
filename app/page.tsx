@@ -14,44 +14,41 @@ interface QSO {
   grid: string
 }
 
+// SECURE SERVER-SIDE LOG EXTRACTION ENGINE
 async function getQrzLogs(): Promise<QSO[]> {
   const apiKey = process.env.QRZ_LOGBOOK_API_KEY
   if (!apiKey) {
-    console.error("Missing QRZ_LOGBOOK_API_KEY configuration.")
+    console.error("Missing system variable context: QRZ_LOGBOOK_API_KEY")
     return []
   }
 
   try {
+    // Replicating your exact successful connection payload protocol from this morning
     const res = await fetch("https://logbook.qrz.com/api", {
       method: "POST",
       headers: { 
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "AF0DBDashboard/2.5.0"
+        "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: new URLSearchParams({
-        KEY: apiKey,
-        ACTION: "FETCH",
-        OPTION: "TYPE:ADIF"
-      }),
+      body: `KEY=${encodeURIComponent(apiKey)}&ACTION=FETCH&OPTION=TYPE%3AADIF`,
       cache: "no-store"
     })
 
     if (!res.ok) return []
     const textData = await res.text()
 
-    // If the server rejects the key or holds the pipeline, abort to fallback array safely
     if (textData.includes("RESULT=FAIL") || !textData.trim()) {
+      console.warn("QRZ remote server returned empty payload or auth mismatch.")
       return []
     }
 
     const parsedLogs: QSO[] = []
-    // Split on <EOR> tag ignoring upper/lowercase constraints
+    // Split entries safely on case-insensitive End-of-Record markers
     const records = textData.split(/<eor>/i)
 
     for (const record of records) {
       if (!record.trim()) continue
 
-      // Hyper-flexible case-insensitive extraction regex engine
+      // Case-Insensitive ADIF Data Slicing Module
       const extractTagValue = (tag: string) => {
         const regex = new RegExp(`<${tag}:\\d+>([^<]*)`, "i")
         const match = record.match(regex)
@@ -86,7 +83,7 @@ async function getQrzLogs(): Promise<QSO[]> {
     return parsedLogs
 
   } catch (e) {
-    console.error("Stream catch mismatch:", e)
+    console.error("Failed to parse incoming ADIF packet stream:", e)
     return []
   }
 }
@@ -94,7 +91,7 @@ async function getQrzLogs(): Promise<QSO[]> {
 export default async function Page() {
   const rawLogs = await getQrzLogs()
   
-  // Hardcoded production dashboard fallbacks so your layout NEVER drops to an empty error screen
+  // Tactical data safehouse array (Loads if server connection drops or holds)
   const fallbackLogs: QSO[] = [
     { callsign: "W1AW", date: "2026-05-20", time: "16:42", band: "20m", mode: "FT8", rstS: "+05", rstR: "-02", grid: "FN31pr" },
     { callsign: "G3XZN", date: "2026-05-20", time: "15:10", band: "15m", mode: "SSB", rstS: "59", rstR: "57", grid: "IO92aa" },
@@ -103,17 +100,18 @@ export default async function Page() {
     { callsign: "VK3CK", date: "2026-05-15", time: "08:14", band: "20m", mode: "FT8", rstS: "+01", rstR: "-05", grid: "QF22" }
   ]
 
-  // If live array resolves empty due to formatting configurations, use structural safety deck
-  const activeLogs = rawLogs.length > 0 ? rawLogs : fallbackLogs
+  // If live query streams data perfectly, override fallback system instantly
+  const isLive = rawLogs.length > 0
+  const activeLogs = isLive ? rawLogs : fallbackLogs
 
-  // Sort: Absolute newest logs locked permanently to the top row
+  // CRITICAL CHRONOLOGICAL SORT: Absolute newest contacts pinned permanently to row 1
   const qsoLogs = [...activeLogs].sort((a, b) => {
     const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
     const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
     return dateTimeB.localeCompare(dateTimeA)
   })
 
-  const liveTotal = rawLogs.length > 0 ? `${4254 + qsoLogs.length}` : "4,254 (LOCAL_CACHE)"
+  const liveTotal = isLive ? `${4254 + qsoLogs.length}` : "4,254 (CACHE_STANDBY)"
   const liveBand = qsoLogs.length > 0 && qsoLogs[0].band ? `${qsoLogs[0].band} Meters` : "20 Meters"
   const liveMode = qsoLogs.length > 0 && qsoLogs[0].mode ? qsoLogs[0].mode : "FT8"
 
@@ -237,7 +235,7 @@ export default async function Page() {
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">DATASET_SYNC</span>
-              <span className="data-value txt-aviation-blue">{rawLogs.length > 0 ? "LIVE_STREAM" : "CACHE_LOCAL"}</span>
+              <span className="data-value txt-aviation-blue">{isLive ? "LIVE_STREAM" : "CACHE_LOCAL"}</span>
             </div>
           </div>
         </div>
@@ -249,7 +247,7 @@ export default async function Page() {
               <div className="panel-title">
                 <History style={{ width: "14px", height: "14px" }} /> LOGBOOK_CHRONO_STREAM [50_MAX]
               </div>
-              <span style={{ fontSize: "0.60rem", color: "#d97706", fontWeight: "bold" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
+              <span style={{ fontSize: "0.60rem", color: "#d97706", fontWeight: "bold" }}>{isLive ? "DATA_STREAM_ACTIVE" : "LOCAL_FALLBACK_ACTIVE"}</span>
             </div>
 
             <div style={{ overflowX: "auto" }}>
