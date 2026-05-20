@@ -90,7 +90,6 @@ export default function Page() {
             ? `${rawTime.substring(0, 2)}:${rawTime.substring(2, 4)}`
             : rawTime
 
-          // Convert any 0 in incoming callsigns to a slashed Ø automatically for consistency
           let displayCall = callsign.toUpperCase()
           if (displayCall.includes("0")) {
             displayCall = displayCall.replace(/0/g, "Ø")
@@ -215,8 +214,9 @@ export default function Page() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div className="terminal-panel">
             <div className="panel-header">
+              {/* RENAMED FROM HARDWARE.LOG */}
               <div className="panel-title">
-                <Cpu style={{ width: "16px", height: "16px" }} /> HARDWARE.LOG
+                <Cpu style={{ width: "16px", height: "16px" }} /> HAMSHACK GEAR
               </div>
               <ChevronRight style={{ width: "14px", height: "14px", color: "#525252" }} />
             </div>
@@ -267,8 +267,9 @@ export default function Page() {
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
+              {/* RENAMED FROM LOGBOOK_CHRONO_STREAM [15_MAX] */}
               <div className="panel-title">
-                <History style={{ width: "16px", height: "16px" }} /> LOGBOOK_CHRONO_STREAM [15_MAX]
+                <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
               </div>
               <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
