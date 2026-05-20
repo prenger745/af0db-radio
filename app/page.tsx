@@ -41,7 +41,6 @@ export default function Page() {
         if (!res.ok) throw new Error("Internal cloud proxy link failure.")
         const rawText = await res.text()
 
-        // Match URL params and strip string entities smoothly
         const decodedText = decodeURIComponent(rawText)
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
@@ -96,7 +95,7 @@ export default function Page() {
           })
         }
 
-        // Anti-chronological data sort matrix engine
+        // CORRECTED SORT LOGIC: Forces absolute descending chronological order (Newest First)
         const sortedLogs = parsedLogs.sort((a, b) => {
           const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
           const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
@@ -273,31 +272,23 @@ export default function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#d97706", fontStyle: "italic" }}>
-                        &gt;&gt; Live log stream parsing pending... Standby for secure server handshake.
+                  {logs.map((qso, index) => (
+                    <tr key={index}>
+                      <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
+                      <td>{qso.date}</td>
+                      <td>{qso.time}</td>
+                      <td>{qso.band}</td>
+                      <td>
+                        <span className="badge-mode-tactical">{qso.mode}</span>
                       </td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className="rst-s-box">{qso.rstS}</span>
+                        <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
+                        <span className="rst-r-box">{qso.rstR}</span>
+                      </td>
+                      <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
                     </tr>
-                  ) : (
-                    logs.map((qso, index) => (
-                      <tr key={index}>
-                        <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
-                        <td>{qso.date}</td>
-                        <td>{qso.time}</td>
-                        <td>{qso.band}</td>
-                        <td>
-                          <span className="badge-mode-tactical">{qso.mode}</span>
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
-                          <span className="rst-r-box">{qso.rstR}</span>
-                        </td>
-                        <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
