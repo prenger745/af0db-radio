@@ -10,15 +10,15 @@ export async function GET() {
       return new NextResponse("RESULT=FAIL&REASON=MISSING_ENV_KEY", { status: 200 })
     }
 
-    // Explicitly fetching via the precise text stream protocol formats
+    // UPDATED BODY FORM PAYLOAD: Adding EXT_ORDER=DESC or grabbing the full set to ensure your latest contacts load
     const response = await fetch("https://logbook.qrz.com/api", {
       method: "POST",
       headers: { 
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "AF0DBConsole/3.0.0"
+        "User-Agent": "AF0DBConsole/3.5.0"
       },
-      // Passing MAX:15 ensures the server releases your most recent 15 logs
-      body: `KEY=${encodeURIComponent(apiKey)}&ACTION=FETCH&OPTION=TYPE%3AADIF%2CMAX%3A15`,
+      // Requesting TYPE:ADIF with un-truncated metrics so our frontend table can slice out the true last 15 entries out of your active book
+      body: `KEY=${encodeURIComponent(apiKey)}&ACTION=FETCH&OPTION=TYPE%3AADIF`,
       cache: "no-store"
     })
 
