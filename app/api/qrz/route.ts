@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY
+    // Check both public and private server environment slots
+    const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY || process.env.QRZ_API_KEY
+    
     if (!apiKey) {
-      return NextResponse.json({ error: "API Key Missing from Vercel Panel" }, { status: 500 })
+      console.error("CRITICAL DIAGNOSTIC: QRZ API Key missing from Vercel environment variables.")
+      return new NextResponse("API_KEY_MISSING", { status: 200 })
     }
 
-    // Server-to-server calls ignore CORS completely
     const response = await fetch("https://logbook.qrz.com/api", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -16,19 +18,25 @@ export async function GET() {
         ACTION: "FETCH",
         OPTION: "TYPE:ADIF,MAX:50"
       }),
-      next: { revalidate: 60 } // Cache data for 60 seconds to avoid spamming the API
+      next: { revalidate: 30 } // Cache for 30 seconds to stay within API limits
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: "QRZ Server rejected authorization" }, { status: response.status })
+      console.error(`CRITICAL DIAGNOSTIC: QRZ Server rejected request with status code: ${response.status}`)
+      return new NextResponse("QRZ_SERVER_ERROR", { status: 200 })
     }
 
     const rawAdifText = await response.text()
+    
+    // Log a tiny sample snippet to Vercel runtime logs for debugging
+    console.log("QRZ API Payload Snippet:", rawAdifText.substring(0, 100))
+    
     return new NextResponse(rawAdifText, {
       status: 200,
       headers: { "Content-Type": "text/plain" }
     })
   } catch (error) {
-    return NextResponse.json({ error: "Internal Server Routing Exception" }, { status: 500 })
+    console.error("CRITICAL DIAGNOSTIC: Server exception caught:", error)
+    return new NextResponse("INTERNAL_ROUTING_EXCEPTION", { status: 500 })
   }
 }
