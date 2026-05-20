@@ -35,31 +35,22 @@ export default function Page() {
   const [isLiveStream, setIsLiveStream] = useState(false)
 
   useEffect(() => {
-    // High-fidelity operational station log safehouse array
-    const stationCacheLogs: QSO[] = [
-      { callsign: "KC0NFS", date: "2026-05-20", time: "14:15", band: "2m", mode: "FM", rstS: "59", rstR: "59", grid: "EM28" },
-      { callsign: "N0TZC", date: "2026-05-20", time: "11:32", band: "20m", mode: "FT8", rstS: "+01", rstR: "-05", grid: "EM29" },
-      { callsign: "KC5HPK", date: "2026-05-19", time: "22:04", band: "20m", mode: "FT8", rstS: "-08", rstR: "+02", grid: "EM15" }
-    ]
-
     async function parseLiveQrzData() {
       try {
-        // FIXED: Pointing strictly at our secure internal backend server route to destroy the CORS flag
         const res = await fetch("/api/qrz")
-        if (!res.ok) throw new Error("Internal cloud routing node unresolvable.")
+        if (!res.ok) throw new Error("Internal cloud proxy link failure.")
         const rawText = await res.text()
 
-        // Clean out messy HTML entity strings directly in memory
+        // Match URL params and strip string entities smoothly
         const decodedText = decodeURIComponent(rawText)
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
           .replace(/&amp;/g, "&")
 
         if (decodedText.includes("RESULT=FAIL") || !decodedText.trim()) {
-          throw new Error("QRZ authorization token rejected.")
+          throw new Error("QRZ transaction token unauthorized.")
         }
 
-        // Pull core telemetry count indices using regex wrappers
         const countMatch = decodedText.match(/COUNT=([^&]*)/i) || decodedText.match(/"COUNT":"(\d+)"/i)
         const confMatch = decodedText.match(/CONFIRMED=([^&]*)/i) || decodedText.match(/"CONFIRMED":"(\d+)"/i)
         const dxccMatch = decodedText.match(/DXCC_COUNT=([^&]*)/i) || decodedText.match(/"DXCC_COUNT":"(\d+)"/i)
@@ -105,7 +96,7 @@ export default function Page() {
           })
         }
 
-        // Sort: Absolute newest updates pinned strictly to the first row
+        // Anti-chronological data sort matrix engine
         const sortedLogs = parsedLogs.sort((a, b) => {
           const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
           const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
@@ -119,15 +110,12 @@ export default function Page() {
             totalQsos: liveCount,
             confirmed: liveConfirmed,
             dxcc: liveDxcc,
-            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band}` : "20M",
+            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band} Meters` : "20 Meters",
             currentMode: sortedLogs[0].mode || "FT8"
           })
-        } else {
-          setLogs(stationCacheLogs)
         }
       } catch (err) {
-        console.warn("Backend link holding. Resolving database via local station cache loop.")
-        setLogs(stationCacheLogs)
+        console.warn("Backend pipeline standby state triggered.", err)
       } finally {
         setLoading(false)
       }
@@ -172,7 +160,7 @@ export default function Page() {
         .rst-r-box { color: #06b6d4; font-weight: bold; }
       `}} />
 
-      {/* Banner Banner Layout Layout */}
+      {/* Banner */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -184,7 +172,7 @@ export default function Page() {
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
-          <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>{isLiveStream ? "LIVE_FEED" : "LOCAL_CACHE"}</span>]</span>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
 
@@ -208,7 +196,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Workspace Area Layout Frame Area Layout */}
+      {/* Workspace Area Layout Frame */}
       <main className="deck-workspace">
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="terminal-panel">
@@ -256,17 +244,17 @@ export default function Page() {
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">DATASET_SYNC</span>
-              <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "CACHE_SAFE"}</span>
+              <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>
             </div>
           </div>
         </div>
 
-        {/* Right Logbook Monitor Column Table */}
+        {/* Right Logbook Monitor Column */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
-                <History style={{ width: "14px", height: "14px" }} /> LOGBOOK_CHRONO_STREAM [50_MAX]
+                <History style={{ width: "14px", height: "14px" }} /> LOGBOOK_CHRONO_STREAM [15_MAX]
               </div>
               <span style={{ fontSize: "0.60rem", color: "#d97706", fontWeight: "bold" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
@@ -285,23 +273,31 @@ export default function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((qso, index) => (
-                    <tr key={index}>
-                      <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
-                      <td>{qso.date}</td>
-                      <td>{qso.time}</td>
-                      <td>{qso.band}</td>
-                      <td>
-                        <span className="badge-mode-tactical">{qso.mode}</span>
+                  {logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#d97706", fontStyle: "italic" }}>
+                        &gt;&gt; Live log stream parsing pending... Standby for secure server handshake.
                       </td>
-                      <td style={{ textAlign: "center" }}>
-                        <span className="rst-s-box">{qso.rstS}</span>
-                        <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
-                        <span className="rst-r-box">{qso.rstR}</span>
-                      </td>
-                      <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    logs.map((qso, index) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
+                        <td>{qso.date}</td>
+                        <td>{qso.time}</td>
+                        <td>{qso.band}</td>
+                        <td>
+                          <span className="badge-mode-tactical">{qso.mode}</span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className="rst-s-box">{qso.rstS}</span>
+                          <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
+                          <span className="rst-r-box">{qso.rstR}</span>
+                        </td>
+                        <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
