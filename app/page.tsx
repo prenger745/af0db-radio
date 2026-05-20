@@ -106,15 +106,15 @@ export default function Page() {
 
         <div className="card-deck metric-card">
           <div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Total Logged contacts</span>
-            <div className="stat-value" style={{ color: "#34d399" }}>4,2754 Logged</div>
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Total Logged Contacts</span>
+            <div className="stat-value" style={{ color: "#34d399" }}>4,254 Logged</div>
           </div>
           <Database style={{ color: "#34d399", width: "24px", height: "24px", opacity: 0.8 }} />
         </div>
 
         <div className="card-deck metric-card">
           <div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Grid Square Grid</span>
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Grid Square</span>
             <div className="stat-value">EM28in</div>
           </div>
           <Award style={{ color: "#f59e0b", width: "24px", height: "24px", opacity: 0.8 }} />
@@ -131,7 +131,7 @@ export default function Page() {
           <div className="card-deck">
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1rem", marginBottom: "1.25rem" }}>
               <Cpu style={{ color: "#f59e0b", width: "20px", height: "20px" }} />
-              <h2 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Station Specs Deck</h2>
+              <h2 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Station Specs</h2>
             </div>
 
             <div style={{ marginBottom: "1.25rem" }}>
@@ -177,7 +177,7 @@ export default function Page() {
               <h2 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Interface Engine</h2>
             </div>
             
-            <div style={{ spaceY: "1rem", display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem", fontFamily: "monospace" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem", fontFamily: "monospace" }}>
               <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "0.25rem" }}>
                 <span style={{ color: "#9ca3af" }}>CAT Engine</span>
                 <span style={{ color: "#34d399" }}>CONNECTED</span>
@@ -225,7 +225,7 @@ export default function Page() {
                 <tbody>
                   {qsoLogs.map((qso, index) => (
                     <tr key={index}>
-                      <td style={{ fontWeight: 900, color: "#fbbf24", fontSize: "1rem", tracking: "0.02em" }}>{qso.callsign}</td>
+                      <td style={{ fontWeight: 900, color: "#fbbf24", fontSize: "1rem" }}>{qso.callsign}</td>
                       <td style={{ fontFamily: "monospace", color: "#d1d5db" }}>{qso.date}</td>
                       <td style={{ fontFamily: "monospace", color: "#d1d5db" }}>{qso.time}</td>
                       <td style={{ fontWeight: 500 }}>{qso.band}</td>
