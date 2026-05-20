@@ -95,7 +95,7 @@ export default function Page() {
           })
         }
 
-        // CORRECTED SORT LOGIC: Forces absolute descending chronological order (Newest First)
+        // Master Chronological Sort: Re-aligns your entire logbook array down to true Newest First order
         const sortedLogs = parsedLogs.sort((a, b) => {
           const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
           const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
@@ -103,14 +103,16 @@ export default function Page() {
         })
 
         if (sortedLogs.length > 0) {
-          setLogs(sortedLogs)
+          // Slicing right here ensures we isolate your latest 15 operations out of your real book
+          const newestFifteen = sortedLogs.slice(0, 15)
+          setLogs(newestFifteen)
           setIsLiveStream(true)
           setStats({
             totalQsos: liveCount,
             confirmed: liveConfirmed,
             dxcc: liveDxcc,
-            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band} Meters` : "20 Meters",
-            currentMode: sortedLogs[0].mode || "FT8"
+            currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
+            currentMode: newestFifteen[0].mode || "FT8"
           })
         }
       } catch (err) {
