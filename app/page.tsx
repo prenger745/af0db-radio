@@ -12,11 +12,11 @@ interface QSO {
   grid: string
 }
 
-// SECURE SERVER-SIDE DATA FETCH (Exactly like this morning)
+// SECURE SERVER-SIDE DATA FETCH (Mapped precisely to your active token variable)
 async function getQrzLogs(): Promise<QSO[]> {
-  const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY || process.env.QRZ_API_KEY
+  const apiKey = process.env.QRZ_LOGBOOK_API_KEY
   if (!apiKey) {
-    console.error("Missing QRZ_API_KEY environment variable")
+    console.error("CRITICAL CONFIG ERROR: QRZ_LOGBOOK_API_KEY not found in system variables context.")
     return []
   }
 
@@ -32,7 +32,6 @@ async function getQrzLogs(): Promise<QSO[]> {
         ACTION: "FETCH",
         OPTION: "TYPE:ADIF"
       }),
-      // Revalidate data cache every 15 seconds for live real-time feel safely
       next: { revalidate: 15 }
     })
 
@@ -40,11 +39,10 @@ async function getQrzLogs(): Promise<QSO[]> {
     const textData = await res.text()
     
     if (textData.includes("RESULT=FAIL")) {
-      console.error("QRZ Server rejected key authorization:", textData)
+      console.error("QRZ Server rejected key authorization payload:", textData)
       return []
     }
 
-    // ADIF DATA STREAM PARSER Engine
     const parsedLogs: QSO[] = []
     const records = textData.split(/<eor>/i)
 
@@ -93,14 +91,14 @@ async function getQrzLogs(): Promise<QSO[]> {
 export default async function Page() {
   const rawLogs = await getQrzLogs()
   
-  // FIXED CHRONOLOGICAL SORT: Absolute newest-at-the-top layout ordering
+  // FIXED CHRONOLOGICAL SORT: Newest updates pinned strictly to row 1
   const qsoLogs = [...rawLogs].sort((a, b) => {
     const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
     const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
     return dateTimeB.localeCompare(dateTimeA)
   })
 
-  // Dynamic status parameters to map telemetry modules to real-time entries
+  // Dynamic telemetry box parameters mapped via real-time data rows
   const liveTotal = qsoLogs.length > 0 ? `${4254 + qsoLogs.length}` : "4,254"
   const liveBand = qsoLogs.length > 0 && qsoLogs[0].band ? `${qsoLogs[0].band} Meters` : "20 Meters"
   const liveMode = qsoLogs.length > 0 && qsoLogs[0].mode ? qsoLogs[0].mode : "FT8"
@@ -141,7 +139,7 @@ export default async function Page() {
         .rst-r-box { color: #06b6d4; font-weight: bold; }
       `}} />
 
-      {/* Masthead Banner Banner Layout */}
+      {/* Banner */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -157,7 +155,7 @@ export default async function Page() {
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Grid Boxes */}
+      {/* Cyber-Deck Telemetry Strip */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>01/ ACTIVE_BAND</span>
@@ -177,7 +175,7 @@ export default async function Page() {
         </div>
       </section>
 
-      {/* Workspace Area Layout Frame */}
+      {/* Main Grid Panels Area */}
       <main className="deck-workspace">
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="terminal-panel">
@@ -230,7 +228,7 @@ export default async function Page() {
           </div>
         </div>
 
-        {/* Right Module Panel Table Columns Grid */}
+        {/* Right Logbook Monitor Column */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
@@ -257,7 +255,7 @@ export default async function Page() {
                   {qsoLogs.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ef4444", fontStyle: "italic" }}>
-                        &gt;&gt; Live Log stream data packet parsing empty. Verify key token.
+                        &gt;&gt; Live Log stream data packet parsing empty. Verify token mapping configs.
                       </td>
                     </tr>
                   ) : (
@@ -287,7 +285,7 @@ export default async function Page() {
           <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
-              STREAM_FILTER: NATIVE_SERVER_PROP // DIRECT_TIMESTAMP_MAP
+              STREAM_FILTER: NATIVE_CORE_PROP // DIRECT_TIMESTAMP_MAP
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
               <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> STATUS: OPERATIONAL_SECURE
