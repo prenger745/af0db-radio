@@ -33,7 +33,7 @@ interface SpaceWeather {
 }
 
 export default function Page() {
-  const [logs, setLogs] = useState<Q QSO[]>([])
+  const [logs, setLogs] = useState<QSO[]>([])
   const [stats, setStats] = useState<StationMetrics>({
     totalQsos: "1,008",
     confirmed: "792",
@@ -224,4 +224,3 @@ export default function Page() {
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
-        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius:
