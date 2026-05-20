@@ -1,42 +1,39 @@
 import { NextResponse } from "next/server"
 
+export const dynamic = "force-dynamic"
+
 export async function GET() {
   try {
-    // Check both public and private server environment slots
-    const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY || process.env.QRZ_API_KEY
-    
+    const apiKey = process.env.QRZ_LOGBOOK_API_KEY
     if (!apiKey) {
-      console.error("CRITICAL DIAGNOSTIC: QRZ API Key missing from Vercel environment variables.")
-      return new NextResponse("API_KEY_MISSING", { status: 200 })
+      console.error("CRITICAL RUNTIME ERROR: QRZ_LOGBOOK_API_KEY missing from Vercel variables context.")
+      return new NextResponse("RESULT=FAIL&REASON=MISSING_KEY", { status: 200 })
     }
 
+    // Server-to-server requests ignore browser CORS restrictions completely
     const response = await fetch("https://logbook.qrz.com/api", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        KEY: apiKey,
-        ACTION: "FETCH",
-        OPTION: "TYPE:ADIF,MAX:50"
-      }),
-      next: { revalidate: 30 } // Cache for 30 seconds to stay within API limits
+      headers: { 
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "AF0DBConsole/3.0.0"
+      },
+      body: `KEY=${encodeURIComponent(apiKey)}&ACTION=FETCH&OPTION=TYPE%3AADIF`,
+      cache: "no-store"
     })
 
     if (!response.ok) {
-      console.error(`CRITICAL DIAGNOSTIC: QRZ Server rejected request with status code: ${response.status}`)
-      return new NextResponse("QRZ_SERVER_ERROR", { status: 200 })
+      return new NextResponse(`RESULT=FAIL&REASON=HTTP_ERROR_${response.status}`, { status: 200 })
     }
 
-    const rawAdifText = await response.text()
+    const rawText = await response.text()
     
-    // Log a tiny sample snippet to Vercel runtime logs for debugging
-    console.log("QRZ API Payload Snippet:", rawAdifText.substring(0, 100))
-    
-    return new NextResponse(rawAdifText, {
+    // Return the raw text directly down to our page template
+    return new NextResponse(rawText, {
       status: 200,
       headers: { "Content-Type": "text/plain" }
     })
   } catch (error) {
-    console.error("CRITICAL DIAGNOSTIC: Server exception caught:", error)
-    return new NextResponse("INTERNAL_ROUTING_EXCEPTION", { status: 500 })
+    console.error("Proxy route execution failure:", error)
+    return new NextResponse("RESULT=FAIL&REASON=SERVER_EXCEPTION", { status: 500 })
   }
 }
