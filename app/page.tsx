@@ -90,8 +90,14 @@ export default function Page() {
             ? `${rawTime.substring(0, 2)}:${rawTime.substring(2, 4)}`
             : rawTime
 
+          // Convert any 0 in incoming callsigns to a slashed Ø automatically for consistency
+          let displayCall = callsign.toUpperCase()
+          if (displayCall.includes("0")) {
+            displayCall = displayCall.replace(/0/g, "Ø")
+          }
+
           parsedLogs.push({
-            callsign: callsign.toUpperCase(),
+            callsign: displayCall,
             date: formattedDate,
             time: formattedTime,
             band: extractTagValue("band") || "—",
@@ -142,7 +148,7 @@ export default function Page() {
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1rem; }
         @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
@@ -172,10 +178,10 @@ export default function Page() {
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
-            <Radio style={{ width: "20px", height: "20px" }} /> SYSTEM:AF0DB // MONITOR_CORE
+            <Radio style={{ width: "20px", height: "20px" }} /> DANIEL McGURK // AFØDB STATION LOG
           </h1>
           <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500 }}>
-            Matrix Terminal Connection Engine Status // Online
+            Real-Time QRZ API Live Data Stream // Connected
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -257,7 +263,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Logbook Stream Table */}
+        {/* Right Logbook Monitor Column */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
