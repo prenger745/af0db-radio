@@ -38,28 +38,37 @@ export default function Page() {
     async function parseLiveQrzData() {
       try {
         const res = await fetch("/api/qrz")
-        if (!res.ok) throw new Error("Internal cloud proxy link failure.")
-        const rawText = await res.text()
+        if (!res.ok) throw new Error("Proxy offline")
+        const json = await res.json()
+        
+        if (json.error || !json.data) throw new Error(json.error || "No data received")
+        const rawText = json.data
 
-        const decodedText = decodeURIComponent(rawText)
+        // Safely map HTML parameters without using unstable decodeURIComponent actions
+        const cleanText = rawText
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
           .replace(/&amp;/g, "&")
 
-        if (decodedText.includes("RESULT=FAIL") || !decodedText.trim()) {
-          throw new Error("QRZ transaction token unauthorized.")
+        const countMatch = cleanText.match(/COUNT=([^&]*)/i) || cleanText.match(/"COUNT":"(\d+)"/i)
+        const confMatch = cleanText.match(/CONFIRMED=([^&]*)/i) || cleanText.match(/"CONFIRMED":"(\d+)"/i)
+        const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i) || cleanText.match(/"DXCC_COUNT":"(\d+)"/i)
+
+        const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,008"
+        const liveConfirmed = confMatch ? confMatch[1].split('&')[0] : "792"
+        const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74"
+
+        // Locate the ADIF data block start boundary safely
+        let adifContent = ""
+        const adifKeyMatch = cleanText.match(/ADIF=([\s\S]*)$/i)
+        if (adifKeyMatch) {
+          adifContent = adifKeyMatch[1]
+        } else {
+          adifContent = cleanText
         }
 
-        const countMatch = decodedText.match(/COUNT=([^&]*)/i) || decodedText.match(/"COUNT":"(\d+)"/i)
-        const confMatch = decodedText.match(/CONFIRMED=([^&]*)/i) || decodedText.match(/"CONFIRMED":"(\d+)"/i)
-        const dxccMatch = decodedText.match(/DXCC_COUNT=([^&]*)/i) || decodedText.match(/"DXCC_COUNT":"(\d+)"/i)
-
-        const liveCount = countMatch ? countMatch[1] : "1,008"
-        const liveConfirmed = confMatch ? confMatch[1] : "792"
-        const liveDxcc = dxccMatch ? dxccMatch[1] : "74"
-
         const parsedLogs: QSO[] = []
-        const records = decodedText.split(/<eor>/i)
+        const records = adifContent.split(/<eor>/i)
 
         for (const record of records) {
           if (!record.trim()) continue
@@ -95,7 +104,7 @@ export default function Page() {
           })
         }
 
-        // Master Chronological Sort: Re-aligns your entire logbook array down to true Newest First order
+        // Sort: True chronological order (Newest First)
         const sortedLogs = parsedLogs.sort((a, b) => {
           const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
           const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
@@ -103,7 +112,7 @@ export default function Page() {
         })
 
         if (sortedLogs.length > 0) {
-          // Slicing right here ensures we isolate your latest 15 operations out of your real book
+          // Isolate exactly your top 15 most recent real-world contacts
           const newestFifteen = sortedLogs.slice(0, 15)
           setLogs(newestFifteen)
           setIsLiveStream(true)
@@ -116,7 +125,7 @@ export default function Page() {
           })
         }
       } catch (err) {
-        console.warn("Backend pipeline standby state triggered.", err)
+        console.warn("Backend parsing hold state triggered:", err)
       } finally {
         setLoading(false)
       }
@@ -251,7 +260,7 @@ export default function Page() {
         </div>
 
         {/* Right Logbook Monitor Column */}
-        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyBetween: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
@@ -274,23 +283,31 @@ export default function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((qso, index) => (
-                    <tr key={index}>
-                      <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
-                      <td>{qso.date}</td>
-                      <td>{qso.time}</td>
-                      <td>{qso.band}</td>
-                      <td>
-                        <span className="badge-mode-tactical">{qso.mode}</span>
+                  {logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#d97706", fontStyle: "italic" }}>
+                        &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
                       </td>
-                      <td style={{ textAlign: "center" }}>
-                        <span className="rst-s-box">{qso.rstS}</span>
-                        <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
-                        <span className="rst-r-box">{qso.rstR}</span>
-                      </td>
-                      <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    logs.map((qso, index) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
+                        <td>{qso.date}</td>
+                        <td>{qso.time}</td>
+                        <td>{qso.band}</td>
+                        <td>
+                          <span className="badge-mode-tactical">{qso.mode}</span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className="rst-s-box">{qso.rstS}</span>
+                          <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
+                          <span className="rst-r-box">{qso.rstR}</span>
+                        </td>
+                        <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -299,7 +316,7 @@ export default function Page() {
           <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
-              STREAM_FILTER: ENHANCED_PROXY_NODE // DIRECT_TIMESTAMP_MAP
+              STREAM_FILTER: JSON_PROXY_NODE // DIRECT_TIMESTAMP_MAP
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
               <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> STATUS: OPERATIONAL_SECURE
