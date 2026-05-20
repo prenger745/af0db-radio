@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import React from "react"
 import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Award, Zap, Activity, ShieldCheck, Database, Sliders, ChevronRight } from "lucide-react"
 
@@ -12,7 +14,7 @@ interface QSO {
   grid: string
 }
 
-// SECURE SERVER-SIDE DATA FETCH (Mapped precisely to your active token variable)
+// SECURE SERVER-SIDE DATA FETCH (Bypasses compilation cache blocks)
 async function getQrzLogs(): Promise<QSO[]> {
   const apiKey = process.env.QRZ_LOGBOOK_API_KEY
   if (!apiKey) {
@@ -32,7 +34,7 @@ async function getQrzLogs(): Promise<QSO[]> {
         ACTION: "FETCH",
         OPTION: "TYPE:ADIF"
       }),
-      next: { revalidate: 15 }
+      cache: "no-store" // Explicitly commands Vercel never to freeze or cache this data packet
     })
 
     if (!res.ok) return []
@@ -139,7 +141,7 @@ export default async function Page() {
         .rst-r-box { color: #06b6d4; font-weight: bold; }
       `}} />
 
-      {/* Banner */}
+      {/* Masthead Banner Banner Layout */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -155,7 +157,7 @@ export default async function Page() {
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Strip */}
+      {/* Cyber-Deck Telemetry Grid Boxes */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>01/ ACTIVE_BAND</span>
@@ -175,7 +177,7 @@ export default async function Page() {
         </div>
       </section>
 
-      {/* Main Grid Panels Area */}
+      {/* Workspace Area Layout Frame */}
       <main className="deck-workspace">
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="terminal-panel">
@@ -285,7 +287,7 @@ export default async function Page() {
           <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
-              STREAM_FILTER: NATIVE_CORE_PROP // DIRECT_TIMESTAMP_MAP
+              STREAM_FILTER: NATIVE_SERVER_PROP // DIRECT_TIMESTAMP_MAP
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
               <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> STATUS: OPERATIONAL_SECURE
