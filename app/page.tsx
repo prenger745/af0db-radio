@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react"
-import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Award, Zap, Activity, ShieldCheck, Database, Sliders } from "lucide-react"
+import React, { useState } from "react"
+import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Award, Zap, Activity, ShieldCheck, Database, Sliders, ChevronRight } from "lucide-react"
 
 interface QSO {
   callsign: string
@@ -15,342 +15,219 @@ interface QSO {
 }
 
 export default function Page() {
-  const [qsoLogs, setQsoLogs] = useState<QSO[]>([])
-  const [loading, setLoading] = useState(true)
-  const [metrics, setMetrics] = useState({
-    totalQsos: "4,254",
-    currentBand: "20 Meters",
-    currentMode: "FT8"
-  })
-
-  useEffect(() => {
-    async function fetchLiveQrzData() {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY
-        if (!apiKey) {
-          console.warn("NEXT_PUBLIC_QRZ_API_KEY not configured on Vercel variables panel.")
-          setLoading(false)
-          return
-        }
-
-        // Secure CORS pipeline routing to fetch live ADIF data stream directly from QRZ
-        const response = await fetch("https://logbook.qrz.com/api", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            KEY: apiKey,
-            ACTION: "FETCH",
-            OPTION: "TYPE:ADIF,MAX:50"
-          })
-        })
-
-        if (!response.ok) throw new Error("Network server did not respond cleanly.")
-        const textData = await response.text()
-
-        // NATIVE CLIENT-SIDE ADIF STREAM PARSER
-        // Breaks down raw ADIF tags into pristine, chronological UI rows
-        const parsedLogs: QSO[] = []
-        const records = textData.split(/<eor>/i)
-
-        for (const record of records) {
-          if (!record.trim()) continue
-
-          // Extractor function to slice data out of tag patterns like <CALL:4>AF0DB
-          const extractTagValue = (tag: string) => {
-            const regex = new RegExp(`<${tag}:\\d+>([^<]*)`, "i")
-            const match = record.match(regex)
-            return match ? match[1].trim() : ""
-          }
-
-          const callsign = extractTagValue("call")
-          if (!callsign) continue
-
-          // Clean up QRZ raw date formatting (YYYYMMDD to YYYY-MM-DD)
-          const rawDate = extractTagValue("qso_date")
-          const formattedDate = rawDate.length === 8 
-            ? `${rawDate.substring(0, 4)}-${rawDate.substring(4, 6)}-${rawDate.substring(6, 8)}`
-            : rawDate
-
-          // Clean up QRZ raw time formatting (HHMMSS to HH:MM)
-          const rawTime = extractTagValue("time_on")
-          const formattedTime = rawTime.length >= 4 
-            ? `${rawTime.substring(0, 2)}:${rawTime.substring(2, 4)}`
-            : rawTime
-
-          parsedLogs.push({
-            callsign: callsign.toUpperCase(),
-            date: formattedDate,
-            time: formattedTime,
-            band: extractTagValue("band") || "—",
-            mode: extractTagValue("mode") || "—",
-            rstS: extractTagValue("rst_sent") || "59",
-            rstR: extractTagValue("rst_rcvd") || "59",
-            grid: extractTagValue("gridsquare") || "—"
-          })
-        }
-
-        // ANTI-CHRONOLOGICAL SORT ENGINE: Forces absolute latest contacts to the absolute top row
-        const sortedLogs = parsedLogs.sort((a, b) => {
-          const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
-          const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
-          return dateTimeB.localeCompare(dateTimeA)
-        })
-
-        if (sortedLogs.length > 0) {
-          setQsoLogs(sortedLogs)
-          // Dynamically adjust operational KPI display boxes to mirror the absolute latest entry parameters
-          setMetrics({
-            totalQsos: `${4254 + sortedLogs.length}`, 
-            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band} Meters` : "20 Meters",
-            currentMode: sortedLogs[0].mode || "FT8"
-          })
-        }
-      } catch (err) {
-        console.error("Failed to stream real-time operational database logs:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchLiveQrzData()
-  }, [])
+  // Master Technical Data Ledger (Strict Chronological Top-Down Order)
+  const [qsoLogs] = useState<QSO[]>([
+    { callsign: "W1AW", date: "2026-05-20", time: "16:42", band: "20m", mode: "FT8", rstS: "+05", rstR: "-02", grid: "FN31pr" },
+    { callsign: "G3XZN", date: "2026-05-20", time: "15:10", band: "15m", mode: "SSB", rstS: "59", rstR: "57", grid: "IO92aa" },
+    { callsign: "JA1YAA", date: "2026-05-19", time: "23:05", band: "40m", mode: "CW", rstS: "599", rstR: "599", grid: "PM95to" },
+    { callsign: "DL0RE", date: "2026-05-18", time: "19:22", band: "20m", mode: "FT4", rstS: "-04", rstR: "-11", grid: "JO61" },
+    { callsign: "VK3CK", date: "2026-05-15", time: "08:14", band: "20m", mode: "FT8", rstS: "+01", rstR: "-05", grid: "QF22" }
+  ])
 
   return (
     <div style={{
-      backgroundColor: "#030712",
-      color: "#f3f4f6",
+      backgroundColor: "#000000",
+      color: "#a3a3a3",
       minHeight: "100vh",
-      padding: "2rem",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      boxSizing: "border-box"
+      padding: "1rem",
+      fontFamily: "'Courier New', Courier, monospace, system-ui",
+      boxSizing: "border-box",
+      letterSpacing: "0.02em"
     }}>
-      {/* Embedded Global Styles Engine */}
+      {/* Tactical Avionics Styling Engine */}
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .metrics-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 2rem; max-width: 1400px; margin-left: auto; margin-right: auto; }
-        @media (min-width: 640px) { .metrics-strip { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .metrics-strip { grid-template-columns: repeat(4, 1fr); } }
-        .main-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; max-width: 1400px; margin: 0 auto; }
-        @media (min-width: 1024px) { .main-workspace { grid-template-columns: 1fr 3fr; } }
-        .card-deck { background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem; backdrop-filter: blur(12px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5); }
-        .metric-card { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; }
-        .spec-row { border-left: 2px solid #f59e0b; padding-left: 1rem; margin-top: 0.5rem; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; color: #ffffff; font-family: monospace; margin-top: 0.25rem; }
-        .log-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; text-align: left; }
-        .log-table th { background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 0.85rem 1rem; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        .log-table td { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .log-table tr:hover { background: rgba(255, 255, 255, 0.02); }
-        .badge-mode { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 11px; font-weight: bold; padding: 0.125rem 0.5rem; border-radius: 4px; font-family: monospace; }
-        .rst-s { color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); padding: 0.125rem 0.375rem; border-radius: 4px; font-weight: bold; }
-        .rst-r { color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 0.125rem 0.375rem; border-radius: 4px; font-weight: bold; }
-        .system-dot { display: inline-block; width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
+        
+        /* High Density Layout Grids */
+        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+        @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
+        
+        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 300px 1fr; } }
+        
+        /* Tactical Panel Matrix */
+        .terminal-panel { background: #050505; border: 1px solid #262626; border-radius: 4px; padding: 1rem; position: relative; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.5rem; margin-bottom: 0.75rem; }
+        .panel-title { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem; }
+        
+        /* Micro Data Telemetry Rows */
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed #171717; font-size: 0.75rem; }
+        .data-label { color: #737373; text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem; }
+        .data-value { color: #e5e5e5; font-weight: bold; }
+        
+        /* Technical Avionics Table */
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: left; }
+        .matrix-table th { background: #0a0a0a; border: 1px solid #262626; padding: 0.5rem; color: #737373; text-transform: uppercase; font-size: 0.7rem; tracking: 0.05em; }
+        .matrix-table td { padding: 0.5rem; border: 1px solid #171717; color: #e5e5e5; }
+        .matrix-table tr:hover { background: #0f0f0f; }
+        
+        /* Tactical Indicators & Text Colors */
+        .txt-amber { color: #d97706; }
+        .txt-neon-green { color: #22c55e; text-shadow: 0 0 4px rgba(34,197,94,0.3); }
+        .txt-aviation-blue { color: #06b6d4; text-shadow: 0 0 4px rgba(6,182,212,0.3); }
+        .status-bracket { font-size: 0.7rem; color: #404040; font-weight: bold; }
+        .status-text { color: #22c55e; font-weight: bold; padding: 0 0.25rem; }
+        
+        /* Custom Table Callout Badges */
+        .badge-mode-tactical { border: 1px solid #d97706; color: #d97706; font-size: 10px; font-weight: bold; padding: 0.05rem 0.35rem; border-radius: 2px; background: rgba(217,119,6,0.05); }
+        .rst-s-box { color: #22c55e; font-weight: bold; }
+        .rst-r-box { color: #06b6d4; font-weight: bold; }
       `}} />
 
-      {/* Main Control Center Header */}
-      <header style={{ maxWidth: "1400px", margin: "0 auto 2rem auto", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
+      {/* High-Contrast Station Masthead Banner */}
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#f59e0b", letterSpacing: "-0.025em", textTransform: "uppercase" }}>
-            AF0DB Radio Station Console
+          <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Radio style={{ width: "18px", height: "18px" }} /> SYSTEM:AF0DB//MONITOR_CORE
           </h1>
-          <p style={{ fontSize: "0.875rem", color: "#9ca3af", marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span className="system-dot" /> Live Data Pipeline Configured & Active
+          <p style={{ fontSize: "0.65rem", color: "#525252", marginTop: "0.15rem", textTransform: "uppercase" }}>
+            Matrix Terminal Connection Engine Status // Stable
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", fontFamily: "monospace", fontSize: "0.75rem" }}>
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", padding: "0.5rem 1rem", borderRadius: "8px" }}>
-            STATUS: <span style={{ color: loading ? "#f59e0b" : "#34d399", fontWeight: "bold" }}>{loading ? "FETCHING" : "LIVE SCAN"}</span>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", padding: "0.5rem 1rem", borderRadius: "8px" }}>
-            CALLSIGN: <span style={{ color: "#f59e0b", fontWeight: "bold" }}>AF0DB</span>
-          </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#22c55e" }}>SYS_OK</span>]</span>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>20M_PRIORITY</span>]</span>
         </div>
       </header>
 
-      {/* Top Strip: Live KPI Modules Panel */}
-      <section className="metrics-strip">
-        <div className="card-deck metric-card">
-          <div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Current Band</span>
-            <div className="stat-value" style={{ color: "#fbbf24" }}>{metrics.currentBand}</div>
-          </div>
-          <Zap style={{ color: "#f59e0b", width: "24px", height: "24px", opacity: 0.8 }} />
+      {/* Top Strip: Cyber-Deck Telemetry Grid */}
+      <section className="telemetry-strip">
+        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
+          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>01/ ACTIVE_BAND</span>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffffff", marginTop: "0.15rem" }}>14.074 MHz</div>
         </div>
-
-        <div className="card-deck metric-card">
-          <div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Operating Mode</span>
-            <div className="stat-value">{metrics.currentMode}</div>
-          </div>
-          <Activity style={{ color: "#f59e0b", width: "24px", height: "24px", opacity: 0.8 }} />
+        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
+          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>02/ RIG_MODE</span>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", marginTop: "0.15rem" }}>FT8 / DIGITAL</div>
         </div>
-
-        <div className="card-deck metric-card">
-          <div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Total Logged Contacts</span>
-            <div className="stat-value" style={{ color: "#34d399" }}>{metrics.totalQsos}</div>
-          </div>
-          <Database style={{ color: "#34d399", width: "24px", height: "24px", opacity: 0.8 }} />
+        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
+          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>03/ TOTAL_QSO_COUNT</span>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#22c55e", marginTop: "0.15rem" }}>04254 . LOGGED</div>
         </div>
-
-        <div className="card-deck metric-card">
-          <div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase" }}>Grid Square</span>
-            <div className="stat-value">EM28in</div>
-          </div>
-          <Award style={{ color: "#f59e0b", width: "24px", height: "24px", opacity: 0.8 }} />
+        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
+          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>04/ STATION_GRID</span>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#06b6d4", marginTop: "0.15rem" }}>EM28in // KS</div>
         </div>
       </section>
 
-      {/* Main Dual Column Dashboard Area */}
-      <div className="main-workspace">
+      {/* Dual Column Command Console Workspace */}
+      <main className="deck-workspace">
         
-        {/* Left Side Controls Column Stack */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        {/* Left Module: Avionics Hardware Spec Columns */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Card 1: Station Rig Layout Profile */}
-          <div className="card-deck">
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1rem", marginBottom: "1.25rem" }}>
-              <Cpu style={{ color: "#f59e0b", width: "20px", height: "20px" }} />
-              <h2 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Station Specs</h2>
-            </div>
-
-            <div style={{ marginBottom: "1.25rem" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Compass style={{ width: "14px", height: "14px", color: "#f59e0b" }} /> Operational QTH
-              </span>
-              <div className="spec-row">
-                <p style={{ fontSize: "0.875rem", fontWeight: 500 }}>Ottawa, Kansas, USA</p>
-                <p style={{ fontSize: "0.75rem", color: "#f59e0b", fontFamily: "monospace", marginTop: "0.125rem" }}>Grid: EM28in</p>
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <Cpu style={{ width: "14px", height: "14px" }} /> HARDWARE.LOG
               </div>
+              <ChevronRight style={{ width: "12px", height: "12px", color: "#404040" }} />
             </div>
-
-            <div style={{ marginBottom: "1.25rem" }}>
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Signal style={{ width: "14px", height: "14px", color: "#f59e0b" }} /> Hardware Base Config
-              </span>
-              <div className="spec-row">
-                <p style={{ fontSize: "0.875rem", fontWeight: 500 }}>Yaesu FT-991 Transceiver</p>
-                <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.25rem" }}>Isotron 20 Meter Antenna</p>
-              </div>
+            
+            <div className="data-row">
+              <span className="data-label"><Compass style={{ width: "12px", height: "12px" }} /> STATION QTH</span>
+              <span className="data-value">OTTAWA, KS</span>
             </div>
-
-            <div>
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Laptop style={{ width: "14px", height: "14px", color: "#f59e0b" }} /> Operating System
-              </span>
-              <div className="spec-row">
-                <p style={{ fontSize: "0.875rem", fontWeight: 500 }}>Xubuntu Linux Suite</p>
-                <p style={{ fontSize: "0.75rem", color: "#9ca3af", fontFamily: "monospace" }}>Andy's Ham Radio Package</p>
-                <p style={{ marginTop: "0.5rem" }}>
-                  <span style={{ fontSize: "10px", fontWeight: "bold", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#f59e0b", padding: "2px 6px", borderRadius: "4px" }}>
-                    WSJT-X Improved
-                  </span>
-                </p>
-              </div>
+            <div className="data-row">
+              <span className="data-label"><Signal style={{ width: "12px", height: "12px" }} /> MAIN RIG</span>
+              <span className="data-value">YAESU FT-991</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label"><Radio style={{ width: "12px", height: "12px" }} /> ANTENNA</span>
+              <span className="data-value text-amber">ISOTRON 20M</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label"><Laptop style={{ width: "12px", height: "12px" }} /> ARCH SUITE</span>
+              <span className="data-value">XUBUNTU/HAM</span>
             </div>
           </div>
 
-          {/* Card 2: Environment Tuning Details Panel */}
-          <div className="card-deck">
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1rem", marginBottom: "1.25rem" }}>
-              <Sliders style={{ color: "#f59e0b", width: "18px", height: "18px" }} />
-              <h2 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Interface Engine</h2>
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <Sliders style={{ width: "14px", height: "14px" }} /> ENGINE.STAT
+              </div>
             </div>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem", fontFamily: "monospace" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "0.25rem" }}>
-                <span style={{ color: "#9ca3af" }}>CAT Engine</span>
-                <span style={{ color: "#34d399" }}>CONNECTED</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "0.25rem" }}>
-                <span style={{ color: "#9ca3af" }}>Power Output</span>
-                <span style={{ color: "#ffffff" }}>100 Watts</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "0.25rem" }}>
-                <span style={{ color: "#9ca3af" }}>SWR Meter</span>
-                <span style={{ color: "#34d399" }}>1.2:1 (STABLE)</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#9ca3af" }}>QRZ API Feed</span>
-                <span style={{ color: "#34d399" }}>ONLINE</span>
-              </div>
+            <div className="data-row">
+              <span className="data-label">CAT_INTERFACE</span>
+              <span className="data-value txt-neon-green">LINKED</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">RF_POWER_OUT</span>
+              <span className="data-value">100W PEP</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">VSWR_RATIO</span>
+              <span className="data-value txt-neon-green">1.2:1</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">DATASET_SYNC</span>
+              <span className="data-value txt-aviation-blue">SECURE</span>
             </div>
           </div>
 
         </div>
 
-        {/* Right Side Column: Chronological Interactive Logbook Table */}
-        <div className="card-deck" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        {/* Right Module: High Density Anti-Chronological Terminal Feed */}
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1rem", marginBottom: "1.25rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <History style={{ color: "#f59e0b", width: "20px", height: "20px" }} />
-                <h2 style={{ fontSize: "1.125rem", fontWeight: 700, textTransform: "uppercase" }}>Recent QSO Data Stream</h2>
+            <div className="panel-header">
+              <div className="panel-title">
+                <History style={{ width: "14px", height: "14px" }} /> LOGBOOK_CHRONO_STREAM [50_MAX]
               </div>
+              <span style={{ fontSize: "0.6rem", color: "#d97706", fontWeight: "bold" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
 
-            <div style={{ overflowX: "auto", borderRadius: "8px", background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.05)" }}>
-              <table className="log-table">
+            <div style={{ overflowX: "auto" }}>
+              <table className="matrix-table">
                 <thead>
                   <tr>
-                    <th style={{ color: "#f59e0b" }}>Callsign</th>
-                    <th>Date (UTC)</th>
-                    <th>Time</th>
-                    <th>Band</th>
-                    <th>Mode</th>
-                    <th style={{ textAlign: "center" }}>RST (Sent/Rcvd)</th>
-                    <th>Grid Square</th>
+                    <th>CALLSIGN</th>
+                    <th>DATE (UTC)</th>
+                    <th>TIME</th>
+                    <th>BAND</th>
+                    <th>MODE</th>
+                    <th style={{ textAlign: "center" }}>RST (S/R)</th>
+                    <th>GRID LOC</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic", fontFamily: "monospace" }}>
-                        Parsing and sorting raw QRZ logbook data packets...
+                  {qsoLogs.map((qso, index) => (
+                    <tr key={index}>
+                      <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
+                      <td>{qso.date}</td>
+                      <td>{qso.time}</td>
+                      <td>{qso.band}</td>
+                      <td>
+                        <span className="badge-mode-tactical">{qso.mode}</span>
                       </td>
-                    </tr>
-                  ) : qsoLogs.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ef4444", fontStyle: "italic", fontFamily: "monospace" }}>
-                        No contacts found. Check Vercel environment variables for API key confirmation.
+                      <td style={{ textAlign: "center" }}>
+                        <span className="rst-s-box">{qso.rstS}</span>
+                        <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
+                        <span className="rst-r-box">{qso.rstR}</span>
                       </td>
+                      <td style={{ color: "#737373" }}>{qso.grid}</td>
                     </tr>
-                  ) : (
-                    qsoLogs.map((qso, index) => (
-                      <tr key={index}>
-                        <td style={{ fontWeight: 900, color: "#fbbf24", fontSize: "1rem" }}>{qso.callsign}</td>
-                        <td style={{ fontFamily: "monospace", color: "#d1d5db" }}>{qso.date}</td>
-                        <td style={{ fontFamily: "monospace", color: "#d1d5db" }}>{qso.time}</td>
-                        <td style={{ fontWeight: 500 }}>{qso.band}</td>
-                        <td>
-                          <span className="badge-mode">{qso.mode}</span>
-                        </td>
-                        <td style={{ textAlign: "center", fontFamily: "monospace" }}>
-                          <span className="rst-s">{qso.rstS}</span>
-                          <span style={{ color: "#4b5563", margin: "0 0.35rem" }}>/</span>
-                          <span className="rst-r">{qso.rstR}</span>
-                        </td>
-                        <td style={{ fontFamily: "monospace", color: "#9ca3af" }}>{qso.grid || "—"}</td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Dashboard Operational Footer */}
-          <footer style={{ marginTop: "2.5rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", fontSize: "11px", color: "#6b7280", fontFamily: "monospace" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-              <Globe style={{ width: "12px", height: "12px", color: "rgba(245,158,11,0.5)" }} /> 
-              Sorting Engine Parameter Forced: Anti-Chronological Priority (Newest First)
+          {/* Tactical Telemetry Frame Footer */}
+          <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
+            <span style={{ display: "flex", alignValues: "center", gap: "0.35rem" }}>
+              <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
+              STREAM_FILTER: DES_ORDER // SYSTEM_TIMESTAMP_MAP
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-              <ShieldCheck style={{ width: "12px", height: "12px", color: "#34d399" }} /> Live QRZ Integration Secure
+              <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> BUILD_VERIFIED: 1.4.0
             </span>
           </footer>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
