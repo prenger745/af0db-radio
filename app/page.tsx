@@ -218,7 +218,7 @@ export default function Page() {
 
           {/* Tactical Telemetry Frame Footer */}
           <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
-            <span style={{ display: "flex", alignValues: "center", gap: "0.35rem" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
               STREAM_FILTER: DES_ORDER // SYSTEM_TIMESTAMP_MAP
             </span>
