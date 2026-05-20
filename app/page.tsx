@@ -33,7 +33,7 @@ interface SpaceWeather {
 }
 
 export default function Page() {
-  const [logs, setLogs] = useState<QSO[]>([])
+  const [logs, setLogs] = useState<Q QSO[]>([])
   const [stats, setStats] = useState<StationMetrics>({
     totalQsos: "1,008",
     confirmed: "792",
@@ -224,8 +224,4 @@ export default function Page() {
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
-        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
-        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
-        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items
+        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius:
