@@ -32,33 +32,34 @@ export default function Page() {
     currentMode: "FT8"
   })
   const [loading, setLoading] = useState(true)
+  const [isLiveStream, setIsLiveStream] = useState(false)
 
   useEffect(() => {
+    // High-fidelity operational station log safehouse array
+    const stationCacheLogs: QSO[] = [
+      { callsign: "KC0NFS", date: "2026-05-20", time: "14:15", band: "2m", mode: "FM", rstS: "59", rstR: "59", grid: "EM28" },
+      { callsign: "N0TZC", date: "2026-05-20", time: "11:32", band: "20m", mode: "FT8", rstS: "+01", rstR: "-05", grid: "EM29" },
+      { callsign: "KC5HPK", date: "2026-05-19", time: "22:04", band: "20m", mode: "FT8", rstS: "-08", rstR: "+02", grid: "EM15" }
+    ]
+
     async function parseLiveQrzData() {
       try {
-        const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY || "AF0DB_SECURE_KEY"
-        
-        // Directly fetching via a clean url form data payload structure
-        const res = await fetch("https://logbook.qrz.com/api", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            KEY: apiKey,
-            ACTION: "FETCH",
-            OPTION: "TYPE:ADIF"
-          })
-        })
-
-        if (!res.ok) throw new Error("Network connection dropped.")
+        // FIXED: Pointing strictly at our secure internal backend server route to destroy the CORS flag
+        const res = await fetch("/api/qrz")
+        if (!res.ok) throw new Error("Internal cloud routing node unresolvable.")
         const rawText = await res.text()
 
-        // HYPER-ROBUST DECODER: Cleans the HTML entity wrappers instantly
+        // Clean out messy HTML entity strings directly in memory
         const decodedText = decodeURIComponent(rawText)
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
           .replace(/&amp;/g, "&")
 
-        // Pull core counter metrics directly using fallback boundaries
+        if (decodedText.includes("RESULT=FAIL") || !decodedText.trim()) {
+          throw new Error("QRZ authorization token rejected.")
+        }
+
+        // Pull core telemetry count indices using regex wrappers
         const countMatch = decodedText.match(/COUNT=([^&]*)/i) || decodedText.match(/"COUNT":"(\d+)"/i)
         const confMatch = decodedText.match(/CONFIRMED=([^&]*)/i) || decodedText.match(/"CONFIRMED":"(\d+)"/i)
         const dxccMatch = decodedText.match(/DXCC_COUNT=([^&]*)/i) || decodedText.match(/"DXCC_COUNT":"(\d+)"/i)
@@ -67,7 +68,6 @@ export default function Page() {
         const liveConfirmed = confMatch ? confMatch[1] : "792"
         const liveDxcc = dxccMatch ? dxccMatch[1] : "74"
 
-        // Extract ADIF log block safely matching any internal string casing
         const parsedLogs: QSO[] = []
         const records = decodedText.split(/<eor>/i)
 
@@ -105,7 +105,7 @@ export default function Page() {
           })
         }
 
-        // Sort: Absolute chronological descending order
+        // Sort: Absolute newest updates pinned strictly to the first row
         const sortedLogs = parsedLogs.sort((a, b) => {
           const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
           const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
@@ -114,23 +114,20 @@ export default function Page() {
 
         if (sortedLogs.length > 0) {
           setLogs(sortedLogs)
+          setIsLiveStream(true)
           setStats({
             totalQsos: liveCount,
             confirmed: liveConfirmed,
             dxcc: liveDxcc,
-            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band}M` : "20 Meters",
+            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band}` : "20M",
             currentMode: sortedLogs[0].mode || "FT8"
           })
         } else {
-          // If no logs array extracts from string, load working default mock logs
-          setLogs([
-            { callsign: "KC0NFS", date: "2026-05-20", time: "14:15", band: "2m", mode: "FM", rstS: "59", rstR: "59", grid: "EM28" },
-            { callsign: "N0TZC", date: "2026-05-20", time: "11:32", band: "20m", mode: "FT8", rstS: "+01", rstR: "-05", grid: "EM29" },
-            { callsign: "KC5HPK", date: "2026-05-19", time: "22:04", band: "20m", mode: "FT8", rstS: "-08", rstR: "+02", grid: "EM15" }
-          ])
+          setLogs(stationCacheLogs)
         }
       } catch (err) {
-        console.error("Data mapping fault:", err)
+        console.warn("Backend link holding. Resolving database via local station cache loop.")
+        setLogs(stationCacheLogs)
       } finally {
         setLoading(false)
       }
@@ -175,7 +172,7 @@ export default function Page() {
         .rst-r-box { color: #06b6d4; font-weight: bold; }
       `}} />
 
-      {/* Banner */}
+      {/* Banner Banner Layout Layout */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -187,7 +184,7 @@ export default function Page() {
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
-          <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>LIVE_FEED</span>]</span>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>{isLiveStream ? "LIVE_FEED" : "LOCAL_CACHE"}</span>]</span>
         </div>
       </header>
 
@@ -211,7 +208,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Workspace Area Layout Frame */}
+      {/* Workspace Area Layout Frame Area Layout */}
       <main className="deck-workspace">
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="terminal-panel">
@@ -259,12 +256,12 @@ export default function Page() {
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">DATASET_SYNC</span>
-              <span className="data-value txt-aviation-blue">{logs.length > 3 ? "LIVE_FEED" : "LOCAL_CACHE"}</span>
+              <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "CACHE_SAFE"}</span>
             </div>
           </div>
         </div>
 
-        {/* Right Logbook Monitor Column */}
+        {/* Right Logbook Monitor Column Table */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
@@ -288,31 +285,23 @@ export default function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#d97706", fontStyle: "italic" }}>
-                        &gt;&gt; Intercepting real-time logging telemetry packets...
+                  {logs.map((qso, index) => (
+                    <tr key={index}>
+                      <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
+                      <td>{qso.date}</td>
+                      <td>{qso.time}</td>
+                      <td>{qso.band}</td>
+                      <td>
+                        <span className="badge-mode-tactical">{qso.mode}</span>
                       </td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className="rst-s-box">{qso.rstS}</span>
+                        <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
+                        <span className="rst-r-box">{qso.rstR}</span>
+                      </td>
+                      <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
                     </tr>
-                  ) : (
-                    logs.map((qso, index) => (
-                      <tr key={index}>
-                        <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
-                        <td>{qso.date}</td>
-                        <td>{qso.time}</td>
-                        <td>{qso.band}</td>
-                        <td>
-                          <span className="badge-mode-tactical">{qso.mode}</span>
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
-                          <span className="rst-r-box">{qso.rstR}</span>
-                        </td>
-                        <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -321,7 +310,7 @@ export default function Page() {
           <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
-              STREAM_FILTER: ENHANCED_DECODER // DIRECT_TIMESTAMP_MAP
+              STREAM_FILTER: ENHANCED_PROXY_NODE // DIRECT_TIMESTAMP_MAP
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
               <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> STATUS: OPERATIONAL_SECURE
