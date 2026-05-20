@@ -225,7 +225,7 @@ export default function Page() {
         </div>
 
         {/* Right Module: Logbook Data Stream */}
-        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyRules: "space-between" }}>
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
