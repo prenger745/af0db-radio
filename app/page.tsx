@@ -44,7 +44,6 @@ export default function Page() {
         if (json.error || !json.data) throw new Error(json.error || "No data received")
         const rawText = json.data
 
-        // Safely map HTML parameters without using unstable decodeURIComponent actions
         const cleanText = rawText
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
@@ -58,7 +57,6 @@ export default function Page() {
         const liveConfirmed = confMatch ? confMatch[1].split('&')[0] : "792"
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74"
 
-        // Locate the ADIF data block start boundary safely
         let adifContent = ""
         const adifKeyMatch = cleanText.match(/ADIF=([\s\S]*)$/i)
         if (adifKeyMatch) {
@@ -104,7 +102,6 @@ export default function Page() {
           })
         }
 
-        // Sort: True chronological order (Newest First)
         const sortedLogs = parsedLogs.sort((a, b) => {
           const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
           const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
@@ -112,7 +109,6 @@ export default function Page() {
         })
 
         if (sortedLogs.length > 0) {
-          // Isolate exactly your top 15 most recent real-world contacts
           const newestFifteen = sortedLogs.slice(0, 15)
           setLogs(newestFifteen)
           setIsLiveStream(true)
@@ -260,7 +256,7 @@ export default function Page() {
         </div>
 
         {/* Right Logbook Monitor Column */}
-        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyBetween: "space-between" }}>
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
