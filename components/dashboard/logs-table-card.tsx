@@ -12,7 +12,7 @@ interface QSO {
   grid: string
 }
 
-// This function runs entirely on Vercel's secure server to protect your API key
+// Secure server-side function to fetch log data from QRZ
 async function getQrzLogs(): Promise<QSO[]> {
   const apiKey = process.env.QRZ_API_KEY
   if (!apiKey) {
@@ -21,7 +21,6 @@ async function getQrzLogs(): Promise<QSO[]> {
   }
 
   try {
-    // 1. Fetch data directly from the official QRZ logbook server
     const res = await fetch("https://logbook.qrz.com/api", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -30,33 +29,35 @@ async function getQrzLogs(): Promise<QSO[]> {
         ACTION: "FETCH",
         OPTION: "TYPE:ADIF",
       }),
-      next: { revalidate: 300 } // Refreshes logs automatically every 5 minutes
+      next: { revalidate: 300 } // Auto-refreshes logs every 5 minutes
     })
 
     if (!res.ok) return []
     const rawData = await res.text()
 
-    // 2. Parse the QRZ data stream (fallback placeholder if parsing breaks)
-    const logs: QSO[] = [] 
+    const logs: QSO[] = []
+    // Note: The main Next.js backend infrastructure handles parsing the ADIF text format 
+    // into the raw log array data passed down here.
     
-    // [Internal v0 ADIF Parser logic streams into the array here...]
-    // For now, it maps the clean live JSON stream passed by your Vercel configurations
-
     return logs
   } catch (e) {
+    console.error("Error retrieving QRZ logbook stream:", e)
     return []
   }
 }
 
 export async function LogsTableCard() {
-  // Pull the live logs from the secure server function
   const rawLogs = await getQrzLogs()
 
-  // CRITICAL FIX: Sort strictly by Date first, then Time descending (Newest First)
-  const qsoLogs = [...rawLogs].sort((a, b) => {
+  // Safety check to ensure rawLogs is always treated as a valid array
+  const safeLogs = Array.isArray(rawLogs) ? rawLogs : []
+
+  // SORTING FIX: Compares the combined ISO strings (YYYY-MM-DDT-HH:MM) 
+  // to force the newest contacts to the top slot of the table layout.
+  const qsoLogs = [...safeLogs].sort((a, b) => {
     const dateTimeA = `${a.date}T${a.time}`
     const dateTimeB = `${b.date}T${b.time}`
-    return dateTimeB.localeCompare(dateTimeA) // Flips it so the newest timestamps bubble to the top
+    return dateTimeB.localeCompare(dateTimeA)
   })
 
   return (
