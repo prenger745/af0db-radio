@@ -132,100 +132,102 @@ export default function Page() {
 
   return (
     <div style={{
-      backgroundColor: "#000000",
-      color: "#a3a3a3",
+      backgroundColor: "#0a0a0a",
+      color: "#e5e5e5",
       minHeight: "100vh",
-      padding: "1rem",
-      fontFamily: "'Courier New', Courier, monospace, system-ui",
+      padding: "1.5rem",
+      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       boxSizing: "border-box",
-      letterSpacing: "0.02em"
+      letterSpacing: "0.01em"
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
-        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 300px 1fr; } }
-        .terminal-panel { background: #050505; border: 1px solid #262626; border-radius: 4px; padding: 1rem; position: relative; }
-        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.5rem; margin-bottom: 0.75rem; }
-        .panel-title { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; color: #d97706; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.35rem 0; border-bottom: 1px dashed #171717; font-size: 0.75rem; }
-        .data-label { color: #737373; text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem; }
-        .data-value { color: #e5e5e5; font-weight: bold; }
-        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: left; }
-        .matrix-table th { background: #0a0a0a; border: 1px solid #262626; padding: 0.5rem; color: #737373; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
-        .matrix-table td { padding: 0.5rem; border: 1px solid #171717; color: #e5e5e5; }
-        .matrix-table tr:hover { background: #0f0f0f; }
-        .txt-neon-green { color: #22c55e; text-shadow: 0 0 4px rgba(34,197,94,0.3); }
-        .txt-aviation-blue { color: #06b6d4; text-shadow: 0 0 4px rgba(6,182,212,0.3); }
-        .status-bracket { font-size: 0.7rem; color: #404040; font-weight: bold; }
-        .status-text { color: #22c55e; font-weight: bold; padding: 0 0.25rem; }
-        .badge-mode-tactical { border: 1px solid #d97706; color: #d97706; font-size: 10px; font-weight: bold; padding: 0.05rem 0.35rem; border-radius: 2px; background: rgba(217,119,6,0.05); }
-        .rst-s-box { color: #22c55e; font-weight: bold; }
-        .rst-r-box { color: #06b6d4; font-weight: bold; }
+        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
+        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
+        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; }
+        .data-value { color: #ffffff; font-weight: 600; }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+        .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
+        .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
+        .matrix-table tr:nth-child(even) { background: #161616; }
+        .matrix-table tr:hover { background: #1f1f1f; }
+        .txt-neon-green { color: #10b981; }
+        .txt-aviation-blue { color: #06b6d4; }
+        .status-bracket { font-size: 0.75rem; color: #525252; font-weight: 600; }
+        .status-text { color: #10b981; font-weight: 700; padding: 0 0.25rem; }
+        .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); letter-spacing: 0.02em; }
+        .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
+        .rst-r-box { color: #06b6d4; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
+        .font-mono-data { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-weight: 600; }
       `}} />
 
-      {/* Banner */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
+      {/* Header Banner */}
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Radio style={{ width: "18px", height: "18px" }} /> SYSTEM:AF0DB//MONITOR_CORE
+          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
+            <Radio style={{ width: "20px", height: "20px" }} /> SYSTEM:AF0DB // MONITOR_CORE
           </h1>
-          <p style={{ fontSize: "0.65rem", color: "#525252", marginTop: "0.15rem", textTransform: "uppercase" }}>
+          <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500 }}>
             Matrix Terminal Connection Engine Status // Online
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
-          <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#f59e0b" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Grid Boxes */}
+      {/* Cyber-Deck Telemetry Cards */}
       <section className="telemetry-strip">
-        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>01/ ACTIVE_BAND</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffffff", marginTop: "0.15rem" }}>{stats.currentBand}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>01/ ACTIVE_BAND</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff", marginTop: "0.25rem" }}>{stats.currentBand}</div>
         </div>
-        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>02/ RIG_MODE</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", marginTop: "0.15rem" }}>{stats.currentMode}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>02/ RIG_MODE</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.25rem" }}>{stats.currentMode}</div>
         </div>
-        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>03/ TOTAL_QSO_COUNT</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#22c55e", marginTop: "0.15rem" }}>{stats.totalQsos}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>03/ TOTAL_QSO_COUNT</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#10b981", marginTop: "0.25rem" }}>{stats.totalQsos}</div>
         </div>
-        <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>04/ CONFIRMED_QSOs</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#06b6d4", marginTop: "0.15rem" }}>{stats.confirmed}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>04/ CONFIRMED_QSOs</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#06b6d4", marginTop: "0.25rem" }}>{stats.confirmed}</div>
         </div>
       </section>
 
-      {/* Workspace Area Layout Frame */}
+      {/* Main Grid Layout */}
       <main className="deck-workspace">
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Cpu style={{ width: "14px", height: "14px" }} /> HARDWARE.LOG
+                <Cpu style={{ width: "16px", height: "16px" }} /> HARDWARE.LOG
               </div>
-              <ChevronRight style={{ width: "12px", height: "12px", color: "#404040" }} />
+              <ChevronRight style={{ width: "14px", height: "14px", color: "#525252" }} />
             </div>
             <div className="data-row">
-              <span className="data-label"><Compass style={{ width: "12px", height: "12px" }} /> STATION QTH</span>
+              <span className="data-label"><Compass style={{ width: "14px", height: "14px" }} /> STATION QTH</span>
               <span className="data-value">OTTAWA, KS</span>
             </div>
             <div className="data-row">
-              <span className="data-label"><Signal style={{ width: "12px", height: "12px" }} /> MAIN RIG</span>
+              <span className="data-label"><Signal style={{ width: "14px", height: "14px" }} /> MAIN RIG</span>
               <span className="data-value">YAESU FT-991</span>
             </div>
             <div className="data-row">
-              <span className="data-label"><Radio style={{ width: "12px", height: "12px" }} /> ANTENNA</span>
+              <span className="data-label"><Radio style={{ width: "14px", height: "14px" }} /> ANTENNA</span>
               <span className="data-value">ISOTRON 20M</span>
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label"><Laptop style={{ width: "12px", height: "12px" }} /> ARCH SUITE</span>
+              <span className="data-label"><Laptop style={{ width: "14px", height: "14px" }} /> ARCH SUITE</span>
               <span className="data-value">XUBUNTU/HAM</span>
             </div>
           </div>
@@ -233,7 +235,7 @@ export default function Page() {
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Sliders style={{ width: "14px", height: "14px" }} /> ENGINE.STAT
+                <Sliders style={{ width: "16px", height: "16px" }} /> ENGINE.STAT
               </div>
             </div>
             <div className="data-row">
@@ -255,14 +257,14 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Right Logbook Monitor Column */}
+        {/* Logbook Stream Table */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
-                <History style={{ width: "14px", height: "14px" }} /> LOGBOOK_CHRONO_STREAM [15_MAX]
+                <History style={{ width: "16px", height: "16px" }} /> LOGBOOK_CHRONO_STREAM [15_MAX]
               </div>
-              <span style={{ fontSize: "0.60rem", color: "#d97706", fontWeight: "bold" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
+              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
 
             <div style={{ overflowX: "auto" }}>
@@ -281,26 +283,30 @@ export default function Page() {
                 <tbody>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#d97706", fontStyle: "italic" }}>
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
                         &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
                       </td>
                     </tr>
                   ) : (
                     logs.map((qso, index) => (
                       <tr key={index}>
-                        <td style={{ fontWeight: "bold", color: "#ffffff", fontSize: "0.8rem" }}>&gt; {qso.callsign}</td>
-                        <td>{qso.date}</td>
-                        <td>{qso.time}</td>
-                        <td>{qso.band}</td>
+                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="font-mono-data">
+                          {qso.callsign}
+                        </td>
+                        <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.time}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.band}</td>
                         <td>
                           <span className="badge-mode-tactical">{qso.mode}</span>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
+                          <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
                           <span className="rst-r-box">{qso.rstR}</span>
                         </td>
-                        <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
+                        <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="font-mono-data">
+                          {qso.grid || "—"}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -309,13 +315,13 @@ export default function Page() {
             </div>
           </div>
 
-          <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-              <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
+          <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
               STREAM_FILTER: JSON_PROXY_NODE // DIRECT_TIMESTAMP_MAP
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-              <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> STATUS: OPERATIONAL_SECURE
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
             </span>
           </footer>
         </div>
