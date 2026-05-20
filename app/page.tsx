@@ -29,6 +29,7 @@ interface SpaceWeather {
   kIndex: string
   xray: string
   conditions: string
+  prop20m: string // Added to store our parsed 20m grade
 }
 
 export default function Page() {
@@ -46,7 +47,8 @@ export default function Page() {
     aIndex: "fetching...",
     kIndex: "fetching...",
     xray: "fetching...",
-    conditions: "CALCULATING..."
+    conditions: "CALCULATING...",
+    prop20m: "ANALYZING..."
   })
   const [loading, setLoading] = useState(true)
   const [isLiveStream, setIsLiveStream] = useState(false)
@@ -161,6 +163,7 @@ export default function Page() {
           return match ? match[1].trim() : "—"
         }
 
+        // Parse out SFI, spots, and geomagnetic parameters
         const sfi = extractXmlTag("solarflux")
         const sunspots = extractXmlTag("sunspots")
         const aIndex = extractXmlTag("aindex")
@@ -168,13 +171,20 @@ export default function Page() {
         const xray = extractXmlTag("xray")
         const geomag = extractXmlTag("geomagfield")
 
+        // Parse out the explicit band calculation for 30m-20m
+        // Searches for the explicit <band name="30m-20m" time="day">VALUE</band> tag configuration
+        const bandRegex = /<band\s+name="30m-20m"\s+time="day">([^<]*)<\/band>/i
+        const bandMatch = xmlText.match(bandRegex)
+        const rawProp = bandMatch ? bandMatch[1].trim().toUpperCase() : "GOOD"
+
         setSpaceWeather({
           sfi: sfi !== "—" ? sfi : "145",
           sunspots: sunspots !== "—" ? sunspots : "98",
           aIndex: aIndex !== "—" ? aIndex : "10",
           kIndex: kIndex !== "—" ? kIndex : "1",
           xray: xray !== "—" ? xray : "A0.0",
-          conditions: geomag !== "—" ? geomag.toUpperCase() : "NORMAL / QUIET"
+          conditions: geomag !== "—" ? geomag.toUpperCase() : "NORMAL / QUIET",
+          prop20m: rawProp
         })
       } catch (e) {
         console.warn("Solar links baseline fallbacks running.", e)
@@ -184,7 +194,8 @@ export default function Page() {
           aIndex: "12",
           kIndex: "2",
           xray: "C1.4",
-          conditions: "NORMAL / QUIET"
+          conditions: "NORMAL / QUIET",
+          prop20m: "GOOD"
         })
       }
     }
@@ -192,6 +203,13 @@ export default function Page() {
     parseLiveQrzData()
     loadLiveSolarConditions()
   }, [])
+
+  // Dynamic style assignment helper to color-code your 20m Grade box
+  const getPropColorClass = (status: string) => {
+    if (status.includes("GOOD")) return "txt-neon-green"
+    if (status.includes("FAIR")) return "txt-solar-amber"
+    return "rst-r-box" // Poor -> Red/Cyan accent tint alert boundary
+  }
 
   return (
     <div style={{
@@ -305,6 +323,12 @@ export default function Page() {
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </div>
             </div>
+            <div className="data-row" style={{ padding: "0.75rem 0", background: "rgba(245,158,11,0.02)", borderBottom: "1px double #262626" }}>
+              <span className="data-label" style={{ fontWeight: "700", color: "#ffffff" }}>&gt;&gt; BAND_PROP_20M</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`} style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}>
+                [{spaceWeather.prop20m}]
+              </span>
+            </div>
             <div className="data-row">
               <span className="data-label">SOLAR_FLUX (SFI)</span>
               <span className="data-value txt-solar-amber">{spaceWeather.sfi}</span>
@@ -334,7 +358,7 @@ export default function Page() {
           {/* Position 3: Engine.Stat */}
           <div className="terminal-panel">
             <div className="panel-header">
-              <div className="panel-title">
+              <div className="terminal-panel">
                 <Sliders style={{ width: "16px", height: "16px" }} /> ENGINE.STAT
               </div>
             </div>
@@ -416,17 +440,4 @@ export default function Page() {
             </div>
           </div>
 
-          <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
-              STREAM_FILTER: JSON_PROXY_NODE // DIRECT_TIMESTAMP_MAP
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-              <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
-            </span>
-          </footer>
-        </div>
-      </main>
-    </div>
-  )
-}
+          <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373
