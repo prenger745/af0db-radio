@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Award, Zap, Activity, ShieldCheck, Database, Sliders, ChevronRight } from "lucide-react"
 
 interface QSO {
@@ -14,90 +12,98 @@ interface QSO {
   grid: string
 }
 
-export default function Page() {
-  const [qsoLogs, setQsoLogs] = useState<QSO[]>([])
-  const [loading, setLoading] = useState(true)
-  const [metrics, setMetrics] = useState({
-    totalQsos: "4,254",
-    currentBand: "20 Meters",
-    currentMode: "FT8"
-  })
+// SECURE SERVER-SIDE DATA FETCH (Exactly like this morning)
+async function getQrzLogs(): Promise<QSO[]> {
+  const apiKey = process.env.NEXT_PUBLIC_QRZ_API_KEY || process.env.QRZ_API_KEY
+  if (!apiKey) {
+    console.error("Missing QRZ_API_KEY environment variable")
+    return []
+  }
 
-  useEffect(() => {
-    async function fetchLiveQrzData() {
-      try {
-        // Fetch securely from our internal backend proxy route
-        const response = await fetch("/api/qrz")
-        if (!response.ok) throw new Error("Backend route returned an error status.")
-        
-        const textData = await response.text()
-        if (textData.includes("RESULT=FAIL")) {
-          console.warn("QRZ API returned failure block. Checking key authentication parameters.")
-          setLoading(false)
-          return
-        }
+  try {
+    const res = await fetch("https://logbook.qrz.com/api", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "AF0DBConsole/2.0.0 (AmateurRadioDashboard)"
+      },
+      body: new URLSearchParams({
+        KEY: apiKey,
+        ACTION: "FETCH",
+        OPTION: "TYPE:ADIF"
+      }),
+      // Revalidate data cache every 15 seconds for live real-time feel safely
+      next: { revalidate: 15 }
+    })
 
-        const parsedLogs: QSO[] = []
-        const records = textData.split(/<eor>/i)
-
-        for (const record of records) {
-          if (!record.trim()) continue
-
-          const extractTagValue = (tag: string) => {
-            const regex = new RegExp(`<${tag}:\\d+>([^<]*)`, "i")
-            const match = record.match(regex)
-            return match ? match[1].trim() : ""
-          }
-
-          const callsign = extractTagValue("call")
-          if (!callsign) continue
-
-          const rawDate = extractTagValue("qso_date")
-          const formattedDate = rawDate.length === 8 
-            ? `${rawDate.substring(0, 4)}-${rawDate.substring(4, 6)}-${rawDate.substring(6, 8)}`
-            : rawDate
-
-          const rawTime = extractTagValue("time_on")
-          const formattedTime = rawTime.length >= 4 
-            ? `${rawTime.substring(0, 2)}:${rawTime.substring(2, 4)}`
-            : rawTime
-
-          parsedLogs.push({
-            callsign: callsign.toUpperCase(),
-            date: formattedDate,
-            time: formattedTime,
-            band: extractTagValue("band") || "—",
-            mode: extractTagValue("mode") || "—",
-            rstS: extractTagValue("rst_sent") || "59",
-            rstR: extractTagValue("rst_rcvd") || "59",
-            grid: extractTagValue("gridsquare") || "—"
-          })
-        }
-
-        // Anti-chronological sort execution block
-        const sortedLogs = parsedLogs.sort((a, b) => {
-          const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
-          const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
-          return dateTimeB.localeCompare(dateTimeA)
-        })
-
-        if (sortedLogs.length > 0) {
-          setQsoLogs(sortedLogs)
-          setMetrics({
-            totalQsos: `${4254 + sortedLogs.length}`, 
-            currentBand: sortedLogs[0].band ? `${sortedLogs[0].band} Meters` : "20 Meters",
-            currentMode: sortedLogs[0].mode || "FT8"
-          })
-        }
-      } catch (err) {
-        console.error("Failed to parse backend data streaming packets:", err)
-      } finally {
-        setLoading(false)
-      }
+    if (!res.ok) return []
+    const textData = await res.text()
+    
+    if (textData.includes("RESULT=FAIL")) {
+      console.error("QRZ Server rejected key authorization:", textData)
+      return []
     }
 
-    fetchLiveQrzData()
-  }, [])
+    // ADIF DATA STREAM PARSER Engine
+    const parsedLogs: QSO[] = []
+    const records = textData.split(/<eor>/i)
+
+    for (const record of records) {
+      if (!record.trim()) continue
+
+      const extractTagValue = (tag: string) => {
+        const regex = new RegExp(`<${tag}:\\d+>([^<]*)`, "i")
+        const match = record.match(regex)
+        return match ? match[1].trim() : ""
+      }
+
+      const callsign = extractTagValue("call")
+      if (!callsign) continue
+
+      const rawDate = extractTagValue("qso_date")
+      const formattedDate = rawDate.length === 8 
+        ? `${rawDate.substring(0, 4)}-${rawDate.substring(4, 6)}-${rawDate.substring(6, 8)}`
+        : rawDate
+
+      const rawTime = extractTagValue("time_on")
+      const formattedTime = rawTime.length >= 4 
+        ? `${rawTime.substring(0, 2)}:${rawTime.substring(2, 4)}`
+        : rawTime
+
+      parsedLogs.push({
+        callsign: callsign.toUpperCase(),
+        date: formattedDate,
+        time: formattedTime,
+        band: extractTagValue("band") || "—",
+        mode: extractTagValue("mode") || "—",
+        rstS: extractTagValue("rst_sent") || "59",
+        rstR: extractTagValue("rst_rcvd") || "59",
+        grid: extractTagValue("gridsquare") || "—"
+      })
+    }
+
+    return parsedLogs
+
+  } catch (e) {
+    console.error("Error retrieving QRZ logbook stream:", e)
+    return []
+  }
+}
+
+export default async function Page() {
+  const rawLogs = await getQrzLogs()
+  
+  // FIXED CHRONOLOGICAL SORT: Absolute newest-at-the-top layout ordering
+  const qsoLogs = [...rawLogs].sort((a, b) => {
+    const dateTimeA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`
+    const dateTimeB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`
+    return dateTimeB.localeCompare(dateTimeA)
+  })
+
+  // Dynamic status parameters to map telemetry modules to real-time entries
+  const liveTotal = qsoLogs.length > 0 ? `${4254 + qsoLogs.length}` : "4,254"
+  const liveBand = qsoLogs.length > 0 && qsoLogs[0].band ? `${qsoLogs[0].band} Meters` : "20 Meters"
+  const liveMode = qsoLogs.length > 0 && qsoLogs[0].mode ? qsoLogs[0].mode : "FT8"
 
   return (
     <div style={{
@@ -135,7 +141,7 @@ export default function Page() {
         .rst-r-box { color: #06b6d4; font-weight: bold; }
       `}} />
 
-      {/* Masthead Banner */}
+      {/* Masthead Banner Banner Layout */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -146,24 +152,24 @@ export default function Page() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
+          <span className="status-bracket">[<span className="status-text">SYS_OK</span>]</span>
           <span className="status-bracket">[<span className="status-text" style={{ color: "#d97706" }}>20M_PRIORITY</span>]</span>
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Grid */}
+      {/* Cyber-Deck Telemetry Grid Boxes */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>01/ ACTIVE_BAND</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffffff", marginTop: "0.15rem" }}>{metrics.currentBand}</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#ffffff", marginTop: "0.15rem" }}>{liveBand}</div>
         </div>
         <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>02/ RIG_MODE</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", marginTop: "0.15rem" }}>{metrics.currentMode}</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#d97706", marginTop: "0.15rem" }}>{liveMode}</div>
         </div>
         <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>03/ TOTAL_QSO_COUNT</span>
-          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#22c55e", marginTop: "0.15rem" }}>{metrics.totalQsos}</div>
+          <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#22c55e", marginTop: "0.15rem" }}>{liveTotal}</div>
         </div>
         <div className="terminal-panel" style={{ padding: "0.75rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#525252", textTransform: "uppercase", display: "block" }}>04/ STATION_GRID</span>
@@ -171,7 +177,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Main Workspace Console */}
+      {/* Workspace Area Layout Frame */}
       <main className="deck-workspace">
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="terminal-panel">
@@ -219,12 +225,12 @@ export default function Page() {
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">DATASET_SYNC</span>
-              <span className="data-value txt-aviation-blue">SECURE</span>
+              <span className="data-value txt-aviation-blue">ACTIVE</span>
             </div>
           </div>
         </div>
 
-        {/* Right Module: Logbook Data Stream */}
+        {/* Right Module Panel Table Columns Grid */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
@@ -248,16 +254,10 @@ export default function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#d97706", fontStyle: "italic" }}>
-                        &gt;&gt; Querying internal server gateway for secure ADIF packets...
-                      </td>
-                    </tr>
-                  ) : qsoLogs.length === 0 ? (
+                  {qsoLogs.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ef4444", fontStyle: "italic" }}>
-                        &gt;&gt; Connection Standby. Real-time logging data stream blank.
+                        &gt;&gt; Live Log stream data packet parsing empty. Verify key token.
                       </td>
                     </tr>
                   ) : (
@@ -271,11 +271,11 @@ export default function Page() {
                           <span className="badge-mode-tactical">{qso.mode}</span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span className="matrix-table rst-s-box">{qso.rstS}</span>
+                          <span className="rst-s-box">{qso.rstS}</span>
                           <span style={{ color: "#262626", margin: "0 0.25rem" }}>|</span>
-                          <span className="matrix-table rst-r-box">{qso.rstR}</span>
+                          <span className="rst-r-box">{qso.rstR}</span>
                         </td>
-                        <td style={{ color: "#737373" }}>{qso.grid}</td>
+                        <td style={{ color: "#737373" }}>{qso.grid || "—"}</td>
                       </tr>
                     ))
                   )}
@@ -287,10 +287,10 @@ export default function Page() {
           <footer style={{ marginTop: "1.5rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#525252" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <Globe style={{ width: "12px", height: "12px", color: "#404040" }} /> 
-              STREAM_FILTER: SERVER_NODE_PROXY // SYSTEM_TIMESTAMP_MAP
+              STREAM_FILTER: NATIVE_SERVER_PROP // DIRECT_TIMESTAMP_MAP
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-              <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> BUILD_VERIFIED: 1.6.0
+              <ShieldCheck style={{ width: "12px", height: "12px", color: "#22c55e" }} /> STATUS: OPERATIONAL_SECURE
             </span>
           </footer>
         </div>
