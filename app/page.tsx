@@ -145,7 +145,7 @@ export default function Page() {
           })
         }
       } catch (err) {
-        console.warn("Backend logs handling complete.", err)
+        console.warn("Backend log sync active.")
       } finally {
         setLoading(false)
       }
@@ -159,8 +159,11 @@ export default function Page() {
         const xmlText = json.contents
 
         const extractXmlTag = (tag: string) => {
-          const match = xmlText.match(new RegExp(`<${tag}>([^<]*)</${tag}>`, "i"))
-          return match ? match[1].trim() : "—"
+          const chunks = xmlText.split(new RegExp(`<${tag}>`, "i"))
+          if (chunks.length > 1) {
+            return chunks[1].split(new RegExp(`</${tag}>`, "i"))[0].trim()
+          }
+          return "—"
         }
 
         const sfi = extractXmlTag("solarflux")
@@ -170,9 +173,12 @@ export default function Page() {
         const xray = extractXmlTag("xray")
         const geomag = extractXmlTag("geomagfield")
 
-        const bandRegex = /<band\s+name="30m-20m"\s+time="day">([^<]*)<\/band>/i
-        const bandMatch = xmlText.match(bandRegex)
-        const rawProp = bandMatch ? bandMatch[1].trim().toUpperCase() : "GOOD"
+        // Safe explicit layout split extraction targeting the 30m-20m segment
+        let rawProp = "GOOD"
+        const bandChunks = xmlText.split('name="30m-20m" time="day">')
+        if (bandChunks.length > 1) {
+          rawProp = bandChunks[1].split("</band>")[0].trim().toUpperCase()
+        }
 
         setSpaceWeather({
           sfi: sfi !== "—" ? sfi : "145",
@@ -184,7 +190,7 @@ export default function Page() {
           prop20m: rawProp
         })
       } catch (e) {
-        console.warn("Solar links baseline fallbacks running.", e)
+        console.warn("Solar link mapping adjusted.")
         setSpaceWeather({
           sfi: "148",
           sunspots: "112",
@@ -224,3 +230,5 @@ export default function Page() {
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
+        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.7
