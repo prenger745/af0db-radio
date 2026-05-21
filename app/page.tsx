@@ -147,7 +147,8 @@ export default function Page() {
       case "30M":
       case "20M":
         if (sfi > 140) return "GREAT";
-        if (sfi > 90) return "GOOD" : "FAIR";
+        if (sfi > 90) return "GOOD";
+        return "FAIR";
       case "17M":
       case "15M":
         if (isNight) return "CLOSED";
