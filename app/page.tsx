@@ -287,7 +287,7 @@ const getPropRating = (band: string) => {
           className="terminal-panel-interactive"
         >
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
-            COUNTRIES CONTACTED ↗
+            GLOBAL MAP VIEW ↗
           </span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>
             {stats.dxcc}
