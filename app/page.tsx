@@ -63,16 +63,17 @@ export default function Page() {
         
         const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
         const countMatch = cleanText.match(/COUNT=([^&]*)/i) || cleanText.match(/"COUNT":"(\d+)"/i)
-        const confMatch = cleanText.match(/CONFIRMED=([^&]*)/i) || cleanText.match(/"CONFIRMED":"(\d+)"/i)
         const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i) || cleanText.match(/"DXCC_COUNT":"(\d+)"/i)
 
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,008"
-        const liveConfirmed = confMatch ? confMatch[1].split('&')[0] : "792"
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74"
 
         let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText
         const parsedLogs: QSO[] = []
         const records = adifContent.split(/<eor>/i)
+
+        // Reset our confirmation calculation tracker
+        let calculatedConfirmations = 0
 
         for (const record of records) {
           if (!record.trim()) continue
@@ -82,6 +83,13 @@ export default function Page() {
           }
           const call = extractTag("call")
           if (!call) continue
+
+          // Count confirmations by scanning the ADIF tracking fields directly
+          const qslRcvd = extractTag("qsl_rcvd").toUpperCase()
+          const lotwRcvd = extractTag("lotw_qsl_rcvd").toUpperCase()
+          if (qslRcvd === "Y" || lotwRcvd === "Y") {
+            calculatedConfirmations++
+          }
 
           const rD = extractTag("qso_date")
           const fD = rD.length === 8 ? `${rD.substring(0, 4)}-${rD.substring(4, 6)}-${rD.substring(6, 8)}` : rD
@@ -113,7 +121,7 @@ export default function Page() {
           setIsLiveStream(true)
           setStats({
             totalQsos: liveCount,
-            confirmed: liveConfirmed,
+            confirmed: calculatedConfirmations.toLocaleString() || liveCount,
             dxcc: liveDxcc,
             currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
             currentMode: newestFifteen[0].mode || "FT8"
