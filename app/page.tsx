@@ -343,9 +343,10 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className={`data-value ${getPropColorClass(spaceWeather.prop30m)}`}>[{spaceWeather.prop30m}]</span>
             </div>
-            <div className="data-row" style={{ background: "rgba(245,158,11,0.03)", paddingLeft: "0.25rem", paddingRight: "0.25rem" }}>
-              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
-              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`}>[{spaceWeather.prop20m}]</span>
+            {/* Realignment Fix: Standard layout properties now map this row exactly with the standard container flow */}
+            <div className="data-row" style={{ background: "rgba(245,158,11,0.04)" }}>
+              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700", paddingLeft: "0.25rem" }}>20M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`} style={{ paddingRight: "0.25rem" }}>[{spaceWeather.prop20m}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
@@ -419,48 +420,3 @@ export default function Page() {
                   {logs.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
-                        &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
-                      </td>
-                    </tr>
-                  ) : (
-                    logs.map((qso, index) => (
-                      <tr key={index}>
-                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="font-mono-data">
-                          {qso.callsign}
-                        </td>
-                        <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
-                        <td style={{ fontWeight: "500" }}>{qso.time}</td>
-                        <td style={{ fontWeight: "500" }}>{qso.band}</td>
-                        <td>
-                          <span className="badge-mode-tactical">{qso.mode}</span>
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
-                          <span className="rst-r-box">{qso.rstR}</span>
-                        </td>
-                        <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="font-mono-data">
-                          {qso.grid || "—"}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
-              STREAM_FILTER: JSON_PROXY_NODE // DIRECT_TIMESTAMP_MAP
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-              <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
-            </span>
-          </footer>
-        </div>
-      </main>
-    </div>
-  )
-}
