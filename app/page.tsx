@@ -192,12 +192,4 @@ export default function Page() {
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
         .matrix-table tr:nth-child(even) { background: #161616; }
         .matrix-table tr:hover { background: #1f1f1f; }
-        .txt-neon-green { color: #10b981; }
-        .txt-aviation-blue { color: #06b6d4; }
-        .txt-solar-amber { color: #f59e0b; }
-        .status-bracket { font-size: 0.75rem; color: #525252; font-weight: 600; }
-        .status-text { color: #10b981; font-weight: 700; padding: 0 0.25rem; }
-        .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); letter-spacing: 0.02em; }
-        .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
-        .rst-r-box { color: #06b6d4; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
-        .font-mono-data { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono',
+        .txt-neon-green
