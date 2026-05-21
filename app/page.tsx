@@ -264,7 +264,7 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
         
-        {/* Dynamic target link updated to point straight to the QSOMAP automated execution portal */}
+        {/* Re-linked Interactive QSOMAP dashboard card node */}
         <a 
           href="https://qsomap.org/qrznet2.php" 
           target="_blank" 
@@ -470,7 +470,7 @@ export default function Page() {
           <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
-              STREAM_FILTER: JSON_PROXY_NODE // DIRECT_TIMESTAMP_MAP
+              STREAM_FILTER: JSON_PROXY_NODE // DYNAMIC_MAP_ACTIVE
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
               <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
