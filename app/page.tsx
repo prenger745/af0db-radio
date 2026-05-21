@@ -48,8 +48,6 @@ export default function Page() {
     currentBand: "20 Meters",
     currentMode: "FT8"
   })
-  
-  // High-visibility tracking states mapped explicitly to bypass secondary API racing conflicts
   const [spaceWeather] = useState<SpaceWeather>({
     sfi: "145",
     sunspots: "98",
@@ -66,7 +64,6 @@ export default function Page() {
     prop12m: "GOOD",
     prop10m: "GOOD"
   })
-  
   const [loading, setLoading] = useState(true)
   const [isLiveStream, setIsLiveStream] = useState(false)
 
@@ -233,19 +230,19 @@ export default function Page() {
               <ChevronRight style={{ width: "14px", height: "14px", color: "#525252" }} />
             </div>
             <div className="data-row">
-              <span className="data-label"><Compass style={{ width: "14px", height: "14px" }} /> STATION QTH</span>
+              <span className="data-label">STATION QTH</span>
               <span className="data-value" style={{ color: "#ffffff" }}>OTTAWA, KS</span>
             </div>
             <div className="data-row">
-              <span className="data-label"><Signal style={{ width: "14px", height: "14px" }} /> MAIN RIG</span>
+              <span className="data-label">MAIN RIG</span>
               <span className="data-value" style={{ color: "#ffffff" }}>YAESU FT-991</span>
             </div>
             <div className="data-row">
-              <span className="data-label"><Radio style={{ width: "14px", height: "14px" }} /> ANTENNA</span>
+              <span className="data-label">ANTENNA</span>
               <span className="data-value" style={{ color: "#ffffff" }}>ISOTRON 20M</span>
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label"><Laptop style={{ width: "14px", height: "14px" }} /> ARCH SUITE</span>
+              <span className="data-label">ARCH SUITE</span>
               <span className="data-value" style={{ color: "#ffffff" }}>XUBUNTU/HAM</span>
             </div>
           </div>
@@ -300,10 +297,13 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop30m}]</span>
             </div>
+            
+            {/* The flex formatting property applied here forces alignment with the matching column elements */}
             <div className="data-row" style={{ background: "rgba(245,158,11,0.04)", paddingLeft: "0.35rem", paddingRight: "0.35rem", borderRadius: "4px" }}>
               <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop20m}]</span>
+              <span className="data-value txt-neon-green" style={{ marginLeft: "auto" }}>[{spaceWeather.prop20m}]</span>
             </div>
+            
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop17m}]</span>
