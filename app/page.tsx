@@ -200,7 +200,7 @@ export default function Page() {
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         
-        .terminal-panel-interactive { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; text-decoration: none !important; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .terminal-panel-interactive { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; text-decoration: none !important; cursor: pointer; transition: all 0.2s ease-in-out; display: block; }
         .terminal-panel-interactive:hover { border-color: #f59e0b; background: #171717; transform: translateY(-2px); }
         
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
@@ -245,7 +245,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Top Strip (Now fully housing all 5 card elements) */}
+      {/* Cyber-Deck Telemetry Top Strip */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
@@ -264,7 +264,7 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
         
-        {/* Enclosed dynamic anchor link element mapped to point straight to the QSOMAP global engine */}
+        {/* Clickable Card Link explicitly rendering as the 5th block element */}
         <a 
           href="https://qsomap.org/qrznet2.php" 
           target="_blank" 
@@ -470,7 +470,7 @@ export default function Page() {
           <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
-              STREAM_FILTER: JSON_PROXY_NODE // DYNAMIC_MAP_ACTIVE
+              STREAM_FILTER: JSON_PROXY_NODE // GLOBAL_DYNAMIC_MAP_OK
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
               <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
@@ -481,4 +481,3 @@ export default function Page() {
     </div>
   )
 }
-// FORCE_CACHE_BUST_V2
