@@ -160,9 +160,12 @@ export default function Page() {
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex: 1; min-width: 0; }
-        .data-value { font-weight: 600; flex-shrink: 0; text-align: right; margin-left: 0.5rem; }
+        
+        /* Master Flexbox Container configuration across all data blocks */
+        .data-row { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex-grow: 1; text-align: left; }
+        .data-value { font-weight: 600; flex-shrink: 0; text-align: right; }
+        
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
@@ -285,6 +288,7 @@ export default function Page() {
               HF Band Real-Time Profiles
             </div>
 
+            {/* Standardized width grid across all profiles */}
             <div className="data-row">
               <span className="data-label">80M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop80m}]</span>
@@ -297,13 +301,10 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop30m}]</span>
             </div>
-            
-            {/* The flex formatting property applied here forces alignment with the matching column elements */}
             <div className="data-row" style={{ background: "rgba(245,158,11,0.04)", paddingLeft: "0.35rem", paddingRight: "0.35rem", borderRadius: "4px" }}>
               <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
-              <span className="data-value txt-neon-green" style={{ marginLeft: "auto" }}>[{spaceWeather.prop20m}]</span>
+              <span className="data-value txt-neon-green">[{spaceWeather.prop20m}]</span>
             </div>
-            
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop17m}]</span>
