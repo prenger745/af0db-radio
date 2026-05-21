@@ -195,15 +195,20 @@ export default function Page() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1rem; }
         @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } } /* Scaled to 5 blocks */
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex: 1; min-width: 0; }
+        
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100% !important; background: transparent !important; }
+        .data-label { color: #a3a3a3 !important; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex: 1; }
         .data-value { font-weight: 600; flex-shrink: 0; text-align: right; margin-left: 0.5rem; }
+        
+        .forced-row-reset { background: transparent !important; padding-left: 0 !important; padding-right: 0 !important; border-radius: 0 !important; }
+        .forced-label-reset { color: #a3a3a3 !important; font-weight: 600 !important; }
+        
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
@@ -236,7 +241,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Top Strip */}
+      {/* Cyber-Deck Telemetry Top Strip (Now 5 blocks wide layout) */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
@@ -253,6 +258,11 @@ export default function Page() {
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
+        </div>
+        {/* New 5th Dashboard Block item inserted right next to confirmed list */}
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.dxcc}</div>
         </div>
       </section>
 
@@ -296,7 +306,6 @@ export default function Page() {
               </div>
             </div>
             
-            {/* Core General Metrics Block */}
             <div className="data-row">
               <span className="data-label">SOLAR FLUX (SFI)</span>
               <span className="data-value txt-solar-amber">{sfi}</span>
@@ -338,13 +347,10 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
             </div>
-            
-            {/* Realignment Fix: Standardized to use the identical, plain class structures as the other rows */}
-            <div className="data-row">
-              <span className="data-label">20M Band Propagation</span>
+            <div className="data-row forced-row-reset">
+              <span className="data-label forced-label-reset">20M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
             </div>
-            
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
@@ -391,7 +397,7 @@ export default function Page() {
         </div>
 
         {/* Right Column Stack: Log ledger */}
-        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyBetween: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
