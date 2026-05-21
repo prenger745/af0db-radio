@@ -22,23 +22,6 @@ interface StationMetrics {
   currentMode: string
 }
 
-interface SpaceWeather {
-  sfi: string
-  sunspots: string
-  aIndex: string
-  kIndex: string
-  xray: string
-  conditions: string
-  prop80m: string
-  prop40m: string
-  prop30m: string
-  prop20m: string
-  prop17m: string
-  prop15m: string
-  prop12m: string
-  prop10m: string
-}
-
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([])
   const [stats, setStats] = useState<StationMetrics>({
@@ -48,24 +31,18 @@ export default function Page() {
     currentBand: "20 Meters",
     currentMode: "FT8"
   })
-  const [spaceWeather] = useState<SpaceWeather>({
-    sfi: "145",
-    sunspots: "98",
-    aIndex: "10",
-    kIndex: "1",
-    xray: "A0.0",
-    conditions: "NORMAL / QUIET",
-    prop80m: "GOOD",
-    prop40m: "GOOD",
-    prop30m: "GOOD",
-    prop20m: "GOOD",
-    prop17m: "GOOD",
-    prop15m: "GOOD",
-    prop12m: "GOOD",
-    prop10m: "GOOD"
-  })
+  
+  // Real-time atmospheric telemetry base states
+  const [sfi, setSfi] = useState<number>(145)
+  const [sunspots, setSunspots] = useState<string>("98")
+  const [aIndex, setAIndex] = useState<string>("10")
+  const [kIndex, setKIndex] = useState<number>(1)
+  const [xray, setXray] = useState<string>("A0.0")
+  const [conditions, setConditions] = useState<string>("NORMAL / QUIET")
+  
   const [loading, setLoading] = useState(true)
   const [isLiveStream, setIsLiveStream] = useState(false)
+  const [isNight, setIsNight] = useState<boolean>(false)
 
   useEffect(() => {
     async function parseLiveQrzData() {
@@ -81,6 +58,29 @@ export default function Page() {
 
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058"
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74"
+
+        // Local system clock mapping to derive true day/night propagation variables
+        const currentHour = new Date().getUTCHours()
+        if (currentHour < 11 || currentHour > 23) {
+          setIsNight(true)
+        } else {
+          setIsNight(false)
+        }
+
+        // Live telemetry updates extracted from the primary proxy server string mapping
+        const sfiM = cleanText.match(/<solarflux>([^<]*)/i)
+        const sspotsM = cleanText.match(/<sunspots>([^<]*)/i)
+        const aM = cleanText.match(/<aindex>([^<]*)/i)
+        const kM = cleanText.match(/<kindex>([^<]*)/i)
+        const xrayM = cleanText.match(/<xray>([^<]*)/i)
+        const condM = cleanText.match(/<geomagfield>([^<]*)/i)
+
+        if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145)
+        if (sspotsM) setSunspots(sspotsM[1].trim() || "98")
+        if (aM) setAIndex(aM[1].trim() || "10")
+        if (kM) setKIndex(parseInt(kM[1].trim()) || 1)
+        if (xrayM) setXray(xrayM[1].trim() || "A0.0")
+        if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET")
 
         let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText
         const parsedLogs: QSO[] = []
@@ -140,6 +140,45 @@ export default function Page() {
     parseLiveQrzData()
   }, [])
 
+  // Scientific calculation engine that outputs the exact states based on incoming SFI and K-Index numbers
+  const getPropRating = (band: string) => {
+    if (kIndex >= 5) return "CLOSED"
+    if (kIndex >= 4) return "POOR"
+
+    switch (band) {
+      case "80M":
+      case "40M":
+        if (!isNight) return "CLOSED"
+        return sfi > 120 ? "GREAT" : sfi > 90 ? "GOOD" : "FAIR"
+      case "30M":
+      case "20M":
+        if (sfi > 140) return "GREAT"
+        if (sfi > 90) return "GOOD"
+        return "FAIR"
+      case "17M":
+      case "15M":
+        if (isNight) return "CLOSED"
+        if (sfi > 150) return "GREAT"
+        if (sfi > 110) return "GOOD"
+        return "POOR"
+      case "12M":
+      case "10M":
+        if (isNight) return "CLOSED"
+        if (sfi > 170) return "GREAT"
+        if (sfi > 130) return "GOOD"
+        if (sfi > 100) return "FAIR"
+        return "POOR"
+      default:
+        return "FAIR"
+    }
+  }
+
+  const getColorClass = (rating: string) => {
+    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green"
+    if (rating === "FAIR") return "txt-solar-amber"
+    return "rst-r-box" // Styles POOR / CLOSED as dim aviation crimson
+  }
+
   return (
     <div style={{
       backgroundColor: "#0a0a0a",
@@ -160,12 +199,9 @@ export default function Page() {
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        
-        /* Flex rows to align labels left and statuses right */
         .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; }
-        .data-value { font-weight: 600; text-align: right; }
-        
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex: 1; min-width: 0; }
+        .data-value { font-weight: 600; flex-shrink: 0; text-align: right; margin-left: 0.5rem; }
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
@@ -178,7 +214,7 @@ export default function Page() {
         .status-text { color: #10b981; font-weight: 700; padding: 0 0.25rem; }
         .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); letter-spacing: 0.02em; }
         .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
-        .rst-r-box { color: #06b6d4; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
+        .rst-r-box { color: #ef4444; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
         .font-mono-data { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-weight: 600; }
       `}} />
 
@@ -258,68 +294,67 @@ export default function Page() {
               </div>
             </div>
             
-            {/* Core General Metrics Block */}
             <div className="data-row">
               <span className="data-label">SOLAR FLUX (SFI)</span>
-              <span className="data-value txt-solar-amber">{spaceWeather.sfi}</span>
+              <span className="data-value txt-solar-amber">{sfi}</span>
             </div>
             <div className="data-row">
               <span className="data-label">SUNSPOT NUMBER</span>
-              <span className="data-value font-mono-data" style={{ color: "#ffffff" }}>{spaceWeather.sunspots}</span>
+              <span className="data-value font-mono-data" style={{ color: "#ffffff" }}>{sunspots}</span>
             </div>
             <div className="data-row">
               <span className="data-label">A INDEX</span>
-              <span className="data-value font-mono-data" style={{ color: "#a3a3a3" }}>{spaceWeather.aIndex}</span>
+              <span className="data-value font-mono-data" style={{ color: "#a3a3a3" }}>{aIndex}</span>
             </div>
             <div className="data-row">
               <span className="data-label">K INDEX</span>
-              <span className="data-value font-mono-data txt-neon-green">{spaceWeather.kIndex}</span>
+              <span className="data-value font-mono-data txt-neon-green">{kIndex}</span>
             </div>
             <div className="data-row">
               <span className="data-label">XRAY FLUX</span>
-              <span className="data-value txt-aviation-blue">{spaceWeather.xray}</span>
+              <span className="data-value txt-aviation-blue">{xray}</span>
             </div>
             <div className="data-row" style={{ marginBottom: "0.5rem" }}>
               <span className="data-label">GEOMAG FIELD</span>
-              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{spaceWeather.conditions}</span>
+              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
             </div>
 
             <div style={{ color: "#f59e0b", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed #262626", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               HF Band Real-Time Profiles
             </div>
 
-            {/* Standardized, identical classes mapping every line parameter evenly */}
+            {/* Matrix array drawing from the direct calculated rating functions */}
             <div className="data-row">
               <span className="data-label">80M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop80m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">40M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop40m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("40M"))}`}>[{getPropRating("40M")}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">30M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop30m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">20M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop20m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop17m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">15M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop15m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">12M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop12m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">10M Band Propagation</span>
-              <span className="data-value txt-neon-green">[{spaceWeather.prop10m}]</span>
+              <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
           </div>
 
