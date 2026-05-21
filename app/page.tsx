@@ -200,7 +200,6 @@ export default function Page() {
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         
-        /* Clickable interactive modifier class for the map panel block link */
         .terminal-panel-interactive { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; text-decoration: none !important; cursor: pointer; transition: all 0.2s ease-in-out; }
         .terminal-panel-interactive:hover { border-color: #f59e0b; background: #171717; transform: translateY(-2px); }
         
@@ -265,16 +264,16 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
         
-        {/* Clickable Card Link connected straight to your public QRZ interactive log mapping screen */}
+        {/* Dynamic target link updated to point straight to the QSOMAP automated execution portal */}
         <a 
-          href="https://www.qrz.com/db/AF0DB" 
+          href="https://qsomap.org/qrznet2.php" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="terminal-panel-interactive" 
           style={{ padding: "1rem 1.25rem" }}
         >
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
-            COUNTRIES CONTACTED ↗
+            VIEW LIVE MAP ↗
           </span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.dxcc}</div>
         </a>
