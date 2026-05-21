@@ -136,10 +136,9 @@ export default function Page() {
     return () => clearInterval(automatedRefreshCycle);
   }, []);
 
-const getPropRating = (band: string) => {
+  const getPropRating = (band: string) => {
     if (kIndex >= 5) return "CLOSED";
     if (kIndex >= 4) return "POOR";
-
     switch (band) {
       case "80M":
       case "40M":
@@ -154,14 +153,14 @@ const getPropRating = (band: string) => {
       case "15M":
         if (isNight) return "CLOSED";
         if (sfi > 150) return "GREAT";
-        if (sfi > 115) return "GOOD";
+        if (sfi > 110) return "GOOD";
         return "POOR";
       case "12M":
       case "10M":
         if (isNight) return "CLOSED";
         if (sfi > 175) return "GREAT";
-        if (sfi > 155) return "GOOD"; // Raised to match true 10m open levels
-        if (sfi > 125) return "FAIR"; // Stricter baseline threshold
+        if (sfi > 155) return "GOOD";
+        if (sfi > 125) return "FAIR";
         return "POOR";
       default:
         return "FAIR";
@@ -212,9 +211,9 @@ const getPropRating = (band: string) => {
           color: inherit !important;
           cursor: pointer !important;
           transition: all 0.25s ease !important;
-          display: block !important;
-          height: 100% !important;
-          width: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
         }
         .terminal-panel-interactive:hover {
           border-color: #f59e0b !important;
@@ -279,15 +278,16 @@ const getPropRating = (band: string) => {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* TARGET DIRECTLY CONNECTED TO INTERACTIVE QSOMAP ENGINE */}
+        {/* RESTORED VISUAL FORMATTING LINK PANEL */}
         <a
           href="https://qsomap.org/qrznet2.php"
           target="_blank"
           rel="noopener noreferrer"
           className="terminal-panel-interactive"
+          style={{ padding: "1rem 1.25rem" }}
         >
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
-            GLOBAL MAP VIEW ↗
+            COUNTRIES CONTACTED ↗
           </span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>
             {stats.dxcc}
