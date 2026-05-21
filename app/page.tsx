@@ -194,6 +194,9 @@ export default function Page() {
         @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } }
 
+        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
+
         .terminal-panel {
           background: #121212;
           border: 1px solid #262626;
@@ -226,9 +229,13 @@ export default function Page() {
         .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
         .data-label { color: #a3a3a3 !important; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
         .data-value { font-weight: 600; text-align: right; }
+        
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
+        .matrix-table tr:nth-child(even) { background: #161616; }
+        .matrix-table tr:hover { background: #1f1f1f; }
+
         .txt-neon-green { color: #10b981; }
         .txt-solar-amber { color: #f59e0b; }
         .txt-aviation-blue { color: #06b6d4; }
@@ -278,13 +285,12 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* RESTORED VISUAL FORMATTING LINK PANEL */}
+        {/* FIXED TARGET LINK INCORPORATING DIRECT CALLSIGN PASS-THROUGH ROUTING */}
         <a
-          href="https://qsomap.org/qrznet2.php"
+          href="https://qsomap.org/qrznet2.php?callsign=AF0DB"
           target="_blank"
           rel="noopener noreferrer"
           className="terminal-panel-interactive"
-          style={{ padding: "1rem 1.25rem" }}
         >
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
             COUNTRIES CONTACTED ↗
@@ -295,8 +301,8 @@ export default function Page() {
         </a>
       </section>
 
-      {/* Main Content */}
-      <main style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="deck-workspace">
+      {/* Main Workspace (Inline style override removed; allowing parent grid split to engage) */}
+      <main className="deck-workspace">
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {/* Shack Gear */}
           <div className="terminal-panel">
@@ -325,12 +331,59 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Live Logs Panel */}
+        {/* Live Logs Panel Ledger with full table map structure included */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column" }}>
           <div className="panel-header">
             <div className="panel-title">
               <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
             </div>
+          </div>
+          
+          <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
+            <table className="matrix-table">
+              <thead>
+                <tr>
+                  <th>CALLSIGN</th>
+                  <th>DATE (UTC)</th>
+                  <th>TIME</th>
+                  <th>BAND</th>
+                  <th>MODE</th>
+                  <th style={{ textAlign: "center" }}>RST (S/R)</th>
+                  <th>GRID LOC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
+                      &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
+                    </td>
+                  </tr>
+                ) : (
+                  logs.map((qso, index) => (
+                    <tr key={index}>
+                      <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="font-mono-data">
+                        {qso.callsign}
+                      </td>
+                      <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
+                      <td style={{ fontWeight: "500" }}>{qso.time}</td>
+                      <td style={{ fontWeight: "500" }}>{qso.band}</td>
+                      <td>
+                        <span className="badge-mode-tactical">{qso.mode}</span>
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className="rst-s-box">{qso.rstS}</span>
+                        <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
+                        <span className="rst-r-box">{qso.rstR}</span>
+                      </td>
+                      <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="font-mono-data">
+                        {qso.grid || "—"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </main>
