@@ -157,135 +157,235 @@ export default function Page() {
     loadLiveSolarConditions()
   }, [])
 
+  const getPropColorClass = (status: string) => {
+    if (status.includes("GOOD")) return "txt-neon-green"
+    if (status.includes("FAIR")) return "txt-solar-amber"
+    return "rst-r-box"
+  }
+
   return (
-    <div style={{ backgroundColor: "#0a0a0a", color: "#e5e5e5", minHeight: "100vh", padding: "1.5rem", fontFamily: "monospace" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
+    <div style={{
+      backgroundColor: "#0a0a0a",
+      color: "#e5e5e5",
+      minHeight: "100vh",
+      padding: "1.5rem",
+      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      boxSizing: "border-box",
+      letterSpacing: "0.01em"
+    }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1rem; }
+        @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
+        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
+        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
+        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; }
+        .data-value { color: #ffffff; font-weight: 600; }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+        .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
+        .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
+        .matrix-table tr:nth-child(even) { background: #161616; }
+        .matrix-table tr:hover { background: #1f1f1f; }
+        .txt-neon-green { color: #10b981; }
+        .txt-aviation-blue { color: #06b6d4; }
+        .txt-solar-amber { color: #f59e0b; }
+        .status-bracket { font-size: 0.75rem; color: #525252; font-weight: 600; }
+        .status-text { color: #10b981; font-weight: 700; padding: 0 0.25rem; }
+        .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); letter-spacing: 0.02em; }
+        .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
+        .rst-r-box { color: #06b6d4; font-weight: 600; font-family: monospace; font-size: 0.9rem; }
+        .font-mono-data { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-weight: 600; }
+      `}} />
+
+      {/* Header Banner */}
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", margin: "0 0 1.5rem 0" }}>
         <div>
-          <h1 style={{ fontSize: "1.2rem", color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Radio style={{ width: "18px" }} /> DANIEL McGURK // AFØDB STATION LOG
+          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
+            <Radio style={{ width: "20px", height: "20px" }} /> DANIEL McGURK // AFØDB STATION LOG
           </h1>
+          <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500 }}>
+            Real-Time QRZ API Live Data Stream // Connected
+          </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", color: "#10b981", fontSize: "0.8rem" }}>
-          <span>[{loading ? "SYNCING" : "SYS_OK"}]</span>
-          <span style={{ color: "#f59e0b" }}>[{isLiveStream ? "LIVE_FEED" : "STANDBY"}]</span>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#f59e0b" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
 
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
-          <div style={{ color: "#737373", fontSize: "0.7rem" }}>01/ ACTIVE_BAND</div>
-          <div style={{ fontSize: "1.4rem", fontWeight: "bold", marginTop: "0.25rem" }}>{stats.currentBand}</div>
+      {/* Cyber-Deck Telemetry Top Strip */}
+      <section className="telemetry-strip">
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>01/ ACTIVE_BAND</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff", marginTop: "0.25rem" }}>{stats.currentBand}</div>
         </div>
-        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
-          <div style={{ color: "#737373", fontSize: "0.7rem" }}>02/ RIG_MODE</div>
-          <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#f59e0b", marginTop: "0.25rem" }}>{stats.currentMode}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>02/ RIG_MODE</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.25rem" }}>{stats.currentMode}</div>
         </div>
-        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
-          <div style={{ color: "#737373", fontSize: "0.7rem" }}>03/ TOTAL_QSO_COUNT</div>
-          <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#10b981", marginTop: "0.25rem" }}>{stats.totalQsos}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>03/ TOTAL_QSO_COUNT</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#10b981", marginTop: "0.25rem" }}>{stats.totalQsos}</div>
         </div>
-        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
-          <div style={{ color: "#737373", fontSize: "0.7rem" }}>04/ CONFIRMED_QSOs</div>
-          <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#06b6d4", marginTop: "0.25rem" }}>{stats.confirmed}</div>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>04/ CONFIRMED_QSOs</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#06b6d4", marginTop: "0.25rem" }}>{stats.confirmed}</div>
         </div>
       </section>
 
-      <main style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+      {/* 2-Column Split Dashboard Wrapper */}
+      <main className="deck-workspace">
+        
+        {/* Left Column Stack: Fixed width 320px bounding box container */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
-          <div style={{ background: "#121212", border: "1px solid #262626", padding: "1.25rem", borderRadius: "8px" }}>
-            <div style={{ color: "#f59e0b", fontSize: "0.8rem", borderBottom: "1px solid #262626", paddingBottom: "0.5rem", marginBottom: "0.75rem", fontWeight: "bold" }}>HAMSHACK GEAR</div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>STATION QTH</span><span>OTTAWA, KS</span>
+          {/* Card 1: Shack Gear */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <Cpu style={{ width: "16px", height: "16px" }} /> HAMSHACK GEAR
+              </div>
+              <ChevronRight style={{ width: "14px", height: "14px", color: "#525252" }} />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>MAIN RIG</span><span>YAESU FT-991</span>
+            <div className="data-row">
+              <span className="data-label"><Compass style={{ width: "14px", height: "14px" }} /> STATION QTH</span>
+              <span className="data-value">OTTAWA, KS</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>ANTENNA</span><span>ISOTRON 20M</span>
+            <div className="data-row">
+              <span className="data-label"><Signal style={{ width: "14px", height: "14px" }} /> MAIN RIG</span>
+              <span className="data-value">YAESU FT-991</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>ARCH SUITE</span><span>XUBUNTU/HAM</span>
+            <div className="data-row">
+              <span className="data-label"><Radio style={{ width: "14px", height: "14px" }} /> ANTENNA</span>
+              <span className="data-value">ISOTRON 20M</span>
             </div>
-          </div>
-
-          <div style={{ background: "#121212", border: "1px solid #262626", padding: "1.25rem", borderRadius: "8px" }}>
-            <div style={{ color: "#f59e0b", fontSize: "0.8rem", borderBottom: "1px solid #262626", paddingBottom: "0.5rem", marginBottom: "0.75rem", fontWeight: "bold" }}>SOLAR WEATHER (N0NBH)</div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", background: "rgba(245,158,11,0.02)", borderBottom: "1px solid #262626", fontSize: "0.85rem", fontWeight: "bold" }}>
-              <span style={{ color: "#fff" }}>&gt;&gt; BAND_PROP_20M</span>
-              <span style={{ color: spaceWeather.prop20m.includes("GOOD") ? "#10b981" : "#f59e0b" }}>[{spaceWeather.prop20m}]</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>SOLAR_FLUX (SFI)</span><span style={{ color: "#f59e0b" }}>{spaceWeather.sfi}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>SUNSPOT_NUMBER</span><span>{spaceWeather.sunspots}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>A_INDEX</span><span style={{ color: "#a3a3a3" }}>{spaceWeather.aIndex}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>K_INDEX</span><span style={{ color: "#10b981" }}>{spaceWeather.kIndex}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>XRAY_FLUX</span><span style={{ color: "#06b6d4" }}>{spaceWeather.xray}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>GEOMAG_FIELD</span><span style={{ color: "#10b981" }}>{spaceWeather.conditions}</span>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label"><Laptop style={{ width: "14px", height: "14px" }} /> ARCH SUITE</span>
+              <span className="data-value">XUBUNTU/HAM</span>
             </div>
           </div>
 
-          <div style={{ background: "#121212", border: "1px solid #262626", padding: "1.25rem", borderRadius: "8px" }}>
-            <div style={{ color: "#f59e0b", fontSize: "0.8rem", borderBottom: "1px solid #262626", paddingBottom: "0.5rem", marginBottom: "0.75rem", fontWeight: "bold" }}>ENGINE.STAT</div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>CAT_INTERFACE</span><span style={{ color: "#10b981" }}>LINKED</span>
+          {/* Card 2: Solar Weather Box with 20M Grade */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title" style={{ color: "#f59e0b" }}>
+                <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
+              </div>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>DXCC_ENTITIES</span><span style={{ color: "#06b6d4" }}>{stats.dxcc}</span>
+            <div className="data-row" style={{ padding: "0.75rem 0", background: "rgba(245,158,11,0.02)", borderBottom: "1px double #262626" }}>
+              <span className="data-label" style={{ fontWeight: "700", color: "#ffffff" }}>&gt;&gt; BAND_PROP_20M</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`} style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}>
+                [{spaceWeather.prop20m}]
+              </span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>VSWR_RATIO</span><span style={{ color: "#10b981" }}>1.2:1</span>
+            <div className="data-row">
+              <span className="data-label">SOLAR_FLUX (SFI)</span>
+              <span className="data-value txt-solar-amber">{spaceWeather.sfi}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
-              <span style={{ color: "#a3a3a3" }}>DATASET_SYNC</span><span style={{ color: "#06b6d4" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>
+            <div className="data-row">
+              <span className="data-label">SUNSPOT_NUMBER</span>
+              <span className="data-value font-mono-data">{spaceWeather.sunspots}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">A_INDEX</span>
+              <span className="data-value font-mono-data" style={{ color: "#a3a3a3" }}>{spaceWeather.aIndex}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">K_INDEX</span>
+              <span className="data-value font-mono-data txt-neon-green">{spaceWeather.kIndex}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">XRAY_FLUX</span>
+              <span className="data-value txt-aviation-blue">{spaceWeather.xray}</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">GEOMAG_FIELD</span>
+              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{spaceWeather.conditions}</span>
+            </div>
+          </div>
+
+          {/* Card 3: Engine Stat */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <Sliders style={{ width: "16px", height: "16px" }} /> ENGINE.STAT
+              </div>
+            </div>
+            <div className="data-row">
+              <span className="data-label">CAT_INTERFACE</span>
+              <span className="data-value txt-neon-green">LINKED</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">DXCC_ENTITIES</span>
+              <span className="data-value txt-aviation-blue">{stats.dxcc}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">VSWR_RATIO</span>
+              <span className="data-value txt-neon-green">1.2:1</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">DATASET_SYNC</span>
+              <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>
             </div>
           </div>
 
         </div>
 
-        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1.25rem", borderRadius: "8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        {/* Right Column Stack: Expanding main matrix log ledger monitor */}
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #262626", paddingBottom: "0.5rem", marginBottom: "1rem", fontSize: "0.8rem" }}>
-              <span style={{ color: "#f59e0b", fontWeight: "bold" }}>LIVE LOOK AT MOST RECENT QSOs</span>
+            <div className="panel-header">
+              <div className="panel-title">
+                <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
+              </div>
+              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
+
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", textAlign: "left" }}>
+              <table className="matrix-table">
                 <thead>
-                  <tr style={{ color: "#a3a3a3", borderBottom: "1px solid #262626" }}>
-                    <th style={{ padding: "0.5rem" }}>CALLSIGN</th>
-                    <th style={{ padding: "0.5rem" }}>DATE</th>
-                    <th style={{ padding: "0.5rem" }}>TIME</th>
-                    <th style={{ padding: "0.5rem" }}>BAND</th>
-                    <th style={{ padding: "0.5rem" }}>MODE</th>
-                    <th style={{ padding: "0.5rem" }}>GRID</th>
+                  <tr>
+                    <th>CALLSIGN</th>
+                    <th>DATE (UTC)</th>
+                    <th>TIME</th>
+                    <th>BAND</th>
+                    <th>MODE</th>
+                    <th style={{ textAlign: "center" }}>RST (S/R)</th>
+                    <th>GRID LOC</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#f59e0b" }}>
-                        &gt;&gt; Live log stream parsing pending... Standby.
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
+                        &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
                       </td>
                     </tr>
                   ) : (
-                    logs.map((qso, i) => (
-                      <tr key={i} style={{ borderBottom: "1px solid #1f1f1f" }}>
-                        <td style={{ padding: "0.5rem", color: "#fff", fontWeight: "bold" }}>{qso.callsign}</td>
-                        <td style={{ padding: "0.5rem", color: "#a3a3a3" }}>{qso.date}</td>
-                        <td style={{ padding: "0.5rem" }}>{qso.time}</td>
-                        <td style={{ padding: "0.5rem" }}>{qso.band}</td>
-                        <td style={{ padding: "0.5rem", color: "#f59e0b" }}>{qso.mode}</td>
-                        <td style={{ padding: "0.5rem", color: "#a3a3a3" }}>{qso.grid}</td>
+                    logs.map((qso, index) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="font-mono-data">
+                          {qso.callsign}
+                        </td>
+                        <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.time}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.band}</td>
+                        <td>
+                          <span className="badge-mode-tactical">{qso.mode}</span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className="rst-s-box">{qso.rstS}</span>
+                          <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
+                          <span className="rst-r-box">{qso.rstR}</span>
+                        </td>
+                        <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="font-mono-data">
+                          {qso.grid || "—"}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -293,9 +393,15 @@ export default function Page() {
               </table>
             </div>
           </div>
-          <footer style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", marginTop: "1rem", paddingTop: "0.5rem", borderTop: "1px dashed #262626" }}>
-            <span>STREAM: JSON_PROXY_NODE</span>
-            <span style={{ color: "#10b981" }}>STATUS: OPERATIONAL_SECURE</span>
+
+          <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
+              STREAM_FILTER: JSON_PROXY_NODE // DIRECT_TIMESTAMP_MAP
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
+            </span>
           </footer>
         </div>
       </main>
