@@ -205,8 +205,8 @@ export default function Page() {
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; min-width: 0; flex-shrink: 1; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex: 1; min-width: 0; }
         .data-value { color: #ffffff; font-weight: 600; flex-shrink: 0; text-align: right; margin-left: 0.5rem; }
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
@@ -343,10 +343,10 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className={`data-value ${getPropColorClass(spaceWeather.prop30m)}`}>[{spaceWeather.prop30m}]</span>
             </div>
-            {/* Realignment Fix: Standard layout properties now map this row exactly with the standard container flow */}
-            <div className="data-row" style={{ background: "rgba(245,158,11,0.04)" }}>
-              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700", paddingLeft: "0.25rem" }}>20M Band Propagation</span>
-              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`} style={{ paddingRight: "0.25rem" }}>[{spaceWeather.prop20m}]</span>
+            {/* Realignment Fix Applied: The flex rules ensure equal distribution across all band names */}
+            <div className="data-row" style={{ background: "rgba(245,158,11,0.04)", paddingLeft: "0.35rem", paddingRight: "0.35rem", borderRadius: "4px" }}>
+              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`}>[{spaceWeather.prop20m}]</span>
             </div>
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
@@ -399,24 +399,3 @@ export default function Page() {
             <div className="panel-header">
               <div className="panel-title">
                 <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
-              </div>
-              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
-            </div>
-
-            <div style={{ overflowX: "auto" }}>
-              <table className="matrix-table">
-                <thead>
-                  <tr>
-                    <th>CALLSIGN</th>
-                    <th>DATE (UTC)</th>
-                    <th>TIME</th>
-                    <th>BAND</th>
-                    <th>MODE</th>
-                    <th style={{ textAlign: "center" }}>RST (S/R)</th>
-                    <th>GRID LOC</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
