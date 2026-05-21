@@ -201,7 +201,7 @@ export default function Page() {
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         
         .terminal-panel-interactive { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; text-decoration: none !important; cursor: pointer; transition: all 0.2s ease-in-out; display: block; }
-        .terminal-panel-interactive:hover { border-color: #f59e0b; background: #171717; transform: translateY(-2px); }
+        .terminal-panel-interactive:hover { border-color: #f59e0b !important; background: #171717 !important; transform: translateY(-2px); }
         
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
@@ -264,11 +264,9 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
         
-        {/* Clickable Card Link explicitly rendering as the 5th block element */}
-        <a 
-          href="https://qsomap.org/qrznet2.php" 
-          target="_blank" 
-          rel="noopener noreferrer" 
+        {/* RE-ARCHITECTED LINK BLOCK: Completely standalone layout structure to block hydration clipping */}
+        <div 
+          onClick={() => window.open("https://qsomap.org/qrznet2.php", "_blank", "noopener,noreferrer")}
           className="terminal-panel-interactive" 
           style={{ padding: "1rem 1.25rem" }}
         >
@@ -276,7 +274,7 @@ export default function Page() {
             VIEW LIVE MAP ↗
           </span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.dxcc}</div>
-        </a>
+        </div>
       </section>
 
       {/* 2-Column Split Dashboard Wrapper */}
@@ -470,7 +468,7 @@ export default function Page() {
           <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
             <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
-              STREAM_FILTER: JSON_PROXY_NODE // GLOBAL_DYNAMIC_MAP_OK
+              STREAM_FILTER: JSON_PROXY_NODE // PURE_JS_HYDRATION_OK
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
               <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
