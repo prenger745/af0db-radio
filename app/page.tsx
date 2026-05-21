@@ -195,7 +195,7 @@ export default function Page() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1rem; }
         @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } } /* Scaled to 5 blocks */
+        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } }
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
@@ -241,7 +241,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Cyber-Deck Telemetry Top Strip (Now 5 blocks wide layout) */}
+      {/* Cyber-Deck Telemetry Top Strip */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
@@ -259,7 +259,6 @@ export default function Page() {
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
-        {/* New 5th Dashboard Block item inserted right next to confirmed list */}
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.dxcc}</div>
@@ -397,7 +396,7 @@ export default function Page() {
         </div>
 
         {/* Right Column Stack: Log ledger */}
-        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyBetween: "space-between" }}>
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
               <div className="panel-title">
