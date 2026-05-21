@@ -136,9 +136,10 @@ export default function Page() {
     return () => clearInterval(automatedRefreshCycle);
   }, []);
 
-  const getPropRating = (band: string) => {
+const getPropRating = (band: string) => {
     if (kIndex >= 5) return "CLOSED";
     if (kIndex >= 4) return "POOR";
+
     switch (band) {
       case "80M":
       case "40M":
@@ -153,14 +154,14 @@ export default function Page() {
       case "15M":
         if (isNight) return "CLOSED";
         if (sfi > 150) return "GREAT";
-        if (sfi > 110) return "GOOD";
+        if (sfi > 115) return "GOOD";
         return "POOR";
       case "12M":
       case "10M":
         if (isNight) return "CLOSED";
-        if (sfi > 170) return "GREAT";
-        if (sfi > 130) return "GOOD";
-        if (sfi > 100) return "FAIR";
+        if (sfi > 175) return "GREAT";
+        if (sfi > 155) return "GOOD"; // Raised to match true 10m open levels
+        if (sfi > 125) return "FAIR"; // Stricter baseline threshold
         return "POOR";
       default:
         return "FAIR";
