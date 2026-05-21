@@ -134,15 +134,12 @@ export default function Page() {
       }
     }
 
-    // Runs immediately upon the first page load initialization
     parseLiveQrzData()
 
-    // Background interval cycle timer: Triggers an automatic silent data re-fetch loop every 5 minutes
     const automatedRefreshCycle = setInterval(() => {
       parseLiveQrzData()
     }, 300000)
 
-    // Clear function that prevents script accumulation if the browser tab changes states
     return () => clearInterval(automatedRefreshCycle)
   }, [])
 
@@ -299,6 +296,7 @@ export default function Page() {
               </div>
             </div>
             
+            {/* Core General Metrics Block */}
             <div className="data-row">
               <span className="data-label">SOLAR FLUX (SFI)</span>
               <span className="data-value txt-solar-amber">{sfi}</span>
@@ -340,10 +338,13 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
             </div>
-            <div className="data-row" style={{ background: "rgba(245,158,11,0.04)", paddingLeft: "0.35rem", paddingRight: "0.35rem", borderRadius: "4px" }}>
-              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
+            
+            {/* Realignment Fix: Standardized to use the identical, plain class structures as the other rows */}
+            <div className="data-row">
+              <span className="data-label">20M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
             </div>
+            
             <div className="data-row">
               <span className="data-label">17M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
