@@ -32,7 +32,6 @@ export default function Page() {
     currentMode: "FT8"
   })
   
-  // Real-time atmospheric telemetry base states
   const [sfi, setSfi] = useState<number>(145)
   const [sunspots, setSunspots] = useState<string>("98")
   const [aIndex, setAIndex] = useState<string>("10")
@@ -59,7 +58,6 @@ export default function Page() {
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058"
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74"
 
-        // Local system clock mapping to derive true day/night propagation variables
         const currentHour = new Date().getUTCHours()
         if (currentHour < 11 || currentHour > 23) {
           setIsNight(true)
@@ -67,7 +65,6 @@ export default function Page() {
           setIsNight(false)
         }
 
-        // Live telemetry updates extracted from the primary proxy server string mapping
         const sfiM = cleanText.match(/<solarflux>([^<]*)/i)
         const sspotsM = cleanText.match(/<sunspots>([^<]*)/i)
         const aM = cleanText.match(/<aindex>([^<]*)/i)
@@ -137,10 +134,18 @@ export default function Page() {
       }
     }
 
+    // Runs immediately upon the first page load initialization
     parseLiveQrzData()
+
+    // Background interval cycle timer: Triggers an automatic silent data re-fetch loop every 5 minutes
+    const automatedRefreshCycle = setInterval(() => {
+      parseLiveQrzData()
+    }, 300000)
+
+    // Clear function that prevents script accumulation if the browser tab changes states
+    return () => clearInterval(automatedRefreshCycle)
   }, [])
 
-  // Scientific calculation engine that outputs the exact states based on incoming SFI and K-Index numbers
   const getPropRating = (band: string) => {
     if (kIndex >= 5) return "CLOSED"
     if (kIndex >= 4) return "POOR"
@@ -176,7 +181,7 @@ export default function Page() {
   const getColorClass = (rating: string) => {
     if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green"
     if (rating === "FAIR") return "txt-solar-amber"
-    return "rst-r-box" // Styles POOR / CLOSED as dim aviation crimson
+    return "rst-r-box"
   }
 
   return (
@@ -323,7 +328,6 @@ export default function Page() {
               HF Band Real-Time Profiles
             </div>
 
-            {/* Matrix array drawing from the direct calculated rating functions */}
             <div className="data-row">
               <span className="data-label">80M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
@@ -336,8 +340,8 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
             </div>
-            <div className="data-row">
-              <span className="data-label">20M Band Propagation</span>
+            <div className="data-row" style={{ background: "rgba(245,158,11,0.04)", paddingLeft: "0.35rem", paddingRight: "0.35rem", borderRadius: "4px" }}>
+              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
             </div>
             <div className="data-row">
