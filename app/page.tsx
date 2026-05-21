@@ -161,10 +161,10 @@ export default function Page() {
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
         
-        /* Master Flexbox Container configuration across all data blocks */
-        .data-row { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; flex-grow: 1; text-align: left; }
-        .data-value { font-weight: 600; flex-shrink: 0; text-align: right; }
+        /* Flex rows to align labels left and statuses right */
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; }
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; }
+        .data-value { font-weight: 600; text-align: right; }
         
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
@@ -288,7 +288,7 @@ export default function Page() {
               HF Band Real-Time Profiles
             </div>
 
-            {/* Standardized width grid across all profiles */}
+            {/* Standardized, identical classes mapping every line parameter evenly */}
             <div className="data-row">
               <span className="data-label">80M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop80m}]</span>
@@ -301,8 +301,8 @@ export default function Page() {
               <span className="data-label">30M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop30m}]</span>
             </div>
-            <div className="data-row" style={{ background: "rgba(245,158,11,0.04)", paddingLeft: "0.35rem", paddingRight: "0.35rem", borderRadius: "4px" }}>
-              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
+            <div className="data-row">
+              <span className="data-label">20M Band Propagation</span>
               <span className="data-value txt-neon-green">[{spaceWeather.prop20m}]</span>
             </div>
             <div className="data-row">
