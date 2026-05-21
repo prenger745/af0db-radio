@@ -157,12 +157,6 @@ export default function Page() {
     loadLiveSolarConditions()
   }, [])
 
-  const getPropColorClass = (status: string) => {
-    if (status.includes("GOOD")) return "txt-neon-green"
-    if (status.includes("FAIR")) return "txt-solar-amber"
-    return "rst-r-box"
-  }
-
   return (
     <div style={{ backgroundColor: "#0a0a0a", color: "#e5e5e5", minHeight: "100vh", padding: "1.5rem", fontFamily: "monospace" }}>
       <header style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
@@ -291,4 +285,20 @@ export default function Page() {
                         <td style={{ padding: "0.5rem" }}>{qso.time}</td>
                         <td style={{ padding: "0.5rem" }}>{qso.band}</td>
                         <td style={{ padding: "0.5rem", color: "#f59e0b" }}>{qso.mode}</td>
-                        <td style={{ padding: "0.5rem", color
+                        <td style={{ padding: "0.5rem", color: "#a3a3a3" }}>{qso.grid}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <footer style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", marginTop: "1rem", paddingTop: "0.5rem", borderTop: "1px dashed #262626" }}>
+            <span>STREAM: JSON_PROXY_NODE</span>
+            <span style={{ color: "#10b981" }}>STATUS: OPERATIONAL_SECURE</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  )
+}
