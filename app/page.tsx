@@ -202,7 +202,7 @@ export default function Page() {
           box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
         }
 
-        .terminal-panel-interactive {
+        .terminal-panel-interactive-button {
           background: #121212 !important;
           border: 1px solid #262626 !important;
           border-radius: 8px;
@@ -214,8 +214,10 @@ export default function Page() {
           display: block !important;
           height: 100% !important;
           width: 100% !important;
+          text-align: left !important;
+          font-family: inherit !important;
         }
-        .terminal-panel-interactive:hover {
+        .terminal-panel-interactive-button:hover {
           border-color: #f59e0b !important;
           background: #171717 !important;
           transform: translateY(-3px) !important;
@@ -278,14 +280,16 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* COMPONENT BOUNDARY ENFORCED LINK CARD */}
-        <div style={{ display: "block", width: "100%", height: "100%" }}>
-          <a
-            href="https://qsomap.org/qrznet2.php"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="terminal-panel-interactive"
-            style={{ display: "block" }}
+        {/* TARGET DIRECTLY CORRECTED TO QSOMAP INTERACTIVE ROUTE */}
+        <form 
+          action="https://qsomap.org/qrznet2.php" 
+          target="_blank" 
+          method="GET"
+          style={{ display: "block", width: "100%", height: "100%" }}
+        >
+          <button
+            type="submit"
+            className="terminal-panel-interactive-button"
           >
             <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
               COUNTRIES CONTACTED ↗
@@ -293,8 +297,8 @@ export default function Page() {
             <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>
               {stats.dxcc}
             </div>
-          </a>
-        </div>
+          </button>
+        </form>
       </section>
 
       {/* Main Content */}
