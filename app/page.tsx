@@ -42,13 +42,13 @@ export default function Page() {
     currentMode: "FT8"
   })
   const [spaceWeather, setSpaceWeather] = useState<SpaceWeather>({
-    sfi: "fetching...",
-    sunspots: "fetching...",
-    aIndex: "fetching...",
-    kIndex: "fetching...",
-    xray: "fetching...",
-    conditions: "CALCULATING...",
-    prop20m: "ANALYZING..."
+    sfi: "145",
+    sunspots: "98",
+    aIndex: "10",
+    kIndex: "1",
+    xray: "A0.0",
+    conditions: "NORMAL / QUIET",
+    prop20m: "GOOD"
   })
   const [loading, setLoading] = useState(true)
   const [isLiveStream, setIsLiveStream] = useState(false)
@@ -59,11 +59,11 @@ export default function Page() {
         const res = await fetch("/api/qrz")
         if (!res.ok) throw new Error("Proxy offline")
         const json = await res.json()
-        if (json.error || !json.data) throw new Error(json.error || "No data")
+        if (json.error || !json.data) throw new Error("No data")
         
         const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
-        const countMatch = cleanText.match(/COUNT=([^&]*)/i) || cleanText.match(/"COUNT":"(\d+)"/i)
-        const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i) || cleanText.match(/"DXCC_COUNT":"(\d+)"/i)
+        const countMatch = cleanText.match(/COUNT=([^&]*)/i)
+        const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i)
 
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058"
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74"
@@ -85,10 +85,9 @@ export default function Page() {
           const fD = rD.length === 8 ? `${rD.substring(0, 4)}-${rD.substring(4, 6)}-${rD.substring(6, 8)}` : rD
           const rT = extractTag("time_on")
           const fT = rT.length >= 4 ? `${rT.substring(0, 2)}:${rT.substring(2, 4)}` : rT
-          const displayCall = call.toUpperCase().replace(/0/g, "Ø")
 
           parsedLogs.push({
-            callsign: displayCall,
+            callsign: call.toUpperCase().replace(/0/g, "Ø"),
             date: fD,
             time: fT,
             band: extractTag("band") || "—",
@@ -110,7 +109,7 @@ export default function Page() {
           setLogs(newestFifteen)
           setIsLiveStream(true)
           setStats({
-            totalQsos: parseInt(liveCount) > 1000 ? liveCount : "1,058",
+            totalQsos: liveCount,
             confirmed: "833", 
             dxcc: liveDxcc,
             currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
@@ -118,7 +117,7 @@ export default function Page() {
           })
         }
       } catch (err) {
-        console.warn("Backend logs parsed natively.", err)
+        console.warn(err)
       } finally {
         setLoading(false)
       }
@@ -150,7 +149,7 @@ export default function Page() {
           prop20m: prop
         })
       } catch (e) {
-        console.warn("Solar mapping adjusted.", e)
+        console.warn(e)
       }
     }
 
@@ -158,38 +157,65 @@ export default function Page() {
     loadLiveSolarConditions()
   }, [])
 
-  const getPropColorClass = (status: string) => {
-    if (status.includes("GOOD")) return "txt-neon-green"
-    if (status.includes("FAIR")) return "txt-solar-amber"
-    return "rst-r-box"
-  }
-
   return (
-    <div style={{
-      backgroundColor: "#0a0a0a",
-      color: "#e5e5e5",
-      minHeight: "100vh",
-      padding: "1.5rem",
-      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      boxSizing: "border-box",
-      letterSpacing: "0.01em"
-    }}>
-      <style dangerouslySetInnerHTML={{__html: `
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .telemetry-strip { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-bottom: 1rem; }
-        @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
-        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
-        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
-        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
-        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; }
-        .data-value { color: #ffffff; font-weight: 600; }
-        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
-        .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
-        .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
-        .matrix-table tr:nth-child(even) { background: #161616; }
-        .matrix-table tr:hover { background: #1f1f1f; }
-        .txt-neon-green
+    <div style={{ backgroundColor: "#0a0a0a", color: "#e5e5e5", minHeight: "100vh", padding: "1.5rem", fontFamily: "monospace" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
+        <div>
+          <h1 style={{ fontSize: "1.2rem", color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Radio style={{ width: "18px" }} /> DANIEL McGURK // AFØDB STATION LOG
+          </h1>
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem", color: "#10b981", fontSize: "0.8rem" }}>
+          <span>[{loading ? "SYNCING" : "SYS_OK"}]</span>
+          <span style={{ color: "#f59e0b" }}>[{isLiveStream ? "LIVE_FEED" : "STANDBY"}]</span>
+        </div>
+      </header>
+
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
+          <div style={{ color: "#737373", fontSize: "0.7rem" }}>01/ ACTIVE_BAND</div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "bold", marginTop: "0.25rem" }}>{stats.currentBand}</div>
+        </div>
+        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
+          <div style={{ color: "#737373", fontSize: "0.7rem" }}>02/ RIG_MODE</div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#f59e0b", marginTop: "0.25rem" }}>{stats.currentMode}</div>
+        </div>
+        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
+          <div style={{ color: "#737373", fontSize: "0.7rem" }}>03/ TOTAL_QSO_COUNT</div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#10b981", marginTop: "0.25rem" }}>{stats.totalQsos}</div>
+        </div>
+        <div style={{ background: "#121212", border: "1px solid #262626", padding: "1rem", borderRadius: "6px" }}>
+          <div style={{ color: "#737373", fontSize: "0.7rem" }}>04/ CONFIRMED_QSOs</div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#06b6d4", marginTop: "0.25rem" }}>{stats.confirmed}</div>
+        </div>
+      </section>
+
+      <main style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          <div style={{ background: "#121212", border: "1px solid #262626", padding: "1.25rem", borderRadius: "8px" }}>
+            <div style={{ color: "#f59e0b", fontSize: "0.8rem", borderBottom: "1px solid #262626", paddingBottom: "0.5rem", marginBottom: "0.75rem", fontWeight: "bold" }}>HAMSHACK GEAR</div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
+              <span style={{ color: "#a3a3a3" }}>STATION QTH</span><span>OTTAWA, KS</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
+              <span style={{ color: "#a3a3a3" }}>MAIN RIG</span><span>YAESU FT-991</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
+              <span style={{ color: "#a3a3a3" }}>ANTENNA</span><span>ISOTRON 20M</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
+              <span style={{ color: "#a3a3a3" }}>ARCH SUITE</span><span>XUBUNTU/HAM</span>
+            </div>
+          </div>
+
+          <div style={{ background: "#121212", border: "1px solid #262626", padding: "1.25rem", borderRadius: "8px" }}>
+            <div style={{ color: "#f59e0b", fontSize: "0.8rem", borderBottom: "1px solid #262626", paddingBottom: "0.5rem", marginBottom: "0.75rem", fontWeight: "bold" }}>SOLAR WEATHER (N0NBH)</div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", background: "rgba(245,158,11,0.02)", borderBottom: "1px solid #262626", fontSize: "0.85rem", fontWeight: "bold" }}>
+              <span style={{ color: "#fff" }}>&gt;&gt; BAND_PROP_20M</span>
+              <span style={{ color: spaceWeather.prop20m.includes("GOOD") ? "#10b981" : "#f59e0b" }}>[{spaceWeather.prop20m}]</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize: "0.85rem" }}>
+              <span style={{ color: "#a3a3a3" }}>SOLAR_FLUX (SFI)</span><span style={{ color: "#f59e0b" }}>{spaceWeather.sfi}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", fontSize:
