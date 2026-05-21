@@ -203,6 +203,8 @@ export default function Page() {
           border-radius: 8px;
           padding: 1.25rem;
           box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+          width: 100%;
+          max-width: 100%;
         }
 
         .terminal-panel-interactive {
@@ -226,10 +228,14 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
-        .data-label { color: #a3a3a3 !important; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
+        
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; background: transparent !important; }
+        .data-label { color: #a3a3a3 !important; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
         .data-value { font-weight: 600; text-align: right; }
         
+        .forced-row-reset { background: transparent !important; padding-left: 0 !important; padding-right: 0 !important; border-radius: 0 !important; }
+        .forced-label-reset { color: #a3a3a3 !important; font-weight: 600 !important; }
+
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
@@ -285,7 +291,6 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* FIXED TARGET LINK INCORPORATING DIRECT CALLSIGN PASS-THROUGH ROUTING */}
         <a
           href="https://qsomap.org/qrznet2.php?callsign=AF0DB"
           target="_blank"
@@ -301,10 +306,13 @@ export default function Page() {
         </a>
       </section>
 
-      {/* Main Workspace (Inline style override removed; allowing parent grid split to engage) */}
+      {/* Main Workspace Split Grid Layout */}
       <main className="deck-workspace">
+        
+        {/* Left Column Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          {/* Shack Gear */}
+          
+          {/* Card 1: Shack Gear */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
@@ -318,25 +326,111 @@ export default function Page() {
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value" style={{ color: "#ffffff" }}>XUBUNTU/HAM</span></div>
           </div>
 
-          {/* Solar Weather */}
+          {/* Card 2: Restored Complete Space & Solar Weather Data System */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#f59e0b" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </div>
             </div>
-            <div className="data-row"><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
-            <div className="data-row"><span className="data-label">SUNSPOT NUMBER</span><span className="data-value">{sunspots}</span></div>
-            <div className="data-row"><span className="data-label">K INDEX</span><span className="data-value txt-neon-green">{kIndex}</span></div>
+            
+            <div className="data-row">
+              <span className="data-label">SOLAR FLUX (SFI)</span>
+              <span className="data-value txt-solar-amber">{sfi}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">SUNSPOT NUMBER</span>
+              <span className="data-value font-mono-data" style={{ color: "#ffffff" }}>{sunspots}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">A INDEX</span>
+              <span className="data-value font-mono-data" style={{ color: "#a3a3a3" }}>{aIndex}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">K INDEX</span>
+              <span className="data-value font-mono-data txt-neon-green">{kIndex}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">XRAY FLUX</span>
+              <span className="data-value txt-aviation-blue">{xray}</span>
+            </div>
+            <div className="data-row" style={{ marginBottom: "0.5rem" }}>
+              <span className="data-label">GEOMAG FIELD</span>
+              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
+            </div>
+
+            <div style={{ color: "#f59e0b", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed #262626", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              HF Band Real-Time Profiles
+            </div>
+
+            <div className="data-row">
+              <span className="data-label">80M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">40M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("40M"))}`}>[{getPropRating("40M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">30M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
+            </div>
+            <div className="data-row forced-row-reset">
+              <span className="data-label forced-label-reset">20M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">17M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">15M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">12M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">10M Band Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
+            </div>
           </div>
+
+          {/* Card 3: Restored Engine Statistics Metrics System */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <Sliders style={{ width: "16px", height: "16px" }} /> ENGINE.STAT
+              </div>
+            </div>
+            <div className="data-row">
+              <span className="data-label">CAT_INTERFACE</span>
+              <span className="data-value txt-neon-green">LINKED</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">DXCC_ENTITIES</span>
+              <span className="data-value txt-aviation-blue">{stats.dxcc}</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">VSWR_RATIO</span>
+              <span className="data-value txt-neon-green">1.2:1</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">DATASET_SYNC</span>
+              <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>
+            </div>
+          </div>
+
         </div>
 
-        {/* Live Logs Panel Ledger with full table map structure included */}
+        {/* Right Column Stack: Complete Live Log Ledger */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column" }}>
           <div className="panel-header">
             <div className="panel-title">
               <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
             </div>
+            <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
           </div>
           
           <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
