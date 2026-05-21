@@ -221,27 +221,27 @@ export default function Page() {
       {/* Cyber-Deck Telemetry Top Strip */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>01/ ACTIVE_BAND</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff", marginTop: "0.25rem" }}>{stats.currentBand}</div>
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#ffffff", marginTop: "0.35rem" }}>{stats.currentBand}</div>
         </div>
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>02/ RIG_MODE</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.25rem" }}>{stats.currentMode}</div>
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>RIG MODE</span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.35rem" }}>{stats.currentMode}</div>
         </div>
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>03/ TOTAL_QSO_COUNT</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#10b981", marginTop: "0.25rem" }}>{stats.totalQsos}</div>
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>TOTAL QSO COUNT</span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#10b981", marginTop: "0.35rem" }}>{stats.totalQsos}</div>
         </div>
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#737373", textTransform: "uppercase", display: "block", fontWeight: 600, letterSpacing: "0.05em" }}>04/ CONFIRMED_QSOs</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#06b6d4", marginTop: "0.25rem" }}>{stats.confirmed}</div>
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
       </section>
 
       {/* 2-Column Split Dashboard Wrapper */}
       <main className="deck-workspace">
         
-        {/* Left Column Stack: Fixed width 320px bounding box container */}
+        {/* Left Column Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
           {/* Card 1: Shack Gear */}
@@ -336,7 +336,7 @@ export default function Page() {
 
         </div>
 
-        {/* Right Column Stack: Expanding main matrix log ledger monitor */}
+        {/* Right Column Stack: Expanding log ledger */}
         <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
             <div className="panel-header">
