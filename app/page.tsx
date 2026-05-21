@@ -199,6 +199,11 @@ export default function Page() {
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
         .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
+        
+        /* Clickable interactive modifier class for the map panel block link */
+        .terminal-panel-interactive { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; text-decoration: none !important; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .terminal-panel-interactive:hover { border-color: #f59e0b; background: #171717; transform: translateY(-2px); }
+        
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
         
@@ -259,10 +264,20 @@ export default function Page() {
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
-        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
+        
+        {/* Clickable Card Link connected straight to your public QRZ interactive log mapping screen */}
+        <a 
+          href="https://www.qrz.com/db/AF0DB" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="terminal-panel-interactive" 
+          style={{ padding: "1rem 1.25rem" }}
+        >
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
+            COUNTRIES CONTACTED ↗
+          </span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.dxcc}</div>
-        </div>
+        </a>
       </section>
 
       {/* 2-Column Split Dashboard Wrapper */}
