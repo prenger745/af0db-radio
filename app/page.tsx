@@ -405,3 +405,79 @@ export default function Page() {
               <span className="data-label">DATASET_SYNC</span>
               <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>
             </div>
+          </div>
+
+        </div>
+
+        {/* Right Column Stack: Log ledger */}
+        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          <div>
+            <div className="panel-header">
+              <div className="panel-title">
+                <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
+              </div>
+              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table className="matrix-table">
+                <thead>
+                  <tr>
+                    <th>CALLSIGN</th>
+                    <th>DATE (UTC)</th>
+                    <th>TIME</th>
+                    <th>BAND</th>
+                    <th>MODE</th>
+                    <th style={{ textAlign: "center" }}>RST (S/R)</th>
+                    <th>GRID LOC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
+                        &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
+                      </td>
+                    </tr>
+                  ) : (
+                    logs.map((qso, index) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="font-mono-data">
+                          {qso.callsign}
+                        </td>
+                        <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.time}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.band}</td>
+                        <td>
+                          <span className="badge-mode-tactical">{qso.mode}</span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className="rst-s-box">{qso.rstS}</span>
+                          <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
+                          <span className="rst-r-box">{qso.rstR}</span>
+                        </td>
+                        <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="font-mono-data">
+                          {qso.grid || "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <footer style={{ marginTop: "2rem", paddingTop: "0.75rem", borderTop: "1px dashed #262626", display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#737373", fontWeight: 500 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <Globe style={{ width: "14px", height: "14px", color: "#525252" }} /> 
+              STREAM_FILTER: JSON_PROXY_NODE // DYNAMIC_MAP_ACTIVE
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <ShieldCheck style={{ width: "14px", height: "14px", color: "#10b981" }} /> STATUS: OPERATIONAL_SECURE
+            </span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  )
+}
