@@ -147,8 +147,7 @@ export default function Page() {
       case "30M":
       case "20M":
         if (sfi > 140) return "GREAT";
-        if (sfi > 90) return "GOOD";
-        return "FAIR";
+        if (sfi > 90) return "GOOD" : "FAIR";
       case "17M":
       case "15M":
         if (isNight) return "CLOSED";
@@ -212,6 +211,8 @@ export default function Page() {
           cursor: pointer !important;
           transition: all 0.25s ease !important;
           display: block !important;
+          height: 100% !important;
+          width: 100% !important;
         }
         .terminal-panel-interactive:hover {
           border-color: #f59e0b !important;
@@ -276,22 +277,23 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* FIXED COUNTRIES CONTACTED BOX */}
-        <a
-          href="https://qsomap.org/qrznet2.php"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="terminal-panel-interactive"
-          style={{ padding: "1rem 1.25rem" }}
-          onClick={() => console.log("Map link clicked")}
-        >
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
-            COUNTRIES CONTACTED ↗
-          </span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>
-            {stats.dxcc}
-          </div>
-        </a>
+        {/* COMPONENT BOUNDARY ENFORCED LINK CARD */}
+        <div style={{ display: "block", width: "100%", height: "100%" }}>
+          <a
+            href="https://qsomap.org/qrznet2.php"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="terminal-panel-interactive"
+            style={{ display: "block" }}
+          >
+            <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
+              COUNTRIES CONTACTED ↗
+            </span>
+            <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>
+              {stats.dxcc}
+            </div>
+          </a>
+        </div>
       </section>
 
       {/* Main Content */}
@@ -318,11 +320,9 @@ export default function Page() {
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </div>
             </div>
-            {/* Solar data rows - abbreviated for brevity but you can expand if needed */}
             <div className="data-row"><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
             <div className="data-row"><span className="data-label">SUNSPOT NUMBER</span><span className="data-value">{sunspots}</span></div>
             <div className="data-row"><span className="data-label">K INDEX</span><span className="data-value txt-neon-green">{kIndex}</span></div>
-            {/* Add the rest of the propagation rows as in your original code */}
           </div>
         </div>
 
@@ -333,7 +333,6 @@ export default function Page() {
               <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
             </div>
           </div>
-          {/* Your table code here - add it back from your original if needed */}
         </div>
       </main>
     </div>
