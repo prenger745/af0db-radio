@@ -29,7 +29,14 @@ interface SpaceWeather {
   kIndex: string
   xray: string
   conditions: string
+  prop80m: string
+  prop40m: string
+  prop30m: string
   prop20m: string
+  prop17m: string
+  prop15m: string
+  prop12m: string
+  prop10m: string
 }
 
 export default function Page() {
@@ -48,7 +55,14 @@ export default function Page() {
     kIndex: "1",
     xray: "A0.0",
     conditions: "NORMAL / QUIET",
-    prop20m: "GOOD"
+    prop80m: "GOOD",
+    prop40m: "GOOD",
+    prop30m: "GOOD",
+    prop20m: "GOOD",
+    prop17m: "GOOD",
+    prop15m: "GOOD",
+    prop12m: "GOOD",
+    prop10m: "GOOD"
   })
   const [loading, setLoading] = useState(true)
   const [isLiveStream, setIsLiveStream] = useState(false)
@@ -135,9 +149,10 @@ export default function Page() {
           return parts.length > 1 ? parts[1].split(new RegExp(`</${tag}>`, "i"))[0].trim() : "—"
         }
 
-        let prop = "GOOD"
-        const chunks = xmlText.split('name="30m-20m" time="day">')
-        if (chunks.length > 1) prop = chunks[1].split("</band>")[0].trim().toUpperCase()
+        const extractBand = (bandName: string) => {
+          const chunks = xmlText.split(`name="${bandName}" time="day">`)
+          return chunks.length > 1 ? chunks[1].split("</band>")[0].trim().toUpperCase() : "GOOD"
+        }
 
         setSpaceWeather({
           sfi: parseXml("solarflux") !== "—" ? parseXml("solarflux") : "145",
@@ -146,7 +161,14 @@ export default function Page() {
           kIndex: parseXml("kindex") !== "—" ? parseXml("kindex") : "1",
           xray: parseXml("xray") !== "—" ? parseXml("xray") : "A0.0",
           conditions: parseXml("geomagfield") !== "—" ? parseXml("geomagfield").toUpperCase() : "NORMAL / QUIET",
-          prop20m: prop
+          prop80m: extractBand("80m-40m"),
+          prop40m: extractBand("80m-40m"),
+          prop30m: extractBand("30m-20m"),
+          prop20m: extractBand("30m-20m"),
+          prop17m: extractBand("17m-15m"),
+          prop15m: extractBand("17m-15m"),
+          prop12m: extractBand("12m-10m"),
+          prop10m: extractBand("12m-10m")
         })
       } catch (e) {
         console.warn(e)
@@ -180,20 +202,20 @@ export default function Page() {
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(4, 1fr); } }
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
-        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+        .terminal-panel { background: #121212; border: 1px solid #262626; border-radius: 8px; padding: 1.25rem; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); width: 100%; max-width: 100%; }
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
-        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; }
-        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 500; }
-        .data-value { color: #ffffff; font-weight: 600; }
+        .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1f1f1f; font-size: 0.85rem; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .data-label { color: #a3a3a3; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; min-width: 0; flex-shrink: 1; }
+        .data-value { color: #ffffff; font-weight: 600; flex-shrink: 0; text-align: right; margin-left: 0.5rem; }
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
         .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; }
         .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
         .matrix-table tr:nth-child(even) { background: #161616; }
         .matrix-table tr:hover { background: #1f1f1f; }
         .txt-neon-green { color: #10b981; }
-        .txt-aviation-blue { color: #06b6d4; }
         .txt-solar-amber { color: #f59e0b; }
+        .txt-aviation-blue { color: #06b6d4; }
         .status-bracket { font-size: 0.75rem; color: #525252; font-weight: 600; }
         .status-text { color: #10b981; font-weight: 700; padding: 0 0.25rem; }
         .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); letter-spacing: 0.02em; }
@@ -270,42 +292,76 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 2: Solar Weather Box with 20M Grade */}
+          {/* Card 2: Expanded Solar Weather Box with Multi-Band Matrix Grid */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#f59e0b" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </div>
             </div>
-            <div className="data-row" style={{ padding: "0.75rem 0", background: "rgba(245,158,11,0.02)", borderBottom: "1px double #262626" }}>
-              <span className="data-label" style={{ fontWeight: "700", color: "#ffffff" }}>&gt;&gt; BAND_PROP_20M</span>
-              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`} style={{ fontSize: "0.95rem", letterSpacing: "0.05em" }}>
-                [{spaceWeather.prop20m}]
-              </span>
-            </div>
+            
+            {/* Core General Metrics Block */}
             <div className="data-row">
-              <span className="data-label">SOLAR_FLUX (SFI)</span>
+              <span className="data-label">SOLAR FLUX (SFI)</span>
               <span className="data-value txt-solar-amber">{spaceWeather.sfi}</span>
             </div>
             <div className="data-row">
-              <span className="data-label">SUNSPOT_NUMBER</span>
+              <span className="data-label">SUNSPOT NUMBER</span>
               <span className="data-value font-mono-data">{spaceWeather.sunspots}</span>
             </div>
             <div className="data-row">
-              <span className="data-label">A_INDEX</span>
+              <span className="data-label">A INDEX</span>
               <span className="data-value font-mono-data" style={{ color: "#a3a3a3" }}>{spaceWeather.aIndex}</span>
             </div>
             <div className="data-row">
-              <span className="data-label">K_INDEX</span>
+              <span className="data-label">K INDEX</span>
               <span className="data-value font-mono-data txt-neon-green">{spaceWeather.kIndex}</span>
             </div>
             <div className="data-row">
-              <span className="data-label">XRAY_FLUX</span>
+              <span className="data-label">XRAY FLUX</span>
               <span className="data-value txt-aviation-blue">{spaceWeather.xray}</span>
             </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">GEOMAG_FIELD</span>
+            <div className="data-row" style={{ marginBottom: "0.5rem" }}>
+              <span className="data-label">GEOMAG FIELD</span>
               <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{spaceWeather.conditions}</span>
+            </div>
+
+            {/* Custom Multi-Band Propagation Array */}
+            <div style={{ color: "#f59e0b", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed #262626", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              HF Band Real-Time Profiles
+            </div>
+
+            <div className="data-row">
+              <span className="data-label">80M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop80m)}`}>[{spaceWeather.prop80m}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">40M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop40m)}`}>[{spaceWeather.prop40m}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">30M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop30m)}`}>[{spaceWeather.prop30m}]</span>
+            </div>
+            <div className="data-row" style={{ background: "rgba(245,158,11,0.03)", paddingLeft: "0.25rem", paddingRight: "0.25rem" }}>
+              <span className="data-label" style={{ color: "#ffffff", fontWeight: "700" }}>20M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop20m)}`}>[{spaceWeather.prop20m}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">17M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop17m)}`}>[{spaceWeather.prop17m}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">15M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop15m)}`}>[{spaceWeather.prop15m}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">12M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop12m)}`}>[{spaceWeather.prop12m}]</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">10M Band Propagation</span>
+              <span className={`data-value ${getPropColorClass(spaceWeather.prop10m)}`}>[{spaceWeather.prop10m}]</span>
             </div>
           </div>
 
