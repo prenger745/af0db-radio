@@ -292,7 +292,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 2: Expanded Solar Weather Box with Multi-Band Matrix Grid */}
+          {/* Card 2: Solar Weather Box */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#f59e0b" }}>
