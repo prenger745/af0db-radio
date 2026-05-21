@@ -292,7 +292,7 @@ export default function Page() {
         </div>
 
         <a
-          href="https://qsomap.org/qrznet2.php?callsign=AF0DB"
+          href="https://www.qsomap.com/QSOmapProduction/qsomapforosmQRZ.php?call=AF0DB"
           target="_blank"
           rel="noopener noreferrer"
           className="terminal-panel-interactive"
