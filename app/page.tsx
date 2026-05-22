@@ -56,12 +56,42 @@ export default function Page() {
   // Dynamic coordinate arc tracking array for full 1,075 dataset mapping
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
   
+  // Explicit parent element dimensions tracker for WebGL canvas alignment
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
+
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const audioEnabledRef = useRef(false);
 
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
   }, [audioEnabled]);
+
+  // Handle runtime responsive resizing to completely prevent globe clipping glitches
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const handleResize = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight
+        });
+      }
+    };
+
+    // Run calibration on mount and attach native observer listener
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    
+    // Quick timeout backup to guarantee clean execution after CSS styles calculate
+    const t = setTimeout(handleResize, 1000);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(t);
+    };
+  }, [logs]); // Re-trigger safety catch when data populates
 
   const playTerminalBeep = (type: "boot" | "sync") => {
     if (!audioEnabledRef.current) return;
@@ -105,7 +135,6 @@ export default function Page() {
     } catch (e) {}
   };
 
-  // AUDIO INTERACTIVE HARDWARE TOGGLE: Fixed and placed explicitly within the component state scope
   const handleToggleAudioSystem = () => {
     const freshState = !audioEnabled;
     setAudioEnabled(freshState);
@@ -222,10 +251,9 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // SPATIAL GLOW MAP ENGINE: Pulls coordinates directly out of your updated proxy file array
           if (json.geoMap && Array.isArray(json.geoMap)) {
             const formattedArcs = json.geoMap.map((pt: any) => ({
-              startLat: 38.6158, // QTH Home: Ottawa, KS
+              startLat: 38.6158, // QTH Base: Ottawa, KS
               startLng: -95.2686,
               endLat: pt.lat,
               endLng: pt.lng,
@@ -472,7 +500,7 @@ export default function Page() {
               </div>
               <ChevronRight style={{ width: "14px", height: "14px", color: "#525252" }} />
             </div>
-            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value" style={{ color: "#ffffff" }}>OTTAWA, INT_KS</span></div>
+            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value" style={{ color: "#ffffff" }}>OTTAWA, KS</span></div>
             <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value" style={{ color: "#ffffff" }}>YAESU FT-991</span></div>
             <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value" style={{ color: "#ffffff" }}>ISOTRON 20M</span></div>
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value" style={{ color: "#ffffff" }}>XUBUNTU/HAM</span></div>
@@ -579,8 +607,20 @@ export default function Page() {
         {/* Right Section Matrix Column Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
-          {/* HARDWARE-ACCELERATED 3D WEBGL GLOBE CANVAS */}
-          <div className="terminal-panel" style={{ padding: "0.5rem", background: "#0b0b0b", position: "relative", minHeight: "360px", height: "440px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {/* HARDWARE-ACCELERATED 3D WEBGL GLOBE CANVAS CONTAINER */}
+          <div 
+            ref={containerRef}
+            className="terminal-panel" 
+            style={{ 
+              padding: "0.5rem", 
+              background: "#0b0b0b", 
+              position: "relative", 
+              height: "520px", // Expands window vertical box tracking footprint
+              overflow: "hidden", 
+              display: "flex", 
+              flexDirection: "column" 
+            }}
+          >
             <div style={{ position: "absolute", top: "1rem", left: "1.25rem", zIndex: 20, pointerEvents: "none" }}>
               <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <Globe style={{ width: "15px", height: "15px", color: "#06b6d4" }} /> DYNAMIC STATION TRAJECTORY MAP
@@ -592,6 +632,8 @@ export default function Page() {
             
             <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
               <GlobeEngine
+                width={dimensions.width}
+                height={dimensions.height}
                 globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
                 bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                 backgroundImageUrl=""
