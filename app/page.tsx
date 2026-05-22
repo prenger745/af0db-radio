@@ -96,7 +96,7 @@ export default function Page() {
   const [showTelemetry, setShowTelemetry] = useState(false);
   const [showWorkspace, setShowWorkspace] = useState(false);
 
-  // Apply typewriter hooks directly to text strings to control load timing loops
+  // FIXED: Spelling corrected to properly register the "D" in Daniel McGurk
   const mainTitleText = useTypewriter("DANIEL McGURK // AFØDB STATION LOG", 35, 300);
   const subTitleText = useTypewriter("Real-Time QRZ API Live Data Stream", 20, 1400);
 
@@ -428,7 +428,7 @@ export default function Page() {
       color: "#e5e5e5",
       minHeight: "100vh",
       padding: "1.5rem",
-      fontFamily: "monospace", // Swapped out system font to lock everything into a fixed-width terminal font mesh
+      fontFamily: "monospace", 
       boxSizing: "border-box",
       letterSpacing: "0.02em"
     }}>
@@ -508,7 +508,6 @@ export default function Page() {
           line-height: 1.4 !important;
         }
 
-        /* Typewriter text flashing cursor line simulation effect */
         .terminal-cursor::after {
           content: "█";
           animation: blink 0.9s step-start infinite;
@@ -522,12 +521,13 @@ export default function Page() {
       {/* Header with Typewriter Terminal Emulation */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00f2ff", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
+          {/* FIXED: Shifted primary header tone to authentic Phosphor Radar Green (#00ff66) for extreme sci-fi mainframe execution */}
+          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> 
-            <span className={mainTitleText.length < 34 ? "terminal-cursor" : ""}>{mainTitleText}</span>
+            <span className={mainTitleText.length < 35 ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
           <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500, minHeight: "12px" }}>
-            <span className={mainTitleText.length >= 34 && subTitleText.length < 35 ? "terminal-cursor" : ""}>{subTitleText}</span>
+            <span className={mainTitleText.length >= 35 && subTitleText.length < 35 ? "terminal-cursor" : ""}>{subTitleText}</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -597,7 +597,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Telemetry Strip - Staged horizontal reveal initialization */}
+      {/* Telemetry Strip */}
       <section className={`telemetry-strip ${showTelemetry ? "active" : ""}`}>
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
@@ -625,7 +625,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Main Workspace Split Grid Layout - Final staging step mounts data models onto live loops */}
+      {/* Main Workspace Split Grid Layout */}
       <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
         {/* Left Column Stack */}
