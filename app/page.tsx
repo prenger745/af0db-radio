@@ -96,9 +96,13 @@ export default function Page() {
   const [showTelemetry, setShowTelemetry] = useState(false);
   const [showWorkspace, setShowWorkspace] = useState(false);
 
-  // FIXED: Spelling corrected to properly register the "D" in Daniel McGurk
-  const mainTitleText = useTypewriter("DANIEL McGURK // AFØDB STATION LOG", 35, 300);
-  const subTitleText = useTypewriter("Real-Time QRZ API Live Data Stream", 20, 1400);
+  // Core configuration identity strings
+  const targetTitle = "DANIEL McGURK // AFØDB STATION LOG";
+  const targetSubtitle = "Real-Time QRZ API Live Data Stream";
+
+  // Apply typewriter hooks directly to text strings to control load timing loops
+  const mainTitleText = useTypewriter(targetTitle, 35, 300);
+  const subTitleText = useTypewriter(targetSubtitle, 20, 1400);
 
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
@@ -513,6 +517,9 @@ export default function Page() {
           animation: blink 0.9s step-start infinite;
           margin-left: 2px;
         }
+        @media (min-width: 640px) {
+          .terminal-cursor::after { margin-left: 4px; }
+        }
         @keyframes blink {
           50% { opacity: 0; }
         }
@@ -521,13 +528,13 @@ export default function Page() {
       {/* Header with Typewriter Terminal Emulation */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
         <div>
-          {/* FIXED: Shifted primary header tone to authentic Phosphor Radar Green (#00ff66) for extreme sci-fi mainframe execution */}
           <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> 
-            <span className={mainTitleText.length < 35 ? "terminal-cursor" : ""}>{mainTitleText}</span>
+            {/* FIXED: Re-aligned boundary limits dynamically targeting exact word layout arrays */}
+            <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
           <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500, minHeight: "12px" }}>
-            <span className={mainTitleText.length >= 35 && subTitleText.length < 35 ? "terminal-cursor" : ""}>{subTitleText}</span>
+            <span className={mainTitleText.length >= targetTitle.length && subTitleText.length < targetSubtitle.length ? "terminal-cursor" : ""}>{subTitleText}</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
