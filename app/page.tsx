@@ -54,11 +54,11 @@ export default function Page() {
 
         const countMatch = cleanText.match(/COUNT=([^&]*)/i);
         const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i);
-        const confirmedMatch = cleanText.match(/CONFIRMED_COUNT=([^&]*)/i); // Added target pattern regex scan
+        const confirmedMatch = cleanText.match(/CONFIRMED=([^&]*)/i); // FIXED: Captures exact QRZ API metadata key
 
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058";
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74";
-        const liveConfirmed = confirmedMatch ? confirmedMatch[1].split('&')[0] : "833"; // Extracted live string token
+        const liveConfirmed = confirmedMatch ? confirmedMatch[1].split('&')[0] : "833"; // Synchronized to dynamic response stream
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -120,7 +120,7 @@ export default function Page() {
           setIsLiveStream(true);
           setStats({
             totalQsos: liveCount,
-            confirmed: liveConfirmed, // Overrode fake "833" string with live parameter variable
+            confirmed: liveConfirmed, // Dynamically maps your live QRZ confirmation metrics
             dxcc: liveDxcc,
             currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
             currentMode: newestFifteen[0].mode || "FT8"
@@ -328,7 +328,7 @@ export default function Page() {
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value" style={{ color: "#ffffff" }}>XUBUNTU/HAM</span></div>
           </div>
 
-          {/* Card 2: Restored Complete Space & Solar Weather Data System */}
+          {/* Card 2: Space & Solar Weather Data System */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#f59e0b" }}>
@@ -399,7 +399,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 3: Restored Engine Statistics Metrics System */}
+          {/* Card 3: Engine Statistics Metrics System */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
