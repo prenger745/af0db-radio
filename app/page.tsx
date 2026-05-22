@@ -249,18 +249,33 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // FIXED: Appends a completely randomized hexadecimal neon color profile parameter onto every contact arc mapping pipeline trace
+          // SPATIAL GEOGRAPHIC BOUNDS ENGINE: Separates USA from DX international logs
           if (json.geoMap && Array.isArray(json.geoMap)) {
             const formattedArcs = json.geoMap.map((pt: any) => {
-              // Mathematical raw hex string randomizer loop
-              const randomHexColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+              const callUpper = pt.callsign.toUpperCase();
+              
+              // 1. Check ITU prefix assignments for standard US operations
+              const isUSAPrefix = callUpper.startsWith("W") || 
+                                  callUpper.startsWith("K") || 
+                                  callUpper.startsWith("N") || 
+                                  callUpper.startsWith("AA") || 
+                                  callUpper.startsWith("AB") || 
+                                  callUpper.startsWith("AC") || 
+                                  callUpper.startsWith("AD");
+              
+              // 2. Bounding box fallback validation for continental US coordinates
+              const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
+                                      pt.lng >= -125.000000 && pt.lng <= -66.934570;
+
+              // Assign Aviation Blue for domestic and Cyber Pink for dynamic global traces
+              const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#f43f5e";
               
               return {
                 startLat: 38.6158, // QTH Base: Ottawa, KS
                 startLng: -95.2686,
                 endLat: pt.lat,
                 endLng: pt.lng,
-                color: randomHexColor,
+                color: assignedTargetColor,
                 label: `${pt.callsign} [${pt.mode}] Grid: ${pt.grid}`
               };
             });
@@ -625,12 +640,20 @@ export default function Page() {
               flexDirection: "column" 
             }}
           >
+            {/* Legend Overlay HUD */}
             <div style={{ position: "absolute", top: "1rem", left: "1.25rem", zIndex: 20, pointerEvents: "none" }}>
               <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <Globe style={{ width: "15px", height: "15px", color: "#06b6d4" }} /> DYNAMIC STATION TRAJECTORY MAP
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: "10px", color: "#737373", marginTop: "0.15rem", textTransform: "uppercase" }}>
-                Plotting {geoArcs.length} active global contacts mapped from grid logs
+              <div style={{ fontFamily: "monospace", fontSize: "10px", color: "#a3a3a3", marginTop: "0.25rem", display: "flex", gap: "1rem" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  <span style={{ width: "6px", height: "6px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
+                  DOMESTIC (USA)
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.3------" }}>
+                  <span style={{ width: "6px", height: "6px", backgroundColor: "#f43f5e", borderRadius: "50%", display: "inline-block" }}></span>
+                  INTERNATIONAL (DX)
+                </span>
               </div>
             </div>
             
