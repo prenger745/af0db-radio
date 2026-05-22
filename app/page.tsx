@@ -85,8 +85,6 @@ export default function Page() {
   
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
-  
-  // MOBILE ENGINE DETECTION STATE: Automatically scales UI footprints based on browser viewport profiling
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
@@ -115,7 +113,6 @@ export default function Page() {
     };
   }, []);
 
-  // Recalibrate width and screen orientation tags across both desktop and mobile viewports
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -126,7 +123,6 @@ export default function Page() {
         
         setDimensions({
           width: containerRef.current.clientWidth,
-          // FIXED: Compresses the 3D footprint vertically on mobile screens to save screen space
           height: mobileViewActive ? 340 : 520
         });
       }
@@ -430,7 +426,7 @@ export default function Page() {
       backgroundColor: "#0a0a0a",
       color: "#e5e5e5",
       minHeight: "100vh",
-      padding: isMobileScreen ? "0.75rem" : "1.5rem", // Shrinks wrapper spacing on small mobile viewports
+      padding: isMobileScreen ? "0.75rem" : "1.5rem",
       fontFamily: "monospace", 
       boxSizing: "border-box",
       letterSpacing: "0.02em"
@@ -488,7 +484,6 @@ export default function Page() {
         .matrix-table tr:nth-child(even) { background: #161616; }
         .matrix-table tr:hover { background: #1f1f1f; }
 
-        // EXPLICIT VIEWPORT RESPONSIVENESS HINTS: Automatically strip wide columns on handheld displays to drop overflow swipes
         @media (max-width: 580px) {
           .hide-on-mobile-cell { display: none !important; }
         }
@@ -523,11 +518,19 @@ export default function Page() {
           animation: blink 0.9s step-start infinite;
           margin-left: 2px;
         }
-        @media (min-width: 640px) {
-          .terminal-cursor::after { margin-left: 4px; }
-        }
         @keyframes blink {
           50% { opacity: 0; }
+        }
+        
+        /* RADAR HUD INTERACTIVE PULSE ANIMATION */
+        .hud-pulse {
+          color: #10b981;
+          animation: pulse-glow 2s infinite ease-in-out;
+          font-weight: 700;
+        }
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.3; color: #737373; }
+          50% { opacity: 1; color: #00ff66; text-shadow: 0 0 8px rgba(0, 255, 102, 0.4); }
         }
       `}} />
 
@@ -777,16 +780,21 @@ export default function Page() {
               padding: "0.5rem", 
               background: "#0b0b0b", 
               position: "relative", 
-              height: isMobileScreen ? "340px" : "520px", // Safely falls back to compressed vertical footprints on smaller phone dimensions
+              height: isMobileScreen ? "340px" : "520px", 
               overflow: "hidden", 
               display: "flex", 
               flexDirection: "column" 
             }}
           >
             {/* Legend Overlay HUD */}
-            <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, pointerEvents: "none" }}>
-              <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Globe style={{ width: "14px", height: "14px", color: "#06b6d4" }} /> AGGREGATED SECTOR GEOMETRY MAP
+            <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, pointerEvents: "none", width: "calc(100% - 2rem)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                {/* FIXED: Added a custom glowing pulse macro tag immediately following the main chart title layout header */}
+                <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <Globe style={{ width: "14px", height: "14px", color: "#06b6d4" }} /> 
+                  <span>AGGREGATED SECTOR GEOMETRY MAP</span>
+                  <span className="hud-pulse" style={{ fontSize: "10px", letterSpacing: "0.05em" }}>[ INTERACTIVE // HOVER_ACTIVE ]</span>
+                </div>
               </div>
               <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#a3a3a3", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
