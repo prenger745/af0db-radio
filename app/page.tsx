@@ -13,9 +13,6 @@ const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.def
   )
 });
 
-// Import Three.js mesh utilities safely for hardware acceleration
-import * as THREE from "three";
-
 interface QSO {
   callsign: string;
   date: string;
@@ -691,23 +688,13 @@ export default function Page() {
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 
-                // HARDWARE-ACCELERATED WEBGL MESH LAYER: Generates flat singular vector tracking dots directly on GPU threads
-                customLayerData={geoArcs}
-                customThreeObject={(d: any) => {
-                  // Creates a single, flat flat 2D circular vector circle mesh
-                  const circleGeo = new THREE.CircleGeometry(0.4, 16);
-                  const circleMat = new THREE.MeshBasicMaterial({ 
-                    color: d.color, 
-                    side: THREE.DoubleSide,
-                    transparent: true,
-                    opacity: 0.95
-                  });
-                  return new THREE.Mesh(circleGeo, circleMat);
-                }}
-                customThreeObjectUpdate={(obj, d: any) => {
-                  // Pins the mesh exactly flat against the curvature coordinates of the planetary sphere body
-                  Object.assign(obj.position, this.getCoords(d.endLat, d.endLng));
-                }}
+                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER: Empty text strings hide layout typography while compiling flat targeting pins directly inside core GPU threads
+                labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "", color: arc.color }))}
+                labelText="text"
+                labelColor="color"
+                labelDotRadius={0.35} // The singular flat glowing target dot width setting
+                labelDotOrientation={() => "bottom"}
+                labelsTransitionDuration={0}
               />
             </div>
           </div>
