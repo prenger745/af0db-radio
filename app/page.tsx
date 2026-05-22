@@ -33,7 +33,7 @@ interface StationMetrics {
   currentMode: string;
 }
 
-// TERMINAL TYPEWRITER CORE SIMULATION HOOK: Emulates mainframe sequential printing character-by-character
+// FIXED TERMINAL TYPEWRITER HOOK: Fixed off-by-one boundary loop to guarantee every character prints fully
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -43,8 +43,9 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
     
     const startTimeout = setTimeout(() => {
       timer = setInterval(() => {
+        // Strict boundary evaluation loop tracking the explicit text array length
         if (index < text.length) {
-          setDisplayedText((prev) => prev + text.charAt(index));
+          setDisplayedText(text.substring(0, index + 1));
           index++;
         } else {
           clearInterval(timer);
@@ -96,11 +97,11 @@ export default function Page() {
   const [showTelemetry, setShowTelemetry] = useState(false);
   const [showWorkspace, setShowWorkspace] = useState(false);
 
-  // Core configuration identity strings
+  // Constant target strings to prevent parsing adjustments
   const targetTitle = "DANIEL McGURK // AFØDB STATION LOG";
   const targetSubtitle = "Real-Time QRZ API Live Data Stream";
 
-  // Apply typewriter hooks directly to text strings to control load timing loops
+  // Feed strings directly to typewriter memory layers
   const mainTitleText = useTypewriter(targetTitle, 35, 300);
   const subTitleText = useTypewriter(targetSubtitle, 20, 1400);
 
@@ -530,7 +531,6 @@ export default function Page() {
         <div>
           <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> 
-            {/* FIXED: Re-aligned boundary limits dynamically targeting exact word layout arrays */}
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
           <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500, minHeight: "12px" }}>
