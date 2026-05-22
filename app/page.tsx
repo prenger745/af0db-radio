@@ -258,11 +258,11 @@ export default function Page() {
         .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); }
         .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; }
         .rst-r-box { color: #ef4444; font-weight: 600; font-family: monospace; }
-        .font-mono-data { font-family: monospace; font-weight: 600; }
+        .panel-mono-data { font-family: monospace; font-weight: 600; }
       `}} />
 
       {/* Header */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
             <Radio style={{ width: "20px", height: "20px" }} /> DANIEL McGURK // AFØDB STATION LOG
@@ -276,6 +276,46 @@ export default function Page() {
           <span className="status-bracket">[<span className="status-text" style={{ color: "#f59e0b" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
+
+      {/* FIXED: Re-coded the banner terms so non-technical users immediately understand it means AI Prompting & Pure Vibes */}
+      <section style={{
+        background: "rgba(244, 63, 94, 0.03)",
+        border: "1px dashed rgba(244, 63, 94, 0.25)",
+        borderRadius: "6px",
+        padding: "0.5rem 0.75rem",
+        marginBottom: "1.5rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        fontSize: "0.7rem",
+        fontFamily: "monospace",
+        fontWeight: 600,
+        letterSpacing: "0.05em",
+        color: "#a3a3a3"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <span style={{ color: "#f43f5e", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f43f5e", display: "inline-block" }}></span>
+            AI_PROMPT_ENGINE // VIBE_CODED_SYSTEM
+          </span>
+          <span style={{ color: "#404040" }}>|</span>
+          <span>STACK_ALLOC: <span style={{ color: "#ffffff" }}>0x7FFEE3A2F1B0</span></span>
+          <span style={{ color: "#404040" }} className="status-bracket">@</span>
+          <span>COMPILING: <span style={{ color: "#10b981" }}>SUCCESS</span></span>
+        </div>
+        <div style={{ 
+          border: "1px solid #f43f5e", 
+          color: "#f43f5e", 
+          fontSize: "9px", 
+          padding: "0.05rem 0.4rem", 
+          borderRadius: "3px", 
+          background: "rgba(244, 63, 94, 0.08)",
+          textTransform: "uppercase",
+          fontWeight: 800
+        }}>
+          BUILT BY AI VIBES
+        </div>
+      </section>
 
       {/* Telemetry Strip */}
       <section className="telemetry-strip">
@@ -299,7 +339,6 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* ADJUSTED VALUE COLOR: Swapped from red to highly visible tactical Neon Lime (#a3e635) */}
         <a
           href="https://www.qsomap.com/QSOmapProduction/qsomapforosmQRZ.php?call=AF0DB"
           target="_blank"
@@ -349,15 +388,15 @@ export default function Page() {
             </div>
             <div className="data-row">
               <span className="data-label">SUNSPOT NUMBER</span>
-              <span className="data-value font-mono-data" style={{ color: "#ffffff" }}>{sunspots}</span>
+              <span className="data-value panel-mono-data" style={{ color: "#ffffff" }}>{sunspots}</span>
             </div>
             <div className="data-row">
               <span className="data-label">A INDEX</span>
-              <span className="data-value font-mono-data" style={{ color: "#a3a3a3" }}>{aIndex}</span>
+              <span className="data-value panel-mono-data" style={{ color: "#a3a3a3" }}>{aIndex}</span>
             </div>
             <div className="data-row">
               <span className="data-label">K INDEX</span>
-              <span className="data-value font-mono-data txt-neon-green">{kIndex}</span>
+              <span className="data-value panel-mono-data txt-neon-green">{kIndex}</span>
             </div>
             <div className="data-row">
               <span className="data-label">XRAY FLUX</span>
@@ -465,7 +504,7 @@ export default function Page() {
                 ) : (
                   logs.map((qso, index) => (
                     <tr key={index}>
-                      <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="font-mono-data">
+                      <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="panel-mono-data">
                         {qso.callsign}
                       </td>
                       <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
@@ -479,7 +518,7 @@ export default function Page() {
                         <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
                         <span className="rst-r-box">{qso.rstR}</span>
                       </td>
-                      <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="font-mono-data">
+                      <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="panel-mono-data">
                         {qso.grid || "—"}
                       </td>
                     </tr>
