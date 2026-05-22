@@ -13,6 +13,9 @@ const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.def
   )
 });
 
+// Import Three.js mesh utilities safely for hardware acceleration
+import * as THREE from "three";
+
 interface QSO {
   callsign: string;
   date: string;
@@ -688,17 +691,22 @@ export default function Page() {
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 
-                // HIGH-PRECISION 2D VECTOR HUD LAYER: Draws a clean, single flat glowing vector dot on the map grid surface mesh
-                htmlElementsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, color: arc.color }))}
-                htmlElement={(d: any) => {
-                  const el = document.createElement("div");
-                  el.style.width = "6px";
-                  el.style.height = "6px";
-                  el.style.borderRadius = "50%";
-                  el.style.backgroundColor = d.color;
-                  el.style.boxShadow = `0 0 8px ${d.color}, 0 0 3px #ffffff`;
-                  el.style.pointerEvents = "none";
-                  return el;
+                // HARDWARE-ACCELERATED WEBGL MESH LAYER: Generates flat singular vector tracking dots directly on GPU threads
+                customLayerData={geoArcs}
+                customThreeObject={(d: any) => {
+                  // Creates a single, flat flat 2D circular vector circle mesh
+                  const circleGeo = new THREE.CircleGeometry(0.4, 16);
+                  const circleMat = new THREE.MeshBasicMaterial({ 
+                    color: d.color, 
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.95
+                  });
+                  return new THREE.Mesh(circleGeo, circleMat);
+                }}
+                customThreeObjectUpdate={(obj, d: any) => {
+                  // Pins the mesh exactly flat against the curvature coordinates of the planetary sphere body
+                  Object.assign(obj.position, this.getCoords(d.endLat, d.endLng));
                 }}
               />
             </div>
