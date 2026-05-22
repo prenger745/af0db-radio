@@ -105,6 +105,31 @@ export default function Page() {
     } catch (e) {}
   };
 
+  // AUDIO INTERACTIVE HARDWARE TOGGLE: Fixed and placed explicitly within the component state scope
+  const handleToggleAudioSystem = () => {
+    const freshState = !audioEnabled;
+    setAudioEnabled(freshState);
+    if (freshState) {
+      setTimeout(() => {
+        try {
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1000, ctx.currentTime);
+          gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } catch(e) {}
+      }, 50);
+    }
+  };
+
   useEffect(() => {
     let baseBootTriggered = false;
 
@@ -447,7 +472,7 @@ export default function Page() {
               </div>
               <ChevronRight style={{ width: "14px", height: "14px", color: "#525252" }} />
             </div>
-            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value" style={{ color: "#ffffff" }}>OTTAWA, KS</span></div>
+            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value" style={{ color: "#ffffff" }}>OTTAWA, INT_KS</span></div>
             <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value" style={{ color: "#ffffff" }}>YAESU FT-991</span></div>
             <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value" style={{ color: "#ffffff" }}>ISOTRON 20M</span></div>
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value" style={{ color: "#ffffff" }}>XUBUNTU/HAM</span></div>
