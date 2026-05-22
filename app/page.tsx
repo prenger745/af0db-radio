@@ -33,6 +33,34 @@ interface StationMetrics {
   currentMode: string;
 }
 
+// TERMINAL TYPEWRITER CORE SIMULATION HOOK: Emulates mainframe sequential printing character-by-character
+function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    let index = 0;
+    let timer: NodeJS.Timeout;
+    
+    const startTimeout = setTimeout(() => {
+      timer = setInterval(() => {
+        if (index < text.length) {
+          setDisplayedText((prev) => prev + text.charAt(index));
+          index++;
+        } else {
+          clearInterval(timer);
+        }
+      }, speed);
+    }, delay);
+
+    return () => {
+      clearTimeout(startTimeout);
+      clearInterval(timer);
+    };
+  }, [text, speed, delay]);
+
+  return displayedText;
+}
+
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
   const [stats, setStats] = useState<StationMetrics>({
@@ -64,9 +92,28 @@ export default function Page() {
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const audioEnabledRef = useRef(false);
 
+  // Layout module sequence trackers for tactical radar deck staging stagger effects
+  const [showTelemetry, setShowTelemetry] = useState(false);
+  const [showWorkspace, setShowWorkspace] = useState(false);
+
+  // Apply typewriter hooks directly to text strings to control load timing loops
+  const mainTitleText = useTypewriter("DANIEL McGURK // AFØDB STATION LOG", 35, 300);
+  const subTitleText = useTypewriter("Real-Time QRZ API Live Data Stream", 20, 1400);
+
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
   }, [audioEnabled]);
+
+  // Handle staging delays for a calculated cinematic hardware interface boot feel
+  useEffect(() => {
+    const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 1800);
+    const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 2400);
+
+    return () => {
+      clearTimeout(telemetryTimeout);
+      clearTimeout(workspaceTimeout);
+    };
+  }, []);
 
   // Handle runtime responsive resizing to completely prevent globe clipping glitches
   useEffect(() => {
@@ -381,9 +428,9 @@ export default function Page() {
       color: "#e5e5e5",
       minHeight: "100vh",
       padding: "1.5rem",
-      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      fontFamily: "monospace", // Swapped out system font to lock everything into a fixed-width terminal font mesh
       boxSizing: "border-box",
-      letterSpacing: "0.01em"
+      letterSpacing: "0.02em"
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -392,11 +439,22 @@ export default function Page() {
           grid-template-columns: repeat(1, 1fr); 
           gap: 1rem; 
           margin-bottom: 1rem; 
+          opacity: 0;
+          transform: translateY(10px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
         }
+        .telemetry-strip.active { opacity: 1; transform: translateY(0); }
         @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } }
 
-        .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .deck-workspace { 
+          display: grid; 
+          grid-template-columns: 1fr; 
+          gap: 1.5rem; 
+          opacity: 0;
+          transition: opacity 0.8s ease;
+        }
+        .deck-workspace.active { opacity: 1; }
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 340px 1fr; } }
 
         .terminal-panel {
@@ -431,9 +489,9 @@ export default function Page() {
         .status-bracket { font-size: 0.75rem; color: #525252; font-weight: 600; }
         .status-text { color: #10b981; font-weight: 700; }
         .badge-mode-tactical { border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245,158,11,0.08); }
-        .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; }
-        .rst-r-box { color: #ef4444; font-weight: 600; font-family: monospace; }
-        .panel-mono-data { font-family: monospace; font-weight: 600; }
+        .rst-s-box { color: #10b981; font-weight: 600; }
+        .rst-r-box { color: #ef4444; font-weight: 600; }
+        .panel-mono-data { font-weight: 600; }
         
         .scene-tooltip {
           background: #171717 !important;
@@ -449,17 +507,27 @@ export default function Page() {
           white-space: normal !important;
           line-height: 1.4 !important;
         }
+
+        /* Typewriter text flashing cursor line simulation effect */
+        .terminal-cursor::after {
+          content: "█";
+          animation: blink 0.9s step-start infinite;
+          margin-left: 2px;
+        }
+        @keyframes blink {
+          50% { opacity: 0; }
+        }
       `}} />
 
-      {/* Header */}
+      {/* Header with Typewriter Terminal Emulation */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
         <div>
-          {/* UPDATED: Main header profile color changed to high-tech Telemetry Cyan (#00f2ff) to match the radar grid theme */}
           <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00f2ff", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
-            <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> DANIEL McGURK // AFØDB STATION LOG
+            <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> 
+            <span className={mainTitleText.length < 34 ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
-          <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500 }}>
-            Real-Time QRZ API Live Data Stream
+          <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500, minHeight: "12px" }}>
+            <span className={mainTitleText.length >= 34 && subTitleText.length < 35 ? "terminal-cursor" : ""}>{subTitleText}</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -479,7 +547,6 @@ export default function Page() {
         justifyContent: "space-between",
         alignItems: "center",
         fontSize: "0.7rem",
-        fontFamily: "monospace",
         fontWeight: 600,
         letterSpacing: "0.05em",
         color: "#a3a3a3"
@@ -530,36 +597,36 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Telemetry Strip */}
-      <section className="telemetry-strip">
+      {/* Telemetry Strip - Staged horizontal reveal initialization */}
+      <section className={`telemetry-strip ${showTelemetry ? "active" : ""}`}>
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.currentBand}</div>
+          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.currentBand}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>RIG MODE</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.35rem" }}>{stats.currentMode}</div>
+          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>RIG MODE</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.35rem" }}>{stats.currentMode}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>TOTAL QSO COUNT</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#10b981", marginTop: "0.35rem" }}>{stats.totalQsos}</div>
+          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>TOTAL QSO COUNT</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#10b981", marginTop: "0.35rem" }}>{stats.totalQsos}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
+          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a3e635", marginTop: "0.35rem" }}>{stats.dxcc}</div>
+          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#a3e635", marginTop: "0.35rem" }}>{stats.dxcc}</div>
         </div>
       </section>
 
-      {/* Main Workspace Split Grid Layout */}
-      <main className="deck-workspace">
+      {/* Main Workspace Split Grid Layout - Final staging step mounts data models onto live loops */}
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
         {/* Left Column Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -711,51 +778,52 @@ export default function Page() {
             </div>
             
             <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
-              <GlobeEngine
-                width={dimensions.width}
-                height={dimensions.height}
-                globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-                backgroundImageUrl=""
-                backgroundColor="#0b0b0b"
-                arcsData={geoArcs}
-                arcColor="color"
-                arcDashLength={0.4}
-                arcDashGap={0.15}
-                arcDashAnimateTime={2500}
-                arcStroke={0.5}
-                arcsTransitionDuration={1000}
-                
-                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER
-                labelsData={geoArcs}
-                labelText={() => ""}
-                labelColor="color"
-                labelDotRadius={0.35}
-                labelDotOrientation={() => "bottom"}
-                labelsTransitionDuration={0}
-                
-                labelLabel={(d: any) => `
-                  <div class="scene-tooltip">
-                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
-                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600; font-family: monospace;">${d.operators}</span></div>
-                    <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
-                      TOTAL CONTACTS IN ZONE: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+              {showWorkspace && (
+                <GlobeEngine
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+                  bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                  backgroundImageUrl=""
+                  backgroundColor="#0b0b0b"
+                  arcsData={geoArcs}
+                  arcColor="color"
+                  arcDashLength={0.4}
+                  arcDashGap={0.15}
+                  arcDashAnimateTime={2500}
+                  arcStroke={0.5}
+                  arcsTransitionDuration={1000}
+                  
+                  labelsData={geoArcs}
+                  labelText={() => ""}
+                  labelColor="color"
+                  labelDotRadius={0.35}
+                  labelDotOrientation={() => "bottom"}
+                  labelsTransitionDuration={0}
+                  
+                  labelLabel={(d: any) => `
+                    <div class="scene-tooltip">
+                      <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
+                      <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
+                        TOTAL CONTACTS IN ZONE: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                      </div>
                     </div>
-                  </div>
-                `}
-                
-                arcLabel={(d: any) => `
-                  <div class="scene-tooltip">
-                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: OTTAWA &rarr; ${d.gridKey}</div>
-                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">TARGET REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600; font-family: monospace;">${d.operators}</span></div>
-                    <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
-                      TOTAL SECTOR CONTACTS: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                  `}
+                  
+                  arcLabel={(d: any) => `
+                    <div class="scene-tooltip">
+                      <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: OTTAWA &rarr; ${d.gridKey}</div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">TARGET REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
+                      <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
+                        TOTAL SECTOR CONTACTS: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                      </div>
                     </div>
-                  </div>
-                `}
-              />
+                  `}
+                />
+              )}
             </div>
           </div>
 
