@@ -54,9 +54,11 @@ export default function Page() {
 
         const countMatch = cleanText.match(/COUNT=([^&]*)/i);
         const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i);
+        const confirmedMatch = cleanText.match(/CONFIRMED_COUNT=([^&]*)/i); // Added target pattern regex scan
 
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058";
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74";
+        const liveConfirmed = confirmedMatch ? confirmedMatch[1].split('&')[0] : "833"; // Extracted live string token
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -118,7 +120,7 @@ export default function Page() {
           setIsLiveStream(true);
           setStats({
             totalQsos: liveCount,
-            confirmed: "833",
+            confirmed: liveConfirmed, // Overrode fake "833" string with live parameter variable
             dxcc: liveDxcc,
             currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
             currentMode: newestFifteen[0].mode || "FT8"
