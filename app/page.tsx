@@ -43,6 +43,64 @@ export default function Page() {
   const [isNight, setIsNight] = useState<boolean>(false);
 
   useEffect(() => {
+    // SYNTHESIZER MODULE: Generates pure browser-native raw telemetry sound elements
+    const playTerminalBeep = (type: "boot" | "sync") => {
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        if (type === "boot") {
+          // Dual-frequency system boot tone sequence
+          const osc1 = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+
+          osc1.type = "sine";
+          osc2.type = "sine";
+          
+          osc1.frequency.setValueAtTime(880, ctx.currentTime); // High A
+          osc1.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
+          
+          osc2.frequency.setValueAtTime(440, ctx.currentTime); // Low A
+          osc2.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
+
+          gainNode.gain.setValueAtTime(0.04, ctx.currentTime); // Kept volume safe and atmospheric
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          osc1.start();
+          osc2.start();
+          osc1.stop(ctx.currentTime + 0.2);
+          osc2.stop(ctx.currentTime + 0.2);
+        } else if (type === "sync") {
+          // Micro-mechanical data packet chirp pulse
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(1500, ctx.currentTime);
+          osc.frequency.setValueAtTime(700, ctx.currentTime + 0.01);
+
+          gainNode.gain.setValueAtTime(0.02, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.02);
+
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          osc.start();
+          osc.stop(ctx.currentTime + 0.02);
+        }
+      } catch (e) {
+        // Prevent audio thread crashes if user interaction models aren't primed yet
+      }
+    };
+
+    let baseBootTriggered = false;
+
     async function parseLiveQrzData() {
       try {
         const res = await fetch("/api/qrz");
@@ -131,6 +189,14 @@ export default function Page() {
             currentBand: displayBand,
             currentMode: newestFifteen[0].mode || "FT8"
           });
+
+          // Core audio engine gate logic
+          if (!baseBootTriggered) {
+            playTerminalBeep("boot");
+            baseBootTriggered = true;
+          } else {
+            playTerminalBeep("sync");
+          }
         }
       } catch (err) {
         console.warn(err);
@@ -277,7 +343,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* FIXED: Re-coded the banner terms so non-technical users immediately understand it means AI Prompting & Pure Vibes */}
+      {/* Vibe Coded Tactical Core Status Banner */}
       <section style={{
         background: "rgba(244, 63, 94, 0.03)",
         border: "1px dashed rgba(244, 63, 94, 0.25)",
