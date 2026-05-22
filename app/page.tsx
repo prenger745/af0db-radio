@@ -687,6 +687,7 @@ export default function Page() {
                 arcDashAnimateTime={2500}
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
+                // FIXED: Aligns target dots to use the exact same grid coordinates as the arc endpoints
                 labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "•", color: arc.color, size: 0.5 }))}
                 labelText="text"
                 labelColor="color"
