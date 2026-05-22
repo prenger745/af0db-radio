@@ -454,8 +454,8 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
         <div>
-          {/* FIXED: Changed main station header text color profile from Amber to a striking clean White (#ffffff) */}
-          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
+          {/* UPDATED: Main header profile color changed to high-tech Telemetry Cyan (#00f2ff) to match the radar grid theme */}
+          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00f2ff", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> DANIEL McGURK // AFØDB STATION LOG
           </h1>
           <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500 }}>
