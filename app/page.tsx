@@ -688,11 +688,18 @@ export default function Page() {
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 
-                // HIGH-PRECISION NODE MARKERS: Feeds deduplicated endpoints straight to the globe surface array
-                pointsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, color: arc.color }))}
-                pointColor="color"
-                pointRadius={0.35}
-                pointsMerge={true}
+                // HIGH-PRECISION 2D VECTOR HUD LAYER: Draws a clean, single flat glowing vector dot on the map grid surface mesh
+                htmlElementsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, color: arc.color }))}
+                htmlElement={(d: any) => {
+                  const el = document.createElement("div");
+                  el.style.width = "6px";
+                  el.style.height = "6px";
+                  el.style.borderRadius = "50%";
+                  el.style.backgroundColor = d.color;
+                  el.style.boxShadow = `0 0 8px ${d.color}, 0 0 3px #ffffff`;
+                  el.style.pointerEvents = "none";
+                  return el;
+                }}
               />
             </div>
           </div>
