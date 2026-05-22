@@ -54,13 +54,11 @@ export default function Page() {
 
         const countMatch = cleanText.match(/COUNT=([^&]*)/i);
         const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i);
+        const qslMatch = cleanText.match(/CQSL=([^&]*)/i); // FIXED: Scans for raw global credit confirmation token
 
         const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058";
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74";
-
-        // GLOBAL STRING ANALYSIS: Counts matches across the entire raw un-truncated feed data text block
-        const globalConfirmationsMatch = cleanText.match(/<qsl_rcvd:1>Y|<lotw_qsl_rcvd:1>Y/gi);
-        const calculatedConfirmedTotal = globalConfirmationsMatch ? globalConfirmationsMatch.length : 850;
+        const liveConfirmed = qslMatch ? qslMatch[1].split('&')[0] : "850"; // FIXED: Holds true rolling database value
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -122,7 +120,7 @@ export default function Page() {
           setIsLiveStream(true);
           setStats({
             totalQsos: liveCount,
-            confirmed: calculatedConfirmedTotal.toLocaleString(), // Injecting fully formatted true tracking count
+            confirmed: liveConfirmed, // FIXED: Maps liveConfirmed directly to the layout panel array
             dxcc: liveDxcc,
             currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
             currentMode: newestFifteen[0].mode || "FT8"
