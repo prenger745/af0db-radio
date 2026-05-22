@@ -33,7 +33,6 @@ interface StationMetrics {
   currentMode: string;
 }
 
-// FIXED TERMINAL TYPEWRITER HOOK: Fixed off-by-one boundary loop to guarantee every character prints fully
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -43,7 +42,6 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
     
     const startTimeout = setTimeout(() => {
       timer = setInterval(() => {
-        // Strict boundary evaluation loop tracking the explicit text array length
         if (index < text.length) {
           setDisplayedText(text.substring(0, index + 1));
           index++;
@@ -83,25 +81,23 @@ export default function Page() {
   const [isLiveStream, setIsLiveStream] = useState(false);
   const [isNight, setIsNight] = useState<boolean>(false);
   
-  // Dynamic coordinate arc tracking array for full dataset mapping
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
   
-  // Explicit parent element dimensions tracker for WebGL canvas alignment
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
+  
+  // MOBILE ENGINE DETECTION STATE: Automatically scales UI footprints based on browser viewport profiling
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const audioEnabledRef = useRef(false);
 
-  // Layout module sequence trackers for tactical radar deck staging stagger effects
   const [showTelemetry, setShowTelemetry] = useState(false);
   const [showWorkspace, setShowWorkspace] = useState(false);
 
-  // Constant target strings to prevent parsing adjustments
   const targetTitle = "DANIEL McGURK // AFØDB STATION LOG";
   const targetSubtitle = "Real-Time QRZ API Live Data Stream";
 
-  // Feed strings directly to typewriter memory layers
   const mainTitleText = useTypewriter(targetTitle, 35, 300);
   const subTitleText = useTypewriter(targetSubtitle, 20, 1400);
 
@@ -109,7 +105,6 @@ export default function Page() {
     audioEnabledRef.current = audioEnabled;
   }, [audioEnabled]);
 
-  // Handle staging delays for a calculated cinematic hardware interface boot feel
   useEffect(() => {
     const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 1800);
     const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 2400);
@@ -120,15 +115,19 @@ export default function Page() {
     };
   }, []);
 
-  // Handle runtime responsive resizing to completely prevent globe clipping glitches
+  // Recalibrate width and screen orientation tags across both desktop and mobile viewports
   useEffect(() => {
     if (!containerRef.current) return;
     
     const handleResize = () => {
       if (containerRef.current) {
+        const mobileViewActive = window.innerWidth < 768;
+        setIsMobileScreen(mobileViewActive);
+        
         setDimensions({
           width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight
+          // FIXED: Compresses the 3D footprint vertically on mobile screens to save screen space
+          height: mobileViewActive ? 340 : 520
         });
       }
     };
@@ -303,7 +302,6 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // Advanced geo-aggregation converter
           if (json.geoMap && Array.isArray(json.geoMap)) {
             const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
@@ -432,7 +430,7 @@ export default function Page() {
       backgroundColor: "#0a0a0a",
       color: "#e5e5e5",
       minHeight: "100vh",
-      padding: "1.5rem",
+      padding: isMobileScreen ? "0.75rem" : "1.5rem", // Shrinks wrapper spacing on small mobile viewports
       fontFamily: "monospace", 
       boxSizing: "border-box",
       letterSpacing: "0.02em"
@@ -442,35 +440,36 @@ export default function Page() {
         .telemetry-strip { 
           display: grid; 
           grid-template-columns: repeat(1, 1fr); 
-          gap: 1rem; 
+          gap: 0.75rem; 
           margin-bottom: 1rem; 
           opacity: 0;
           transform: translateY(10px);
           transition: opacity 0.6s ease, transform 0.6s ease;
         }
         .telemetry-strip.active { opacity: 1; transform: translateY(0); }
-        @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } }
 
         .deck-workspace { 
           display: grid; 
           grid-template-columns: 1fr; 
-          gap: 1.5rem; 
+          gap: 1rem; 
           opacity: 0;
           transition: opacity 0.8s ease;
         }
         .deck-workspace.active { opacity: 1; }
-        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 340px 1fr; } }
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 340px 1fr; gap: 1.5rem; } }
 
         .terminal-panel {
           background: #121212;
           border: 1px solid #262626;
           border-radius: 8px;
-          padding: 1.25rem;
+          padding: 1rem;
           box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
           width: 100%;
           max-width: 100%;
         }
+        @media (min-width: 640px) { .terminal-panel { padding: 1.25rem; } }
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
         .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
@@ -483,10 +482,16 @@ export default function Page() {
         .forced-label-reset { color: #a3a3a3 !important; font-weight: 600 !important; }
 
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
-        .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 1rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
-        .matrix-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
+        .matrix-table th { background: #171717; border-bottom: 2px solid #262626; padding: 0.75rem 0.5rem; color: #a3a3a3; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
+        .matrix-table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #1f1f1f; color: #d4d4d4; }
+        @media (min-width: 640px) { .matrix-table th, .matrix-table td { padding: 0.75rem 1rem; } }
         .matrix-table tr:nth-child(even) { background: #161616; }
         .matrix-table tr:hover { background: #1f1f1f; }
+
+        // EXPLICIT VIEWPORT RESPONSIVENESS HINTS: Automatically strip wide columns on handheld displays to drop overflow swipes
+        @media (max-width: 580px) {
+          .hide-on-mobile-cell { display: none !important; }
+        }
 
         .txt-neon-green { color: #10b981; }
         .txt-solar-amber { color: #f59e0b; }
@@ -508,7 +513,7 @@ export default function Page() {
           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
           color: #e5e5e5 !important;
           pointer-events: none !important;
-          max-width: 280px !important;
+          max-width: 240px !important;
           white-space: normal !important;
           line-height: 1.4 !important;
         }
@@ -526,10 +531,19 @@ export default function Page() {
         }
       `}} />
 
-      {/* Header with Typewriter Terminal Emulation */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
+      {/* Header */}
+      <header style={{ 
+        display: "flex", 
+        flexDirection: isMobileScreen ? "column" : "row",
+        alignItems: isMobileScreen ? "flex-start" : "center",
+        justifyContent: "space-between", 
+        borderBottom: "1px solid #262626", 
+        paddingBottom: "1rem", 
+        marginBottom: "1rem",
+        gap: isMobileScreen ? "0.75rem" : "0px"
+      }}>
         <div>
-          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -537,7 +551,7 @@ export default function Page() {
             <span className={mainTitleText.length >= targetTitle.length && subTitleText.length < targetSubtitle.length ? "terminal-cursor" : ""}>{subTitleText}</span>
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
           <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
           <span className="status-bracket">[<span className="status-text" style={{ color: "#f59e0b" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
@@ -556,17 +570,19 @@ export default function Page() {
         fontSize: "0.7rem",
         fontWeight: 600,
         letterSpacing: "0.05em",
-        color: "#a3a3a3"
+        color: "#a3a3a3",
+        flexWrap: "wrap",
+        gap: "0.5rem"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#f43f5e", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#f43f5e", display: "inline-block" }}></span>
             AI_PROMPT_ENGINE // VIBE_CODED_SYSTEM
           </span>
-          <span style={{ color: "#404040" }}>|</span>
-          <span>STACK_ALLOC: <span style={{ color: "#ffffff" }}>0x7FFEE3A2F1B0</span></span>
-          <span style={{ color: "#404040" }} className="status-bracket">@</span>
-          <span>COMPILING: <span style={{ color: "#10b981" }}>SUCCESS</span></span>
+          <span style={{ color: "#404040" }} className="hide-on-mobile-cell">|</span>
+          <span className="hide-on-mobile-cell">STACK_ALLOC: <span style={{ color: "#ffffff" }}>0x7FFEE3A2F1B0</span></span>
+          <span style={{ color: "#404040" }} className="status-bracket hide-on-mobile-cell">@</span>
+          <span className="hide-on-mobile-cell">COMPILING: <span style={{ color: "#10b981" }}>SUCCESS</span></span>
           <span style={{ color: "#404040" }}>|</span>
           
           <button 
@@ -606,29 +622,29 @@ export default function Page() {
 
       {/* Telemetry Strip */}
       <section className={`telemetry-strip ${showTelemetry ? "active" : ""}`}>
-        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.currentBand}</div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
+          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.2rem" }}>{stats.currentBand}</div>
         </div>
 
-        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>RIG MODE</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.35rem" }}>{stats.currentMode}</div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>RIG MODE</span>
+          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.2rem" }}>{stats.currentMode}</div>
         </div>
 
-        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>TOTAL QSO COUNT</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#10b981", marginTop: "0.35rem" }}>{stats.totalQsos}</div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>TOTAL QSOs</span>
+          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#10b981", marginTop: "0.2rem" }}>{stats.totalQsos}</div>
         </div>
 
-        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED</span>
+          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a855f7", marginTop: "0.2rem" }}>{stats.confirmed}</div>
         </div>
 
-        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
-          <span style={{ fontSize: "0.75rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
-          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#a3e635", marginTop: "0.35rem" }}>{stats.dxcc}</div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#a3a3a3", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES DXCC</span>
+          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a3e635", marginTop: "0.2rem" }}>{stats.dxcc}</div>
         </div>
       </section>
 
@@ -636,7 +652,7 @@ export default function Page() {
       <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
         {/* Left Column Stack */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
           {/* Card 1: Shack Gear */}
           <div className="terminal-panel">
@@ -690,35 +706,35 @@ export default function Page() {
             </div>
 
             <div className="data-row">
-              <span className="data-label">80M Band Propagation</span>
+              <span className="data-label">80M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
             </div>
             <div className="data-row">
-              <span className="data-label">40M Band Propagation</span>
+              <span className="data-label">40M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("40M"))}`}>[{getPropRating("40M")}]</span>
             </div>
             <div className="data-row">
-              <span className="data-label">30M Band Propagation</span>
+              <span className="data-label">30M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
             </div>
             <div className="data-row forced-row-reset">
-              <span className="data-label forced-label-reset">20M Band Propagation</span>
+              <span className="data-label forced-label-reset">20M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
             </div>
             <div className="data-row">
-              <span className="data-label">17M Band Propagation</span>
+              <span className="data-label">17M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
             </div>
             <div className="data-row">
-              <span className="data-label">15M Band Propagation</span>
+              <span className="data-label">15M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
             </div>
             <div className="data-row">
-              <span className="data-label">12M Band Propagation</span>
+              <span className="data-label">12M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">10M Band Propagation</span>
+              <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
           </div>
@@ -751,7 +767,7 @@ export default function Page() {
         </div>
 
         {/* Right Section Matrix Column Stack */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
           {/* HARDWARE-ACCELERATED 3D WEBGL GLOBE CANVAS CONTAINER */}
           <div 
@@ -761,25 +777,25 @@ export default function Page() {
               padding: "0.5rem", 
               background: "#0b0b0b", 
               position: "relative", 
-              height: "520px", 
+              height: isMobileScreen ? "340px" : "520px", // Safely falls back to compressed vertical footprints on smaller phone dimensions
               overflow: "hidden", 
               display: "flex", 
               flexDirection: "column" 
             }}
           >
             {/* Legend Overlay HUD */}
-            <div style={{ position: "absolute", top: "1rem", left: "1.25rem", zIndex: 20, pointerEvents: "none" }}>
-              <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Globe style={{ width: "15px", height: "15px", color: "#06b6d4" }} /> AGGREGATED SECTOR GEOMETRY MAP
+            <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, pointerEvents: "none" }}>
+              <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Globe style={{ width: "14px", height: "14px", color: "#06b6d4" }} /> AGGREGATED SECTOR GEOMETRY MAP
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: "10px", color: "#a3a3a3", marginTop: "0.25rem", display: "flex", gap: "1rem" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ width: "6px", height: "6px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
-                  DOMESTIC (USA)
+              <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#a3a3a3", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  <span style={{ width: "5px", height: "5px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
+                  USA
                 </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ width: "6px", height: "6px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
-                  INTERNATIONAL (DX)
+                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  <span style={{ width: "5px", height: "5px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
+                  DX
                 </span>
               </div>
             </div>
@@ -814,7 +830,7 @@ export default function Page() {
                       <div style="color: #a3a3a3; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
                       <div style="color: #a3a3a3; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
                       <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
-                        TOTAL CONTACTS IN ZONE: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                        TOTAL QSOs: <span style="color: #10b981; font-weight: 700;">${d.count}</span>
                       </div>
                     </div>
                   `}
@@ -822,10 +838,10 @@ export default function Page() {
                   arcLabel={(d: any) => `
                     <div class="scene-tooltip">
                       <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: OTTAWA &rarr; ${d.gridKey}</div>
-                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">TARGET REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
                       <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
-                        TOTAL SECTOR CONTACTS: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                        TOTAL QSOs: <span style="color: #10b981; font-weight: 700;">${d.count}</span>
                       </div>
                     </div>
                   `}
@@ -840,7 +856,7 @@ export default function Page() {
               <div className="panel-title">
                 <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
               </div>
-              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
+              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }} className="hide-on-mobile-cell">ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
             
             <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
@@ -848,8 +864,8 @@ export default function Page() {
                 <thead>
                   <tr>
                     <th>CALLSIGN</th>
-                    <th>DATE (UTC)</th>
-                    <th>TIME</th>
+                    <th className="hide-on-mobile-cell">DATE (UTC)</th>
+                    <th className="hide-on-mobile-cell">TIME</th>
                     <th>BAND</th>
                     <th>MODE</th>
                     <th style={{ textAlign: "center" }}>RST (S/R)</th>
@@ -866,18 +882,18 @@ export default function Page() {
                   ) : (
                     logs.map((qso, index) => (
                       <tr key={index}>
-                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="panel-mono-data">
+                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
                           {qso.callsign}
                         </td>
-                        <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
-                        <td style={{ fontWeight: "500" }}>{qso.time}</td>
+                        <td style={{ color: "#a3a3a3" }} className="hide-on-mobile-cell">{qso.date}</td>
+                        <td style={{ fontWeight: "500" }} className="hide-on-mobile-cell">{qso.time}</td>
                         <td style={{ fontWeight: "500" }}>{qso.band}</td>
                         <td>
                           <span className="badge-mode-tactical">{qso.mode}</span>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
+                          <span style={{ color: "#404040", margin: "0 0.3rem" }}>|</span>
                           <span className="rst-r-box">{qso.rstR}</span>
                         </td>
                         <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="panel-mono-data">
