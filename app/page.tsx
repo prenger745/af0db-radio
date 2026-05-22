@@ -282,7 +282,8 @@ export default function Page() {
               const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
                                       pt.lng >= -125.000000 && pt.lng <= -66.934570;
 
-              const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#f43f5e";
+              // UPDATED: Replaced Cyber Pink with a clean Tactical Solar Amber value for overseas DX tracking
+              const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
               
               return {
                 startLat: 38.6158, // QTH Base: Ottawa, KS
@@ -666,7 +667,8 @@ export default function Page() {
                   DOMESTIC (USA)
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ width: "6px", height: "6px", backgroundColor: "#f43f5e", borderRadius: "50%", display: "inline-block" }}></span>
+                  {/* UPDATED: Aligned legend background color metric badge to match new Solar Amber profile configuration */}
+                  <span style={{ width: "6px", height: "6px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
                   INTERNATIONAL (DX)
                 </span>
               </div>
@@ -692,7 +694,7 @@ export default function Page() {
                 labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "", color: arc.color }))}
                 labelText="text"
                 labelColor="color"
-                labelDotRadius={0.35} // The singular flat glowing target dot width setting
+                labelDotRadius={0.35}
                 labelDotOrientation={() => "bottom"}
                 labelsTransitionDuration={0}
               />
