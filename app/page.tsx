@@ -53,7 +53,7 @@ export default function Page() {
   const [isLiveStream, setIsLiveStream] = useState(false);
   const [isNight, setIsNight] = useState<boolean>(false);
   
-  // Dynamic coordinate arc tracking array for full 1,075 dataset mapping
+  // Dynamic coordinate arc tracking array for full dataset mapping
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
   
   // Explicit parent element dimensions tracker for WebGL canvas alignment
@@ -249,12 +249,28 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // SPATIAL GEOGRAPHIC BOUNDS ENGINE: Separates USA from DX international logs
+          // FIXED: Deduplication system aggregates overlapping grid squares into single clear pathways
           if (json.geoMap && Array.isArray(json.geoMap)) {
-            const formattedArcs = json.geoMap.map((pt: any) => {
-              const callUpper = pt.callsign.toUpperCase();
+            const gridCounters: { [key: string]: number } = {};
+            const uniqueGridMap: { [key: string]: any } = {};
+
+            // Pass 1: Tally contacts and track unique grids
+            json.geoMap.forEach((pt: any) => {
+              if (!pt.grid) return;
+              const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
+              gridCounters[cleanGrid4] = (gridCounters[cleanGrid4] || 0) + 1;
               
-              // 1. Check ITU prefix assignments for standard US operations
+              if (!uniqueGridMap[cleanGrid4]) {
+                uniqueGridMap[cleanGrid4] = pt;
+              }
+            });
+
+            // Pass 2: Map unique fields to cleanly filtered visual geometric trajectories
+            const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
+              const pt = uniqueGridMap[gridKey];
+              const callUpper = pt.callsign.toUpperCase();
+              const contactCountForGrid = gridCounters[gridKey];
+
               const isUSAPrefix = callUpper.startsWith("W") || 
                                   callUpper.startsWith("K") || 
                                   callUpper.startsWith("N") || 
@@ -263,11 +279,9 @@ export default function Page() {
                                   callUpper.startsWith("AC") || 
                                   callUpper.startsWith("AD");
               
-              // 2. Bounding box fallback validation for continental US coordinates
               const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
                                       pt.lng >= -125.000000 && pt.lng <= -66.934570;
 
-              // Assign Aviation Blue for domestic and Cyber Pink for dynamic global traces
               const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#f43f5e";
               
               return {
@@ -276,10 +290,12 @@ export default function Page() {
                 endLat: pt.lat,
                 endLng: pt.lng,
                 color: assignedTargetColor,
-                label: `${pt.callsign} [${pt.mode}] Grid: ${pt.grid}`
+                // Informative aggregated text overlay on hover
+                label: `Sector: ${gridKey} (${contactCountForGrid} Contacts Mapped)`
               };
             });
-            setGeoArcs(formattedArcs);
+            
+            setGeoArcs(filteredArcs);
           }
 
           if (!baseBootTriggered) {
@@ -643,14 +659,14 @@ export default function Page() {
             {/* Legend Overlay HUD */}
             <div style={{ position: "absolute", top: "1rem", left: "1.25rem", zIndex: 20, pointerEvents: "none" }}>
               <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Globe style={{ width: "15px", height: "15px", color: "#06b6d4" }} /> DYNAMIC STATION TRAJECTORY MAP
+                <Globe style={{ width: "15px", height: "15px", color: "#06b6d4" }} /> AGGREGATED SECTOR GEOMETRY MAP
               </div>
               <div style={{ fontFamily: "monospace", fontSize: "10px", color: "#a3a3a3", marginTop: "0.25rem", display: "flex", gap: "1rem" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                   <span style={{ width: "6px", height: "6px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
                   DOMESTIC (USA)
                 </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.3------" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                   <span style={{ width: "6px", height: "6px", backgroundColor: "#f43f5e", borderRadius: "50%", display: "inline-block" }}></span>
                   INTERNATIONAL (DX)
                 </span>
@@ -670,7 +686,7 @@ export default function Page() {
                 arcDashLength={0.4}
                 arcDashGap={0.15}
                 arcDashAnimateTime={2500}
-                arcStroke={0.4}
+                arcStroke={0.5} // Slightly heavier line stroke since paths are completely clean now
                 arcsTransitionDuration={1000}
                 labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "•", color: arc.color, size: 0.5 }))}
                 labelText="text"
