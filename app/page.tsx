@@ -22,6 +22,7 @@ interface QSO {
   rstS: string;
   rstR: string;
   grid: string;
+  country?: string; // Optional support for DXCC fields
 }
 
 interface StationMetrics {
@@ -221,7 +222,8 @@ export default function Page() {
             mode: extractTag("mode") || "—",
             rstS: extractTag("rst_sent") || "59",
             rstR: extractTag("rst_rcvd") || "59",
-            grid: extractTag("gridsquare") || "—"
+            grid: extractTag("gridsquare") || "—",
+            country: extractTag("country") || "" // Grabs the raw text country string from the ADIF record structure
           });
         }
 
@@ -249,27 +251,42 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // Deduplication system aggregates overlapping grid squares into single clear pathways
+          // ADVANCED GEO-AGGREGATION CONVERTER: Groups callsigns and countries under singular sectors
           if (json.geoMap && Array.isArray(json.geoMap)) {
-            const gridCounters: { [key: string]: number } = {};
-            const uniqueGridMap: { [key: string]: any } = {};
+            const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
-            // Pass 1: Tally contacts and track unique grids
             json.geoMap.forEach((pt: any) => {
               if (!pt.grid) return;
               const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
-              gridCounters[cleanGrid4] = (gridCounters[cleanGrid4] || 0) + 1;
+              const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
               
+              // Fallback country identification if the direct mapping is empty
+              let stationCountry = pt.country || "";
+              if (!stationCountry) {
+                stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
+                  ? "United States" 
+                  : "International DX";
+              }
+
               if (!uniqueGridMap[cleanGrid4]) {
-                uniqueGridMap[cleanGrid4] = pt;
+                uniqueGridMap[cleanGrid4] = {
+                  base: pt,
+                  callsigns: [stationCall],
+                  country: stationCountry
+                };
+              } else {
+                // If the callsign isn't in the list yet, append it
+                if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
+                  uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
+                }
               }
             });
 
-            // Pass 2: Map unique fields to cleanly filtered visual geometric trajectories
+            // Map unique fields to visual geometric tracking arrays
             const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-              const pt = uniqueGridMap[gridKey];
+              const sectorData = uniqueGridMap[gridKey];
+              const pt = sectorData.base;
               const callUpper = pt.callsign.toUpperCase();
-              const contactCountForGrid = gridCounters[gridKey];
 
               const isUSAPrefix = callUpper.startsWith("W") || 
                                   callUpper.startsWith("K") || 
@@ -285,6 +302,10 @@ export default function Page() {
               const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
               const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
               
+              // Format a scrolling/wrapped list of the operators logged inside this sector square
+              const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
+                (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
+
               return {
                 startLat: 38.6158, // QTH Base: Ottawa, KS
                 startLng: -95.2686,
@@ -293,7 +314,9 @@ export default function Page() {
                 color: assignedTargetColor,
                 gridKey: gridKey,
                 territory: territoryType,
-                count: contactCountForGrid
+                country: sectorData.country,
+                operators: operatorsString,
+                count: sectorData.callsigns.length
               };
             });
             
@@ -426,6 +449,9 @@ export default function Page() {
           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
           color: #e5e5e5 !important;
           pointer-events: none !important;
+          max-width: 280px !important;
+          white-space: normal !important;
+          line-height: 1.4 !important;
         }
       `}} />
 
@@ -703,7 +729,7 @@ export default function Page() {
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 
-                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER: Empty text strings hide layout typography while compiling flat targeting pins directly inside core GPU threads
+                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER
                 labelsData={geoArcs}
                 labelText={() => ""}
                 labelColor="color"
@@ -711,20 +737,26 @@ export default function Page() {
                 labelDotOrientation={() => "bottom"}
                 labelsTransitionDuration={0}
                 
-                // REPAIRED HOVER HUD PATHWAYS: Natively linked using accurate signature parameters to clear compiler errors
+                // REPAIRED DYNAMIC OVERLAY HUD: Enriches layout to render localized Operator strings and Country metrics
                 labelLabel={(d: any) => `
                   <div class="scene-tooltip">
-                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.2rem; text-transform: uppercase;">SECTOR LOG: ${d.gridKey}</div>
-                    <div style="color: #a3a3a3; margin-bottom: 0.15rem;">ZONE: <span style="color: #ffffff; font-weight: 600;">${d.territory}</span></div>
-                    <div style="color: #a3a3a3;">TOTAL CONTACTS: <span style="color: #10b981; font-weight: 600;">${d.count} QSOs</span></div>
+                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
+                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600; font-family: monospace;">${d.operators}</span></div>
+                    <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
+                      TOTAL CONTACTS IN ZONE: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                    </div>
                   </div>
                 `}
                 
                 arcLabel={(d: any) => `
                   <div class="scene-tooltip">
-                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.2rem; text-transform: uppercase;">PATH TRAJECTORY: ${d.gridKey}</div>
-                    <div style="color: #a3a3a3; margin-bottom: 0.15rem;">ZONE: <span style="color: #ffffff; font-weight: 600;">${d.territory}</span></div>
-                    <div style="color: #a3a3a3;">TOTAL CONTACTS: <span style="color: #10b981; font-weight: 600;">${d.count} QSOs</span></div>
+                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: OTTAWA &rarr; ${d.gridKey}</div>
+                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">TARGET REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                    <div style="color: #a3a3a3; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600; font-family: monospace;">${d.operators}</span></div>
+                    <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
+                      TOTAL SECTOR CONTACTS: <span style="color: #10b981; font-weight: 700;">${d.count} QSOs</span>
+                    </div>
                   </div>
                 `}
               />
