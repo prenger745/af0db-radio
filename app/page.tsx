@@ -80,18 +80,16 @@ export default function Page() {
       }
     };
 
-    // Run calibration on mount and attach native observer listener
     handleResize();
     window.addEventListener("resize", handleResize);
     
-    // Quick timeout backup to guarantee clean execution after CSS styles calculate
     const t = setTimeout(handleResize, 1000);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(t);
     };
-  }, [logs]); // Re-trigger safety catch when data populates
+  }, [logs]);
 
   const playTerminalBeep = (type: "boot" | "sync") => {
     if (!audioEnabledRef.current) return;
@@ -251,15 +249,21 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
+          // FIXED: Appends a completely randomized hexadecimal neon color profile parameter onto every contact arc mapping pipeline trace
           if (json.geoMap && Array.isArray(json.geoMap)) {
-            const formattedArcs = json.geoMap.map((pt: any) => ({
-              startLat: 38.6158, // QTH Base: Ottawa, KS
-              startLng: -95.2686,
-              endLat: pt.lat,
-              endLng: pt.lng,
-              color: pt.mode === "FT8" ? "#a3e635" : "#06b6d4",
-              label: `${pt.callsign} [${pt.mode}] Grid: ${pt.grid}`
-            }));
+            const formattedArcs = json.geoMap.map((pt: any) => {
+              // Mathematical raw hex string randomizer loop
+              const randomHexColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+              
+              return {
+                startLat: 38.6158, // QTH Base: Ottawa, KS
+                startLng: -95.2686,
+                endLat: pt.lat,
+                endLng: pt.lng,
+                color: randomHexColor,
+                label: `${pt.callsign} [${pt.mode}] Grid: ${pt.grid}`
+              };
+            });
             setGeoArcs(formattedArcs);
           }
 
@@ -615,7 +619,7 @@ export default function Page() {
               padding: "0.5rem", 
               background: "#0b0b0b", 
               position: "relative", 
-              height: "520px", // Expands window vertical box tracking footprint
+              height: "520px", 
               overflow: "hidden", 
               display: "flex", 
               flexDirection: "column" 
