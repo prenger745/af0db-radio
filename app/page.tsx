@@ -282,8 +282,8 @@ export default function Page() {
               const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
                                       pt.lng >= -125.000000 && pt.lng <= -66.934570;
 
-              // UPDATED: Replaced Cyber Pink with a clean Tactical Solar Amber value for overseas DX tracking
               const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
+              const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
               
               return {
                 startLat: 38.6158, // QTH Base: Ottawa, KS
@@ -291,7 +291,9 @@ export default function Page() {
                 endLat: pt.lat,
                 endLng: pt.lng,
                 color: assignedTargetColor,
-                label: `Sector: ${gridKey} (${contactCountForGrid} Contacts Mapped)`
+                gridKey: gridKey,
+                territory: territoryType,
+                count: contactCountForGrid
               };
             });
             
@@ -413,6 +415,19 @@ export default function Page() {
         .rst-s-box { color: #10b981; font-weight: 600; font-family: monospace; }
         .rst-r-box { color: #ef4444; font-weight: 600; font-family: monospace; }
         .panel-mono-data { font-family: monospace; font-weight: 600; }
+        
+        /* HOVER CONTROLLER: Stylizes the native WebGL overlay tooltip box wrapper */
+        .scene-tooltip {
+          background: #171717 !important;
+          border: 1px solid #262626 !important;
+          border-radius: 6px !important;
+          padding: 0.65rem 0.85rem !important;
+          font-family: monospace !important;
+          font-size: 11px !important;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+          color: #e5e5e5 !important;
+          pointer-events: none !important;
+        }
       `}} />
 
       {/* Header */}
@@ -667,7 +682,6 @@ export default function Page() {
                   DOMESTIC (USA)
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  {/* UPDATED: Aligned legend background color metric badge to match new Solar Amber profile configuration */}
                   <span style={{ width: "6px", height: "6px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
                   INTERNATIONAL (DX)
                 </span>
@@ -690,13 +704,31 @@ export default function Page() {
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 
-                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER: Empty text strings hide layout typography while compiling flat targeting pins directly inside core GPU threads
-                labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "", color: arc.color }))}
-                labelText="text"
+                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER: Empty text loops pass coordinates directly to GPU threads
+                labelsData={geoArcs}
+                labelText={() => ""} // Keeps typography hidden to maintain look
                 labelColor="color"
                 labelDotRadius={0.35}
                 labelDotOrientation={() => "bottom"}
                 labelsTransitionDuration={0}
+                
+                // INTERACTIVE HOVER INTERFACE: Pulls up structured operator parameters instantly on cursor intersection
+                labelHoverHTML={(d: any) => `
+                  <div class="scene-tooltip">
+                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.2rem; text-transform: uppercase;">SECTOR LOG: ${d.gridKey}</div>
+                    <div style="color: #a3a3a3; margin-bottom: 0.15rem;">ZONE: <span style="color: #ffffff; font-weight: 600;">${d.territory}</span></div>
+                    <div style="color: #a3a3a3;">TOTAL CONTACTS: <span style="color: #10b981; font-weight: 600;">${d.count} QSOs</span></div>
+                  </div>
+                `}
+                
+                // Mirrors hover overlay logic onto flying signal pathways
+                arcHoverHTML={(d: any) => `
+                  <div class="scene-tooltip">
+                    <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.2rem; text-transform: uppercase;">PATH TRAJECTORY: ${d.gridKey}</div>
+                    <div style="color: #a3a3a3; margin-bottom: 0.15rem;">ZONE: <span style="color: #ffffff; font-weight: 600;">${d.territory}</span></div>
+                    <div style="color: #a3a3a3;">TOTAL CONTACTS: <span style="color: #10b981; font-weight: 600;">${d.count} QSOs</span></div>
+                  </div>
+                `}
               />
             </div>
           </div>
