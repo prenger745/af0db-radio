@@ -1,6 +1,17 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Sliders, ChevronRight, Sun, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+
+// NEXT 14 WEBGL DYNAMIC LAYOUT ENGINE: Runs the 3D canvas entirely on the client side to bypass server compilation locks
+const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.default), {
+  ssr: false,
+  loading: () => (
+    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a3a3a3", fontSize: "0.75rem", fontFamily: "monospace" }}>
+      &gt;&gt; STAGING_WEBGL_GRID_ARRAY...
+    </div>
+  )
+});
 
 interface QSO {
   callsign: string;
@@ -42,18 +53,18 @@ export default function Page() {
   const [isLiveStream, setIsLiveStream] = useState(false);
   const [isNight, setIsNight] = useState<boolean>(false);
   
-  // Audio state tracker to unblock browser security policies
+  // Dynamic coordinate arc tracking array for full 1,075 dataset mapping
+  const [geoArcs, setGeoArcs] = useState<any[]>([]);
+  
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   const audioEnabledRef = useRef(false);
 
-  // Sync ref with state block to prevent useEffect closure freezing
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
   }, [audioEnabled]);
 
-  // SYNTHESIZER MODULE: Generates pure browser-native raw telemetry sound elements
   const playTerminalBeep = (type: "boot" | "sync") => {
-    if (!audioEnabledRef.current) return; // Prevent sound if muted or blocked
+    if (!audioEnabledRef.current) return;
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContext) return;
@@ -63,23 +74,17 @@ export default function Page() {
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gainNode = ctx.createGain();
-
         osc1.type = "sine";
         osc2.type = "sine";
-        
         osc1.frequency.setValueAtTime(880, ctx.currentTime);
         osc1.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
-        
         osc2.frequency.setValueAtTime(440, ctx.currentTime);
         osc2.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
-
         gainNode.gain.setValueAtTime(0.04, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
-
         osc1.connect(gainNode);
         osc2.connect(gainNode);
         gainNode.connect(ctx.destination);
-
         osc1.start();
         osc2.start();
         osc1.stop(ctx.currentTime + 0.2);
@@ -87,23 +92,17 @@ export default function Page() {
       } else if (type === "sync") {
         const osc = ctx.createOscillator();
         const gainNode = ctx.createGain();
-
         osc.type = "triangle";
         osc.frequency.setValueAtTime(1500, ctx.currentTime);
         osc.frequency.setValueAtTime(700, ctx.currentTime + 0.01);
-
         gainNode.gain.setValueAtTime(0.02, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.02);
-
         osc.connect(gainNode);
         gainNode.connect(ctx.destination);
-
         osc.start();
         osc.stop(ctx.currentTime + 0.02);
       }
-    } catch (e) {
-      console.warn("Audio Context init blocked:", e);
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
@@ -198,6 +197,19 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
+          // SPATIAL GLOW MAP ENGINE: Pulls coordinates directly out of your updated proxy file array
+          if (json.geoMap && Array.isArray(json.geoMap)) {
+            const formattedArcs = json.geoMap.map((pt: any) => ({
+              startLat: 38.6158, // QTH Home: Ottawa, KS
+              startLng: -95.2686,
+              endLat: pt.lat,
+              endLng: pt.lng,
+              color: pt.mode === "FT8" ? "#a3e635" : "#06b6d4",
+              label: `${pt.callsign} [${pt.mode}] Grid: ${pt.grid}`
+            }));
+            setGeoArcs(formattedArcs);
+          }
+
           if (!baseBootTriggered) {
             playTerminalBeep("boot");
             baseBootTriggered = true;
@@ -254,32 +266,6 @@ export default function Page() {
     return "rst-r-box";
   };
 
-  // Helper handling manual click events to unlock browser audio hardware lines
-  const handleToggleAudioSystem = () => {
-    const freshState = !audioEnabled;
-    setAudioEnabled(freshState);
-    if (freshState) {
-      // Direct, real-time audio test execution triggered via user click event
-      setTimeout(() => {
-        try {
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-          if (!AudioContext) return;
-          const ctx = new AudioContext();
-          const osc = ctx.createOscillator();
-          const gainNode = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(1000, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
-          osc.connect(gainNode);
-          gainNode.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.1);
-        } catch(e) {}
-      }, 50);
-    }
-  };
-
   return (
     <div style={{
       backgroundColor: "#0a0a0a",
@@ -302,7 +288,7 @@ export default function Page() {
         @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } }
 
         .deck-workspace { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 320px 1fr; } }
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 340px 1fr; } }
 
         .terminal-panel {
           background: #121212;
@@ -312,25 +298,6 @@ export default function Page() {
           box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
           width: 100%;
           max-width: 100%;
-        }
-
-        .terminal-panel-interactive {
-          background: #121212 !important;
-          border: 1px solid #262626 !important;
-          border-radius: 8px;
-          padding: 1.25rem !important;
-          text-decoration: none !important;
-          color: inherit !important;
-          cursor: pointer !important;
-          transition: all 0.25s ease !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: flex-start !important;
-        }
-        .terminal-panel-interactive:hover {
-          border-color: #f59e0b !important;
-          background: #171717 !important;
-          transform: translateY(-3px) !important;
         }
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 0.75rem; margin-bottom: 1rem; }
@@ -376,7 +343,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Vibe Coded Tactical Core Status Banner with integrated dynamic safety bypass button */}
+      {/* Vibe Coded Tactical Core Status Banner */}
       <section style={{
         background: "rgba(244, 63, 94, 0.03)",
         border: "1px dashed rgba(244, 63, 94, 0.25)",
@@ -403,7 +370,6 @@ export default function Page() {
           <span>COMPILING: <span style={{ color: "#10b981" }}>SUCCESS</span></span>
           <span style={{ color: "#404040" }}>|</span>
           
-          {/* FIXED: Interactive audio unblocking node hook */}
           <button 
             onClick={handleToggleAudioSystem}
             style={{
@@ -461,19 +427,10 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        <a
-          href="https://www.qsomap.com/QSOmapProduction/qsomapforosmQRZ.php?call=AF0DB"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="terminal-panel-interactive"
-        >
-          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
-            COUNTRIES CONTACTED ↗
-          </span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a3e635", marginTop: "0.35rem" }}>
-            {stats.dxcc}
-          </div>
-        </a>
+        <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
+          <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES CONTACTED</span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a3e635", marginTop: "0.35rem" }}>{stats.dxcc}</div>
+        </div>
       </section>
 
       {/* Main Workspace Split Grid Layout */}
@@ -594,61 +551,99 @@ export default function Page() {
 
         </div>
 
-        {/* Right Column Stack: Complete Live Log Ledger */}
-        <div className="terminal-panel" style={{ display: "flex", flexDirection: "column" }}>
-          <div className="panel-header">
-            <div className="panel-title">
-              <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
-            </div>
-            <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
-          </div>
+        {/* Right Section Matrix Column Stack */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
-          <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
-            <table className="matrix-table">
-              <thead>
-                <tr>
-                  <th>CALLSIGN</th>
-                  <th>DATE (UTC)</th>
-                  <th>TIME</th>
-                  <th>BAND</th>
-                  <th>MODE</th>
-                  <th style={{ textAlign: "center" }}>RST (S/R)</th>
-                  <th>GRID LOC</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.length === 0 ? (
+          {/* HARDWARE-ACCELERATED 3D WEBGL GLOBE CANVAS */}
+          <div className="terminal-panel" style={{ padding: "0.5rem", background: "#0b0b0b", position: "relative", minHeight: "360px", height: "440px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ position: "absolute", top: "1rem", left: "1.25rem", zIndex: 20, pointerEvents: "none" }}>
+              <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Globe style={{ width: "15px", height: "15px", color: "#06b6d4" }} /> DYNAMIC STATION TRAJECTORY MAP
+              </div>
+              <div style={{ fontFamily: "monospace", fontSize: "10px", color: "#737373", marginTop: "0.15rem", textTransform: "uppercase" }}>
+                Plotting {geoArcs.length} active global contacts mapped from grid logs
+              </div>
+            </div>
+            
+            <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
+              <GlobeEngine
+                globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                backgroundImageUrl=""
+                backgroundColor="#0b0b0b"
+                arcsData={geoArcs}
+                arcColor="color"
+                arcDashLength={0.4}
+                arcDashGap={0.15}
+                arcDashAnimateTime={2500}
+                arcStroke={0.4}
+                arcsTransitionDuration={1000}
+                labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "•", color: arc.color, size: 0.5 }))}
+                labelText="text"
+                labelColor="color"
+                labelSize="size"
+                labelDotRadius={0.3}
+              />
+            </div>
+          </div>
+
+          {/* Complete Live Log Ledger */}
+          <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            <div className="panel-header">
+              <div className="panel-title">
+                <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
+              </div>
+              <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.02em" }}>ANTI_CHRONO_INDEX_ACTIVE</span>
+            </div>
+            
+            <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
+              <table className="matrix-table">
+                <thead>
                   <tr>
-                    <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
-                      &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
-                    </td>
+                    <th>CALLSIGN</th>
+                    <th>DATE (UTC)</th>
+                    <th>TIME</th>
+                    <th>BAND</th>
+                    <th>MODE</th>
+                    <th style={{ textAlign: "center" }}>RST (S/R)</th>
+                    <th>GRID LOC</th>
                   </tr>
-                ) : (
-                  logs.map((qso, index) => (
-                    <tr key={index}>
-                      <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="panel-mono-data">
-                        {qso.callsign}
-                      </td>
-                      <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
-                      <td style={{ fontWeight: "500" }}>{qso.time}</td>
-                      <td style={{ fontWeight: "500" }}>{qso.band}</td>
-                      <td>
-                        <span className="badge-mode-tactical">{qso.mode}</span>
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        <span className="rst-s-box">{qso.rstS}</span>
-                        <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
-                        <span className="rst-r-box">{qso.rstR}</span>
-                      </td>
-                      <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="panel-mono-data">
-                        {qso.grid || "—"}
+                </thead>
+                <tbody>
+                  {logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#f59e0b", fontStyle: "italic" }}>
+                        &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    logs.map((qso, index) => (
+                      <tr key={index}>
+                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.95rem" }} className="panel-mono-data">
+                          {qso.callsign}
+                        </td>
+                        <td style={{ color: "#a3a3a3" }}>{qso.date}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.time}</td>
+                        <td style={{ fontWeight: "500" }}>{qso.band}</td>
+                        <td>
+                          <span className="badge-mode-tactical">{qso.mode}</span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className="rst-s-box">{qso.rstS}</span>
+                          <span style={{ color: "#404040", margin: "0 0.4rem" }}>|</span>
+                          <span className="rst-r-box">{qso.rstR}</span>
+                        </td>
+                        <td style={{ color: "#a3a3a3", fontWeight: "500" }} className="panel-mono-data">
+                          {qso.grid || "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
         </div>
       </main>
     </div>
