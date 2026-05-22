@@ -24,8 +24,8 @@ interface StationMetrics {
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
   const [stats, setStats] = useState<StationMetrics>({
-    totalQsos: "1,058",
-    confirmed: "833",
+    totalQsos: "1,075",
+    confirmed: "850",
     dxcc: "74",
     currentBand: "20 Meters",
     currentMode: "FT8"
@@ -54,11 +54,11 @@ export default function Page() {
 
         const countMatch = cleanText.match(/COUNT=([^&]*)/i);
         const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i);
-        const qslMatch = cleanText.match(/CQSL=([^&]*)/i); // FIXED: Scans for raw global credit confirmation token
+        const qslMatch = cleanText.match(/CQSL=([^&]*)/i);
 
-        const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,058";
+        const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,075";
         const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74";
-        const liveConfirmed = qslMatch ? qslMatch[1].split('&')[0] : "850"; // FIXED: Holds true rolling database value
+        const liveConfirmed = qslMatch ? qslMatch[1].split('&')[0] : "850";
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -118,11 +118,18 @@ export default function Page() {
           const newestFifteen = sortedLogs.slice(0, 15);
           setLogs(newestFifteen);
           setIsLiveStream(true);
+
+          // FIXED: Cleans the output token to read "20 Meters" instead of appending redundant "M Meters" suffixes
+          const rawBand = newestFifteen[0].band ? newestFifteen[0].band : "20M";
+          const displayBand = rawBand.toUpperCase().endsWith("M") 
+            ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
+            : `${rawBand} Meters`;
+
           setStats({
             totalQsos: liveCount,
-            confirmed: liveConfirmed, // FIXED: Maps liveConfirmed directly to the layout panel array
+            confirmed: liveConfirmed,
             dxcc: liveDxcc,
-            currentBand: newestFifteen[0].band ? `${newestFifteen[0].band} Meters` : "20 Meters",
+            currentBand: displayBand,
             currentMode: newestFifteen[0].mode || "FT8"
           });
         }
@@ -273,9 +280,10 @@ export default function Page() {
 
       {/* Telemetry Strip */}
       <section className="telemetry-strip">
+        {/* FIXED: Shifted the numeric display value color here from white to dynamic aviation cyan */}
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#ffffff", marginTop: "0.35rem" }}>{stats.currentBand}</div>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.currentBand}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
@@ -293,6 +301,7 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
+        {/* FIXED: Shifted the numeric value here from light blue to distinct solar amber to eliminate matching wall collision */}
         <a
           href="https://www.qsomap.com/QSOmapProduction/qsomapforosmQRZ.php?call=AF0DB"
           target="_blank"
@@ -302,7 +311,7 @@ export default function Page() {
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
             COUNTRIES CONTACTED ↗
           </span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.35rem" }}>
             {stats.dxcc}
           </div>
         </a>
