@@ -22,7 +22,7 @@ interface QSO {
   rstS: string;
   rstR: string;
   grid: string;
-  country?: string; // Optional support for DXCC fields
+  country?: string;
 }
 
 interface StationMetrics {
@@ -223,7 +223,7 @@ export default function Page() {
             rstS: extractTag("rst_sent") || "59",
             rstR: extractTag("rst_rcvd") || "59",
             grid: extractTag("gridsquare") || "—",
-            country: extractTag("country") || "" // Grabs the raw text country string from the ADIF record structure
+            country: extractTag("country") || ""
           });
         }
 
@@ -251,7 +251,7 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // ADVANCED GEO-AGGREGATION CONVERTER: Groups callsigns and countries under singular sectors
+          // Advanced geo-aggregation converter
           if (json.geoMap && Array.isArray(json.geoMap)) {
             const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
@@ -260,7 +260,6 @@ export default function Page() {
               const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
               const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
               
-              // Fallback country identification if the direct mapping is empty
               let stationCountry = pt.country || "";
               if (!stationCountry) {
                 stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
@@ -275,14 +274,12 @@ export default function Page() {
                   country: stationCountry
                 };
               } else {
-                // If the callsign isn't in the list yet, append it
                 if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
                   uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
                 }
               }
             });
 
-            // Map unique fields to visual geometric tracking arrays
             const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
               const sectorData = uniqueGridMap[gridKey];
               const pt = sectorData.base;
@@ -302,7 +299,6 @@ export default function Page() {
               const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
               const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
               
-              // Format a scrolling/wrapped list of the operators logged inside this sector square
               const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
                 (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
 
@@ -458,8 +454,9 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #262626", paddingBottom: "1rem", marginBottom: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#f59e0b", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
-            <Radio style={{ width: "20px", height: "20px" }} /> DANIEL McGURK // AFØDB STATION LOG
+          {/* FIXED: Changed main station header text color profile from Amber to a striking clean White (#ffffff) */}
+          <h1 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
+            <Radio style={{ width: "20px", height: "20px", color: "#f59e0b" }} /> DANIEL McGURK // AFØDB STATION LOG
           </h1>
           <p style={{ fontSize: "0.7rem", color: "#737373", marginTop: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500 }}>
             Real-Time QRZ API Live Data Stream
@@ -737,7 +734,6 @@ export default function Page() {
                 labelDotOrientation={() => "bottom"}
                 labelsTransitionDuration={0}
                 
-                // REPAIRED DYNAMIC OVERLAY HUD: Enriches layout to render localized Operator strings and Country metrics
                 labelLabel={(d: any) => `
                   <div class="scene-tooltip">
                     <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
