@@ -277,7 +277,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Telemetry Strip (All numeric fields fully color-isolated) */}
+      {/* Telemetry Strip */}
       <section className="telemetry-strip">
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
@@ -299,6 +299,7 @@ export default function Page() {
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
+        {/* ADJUSTED VALUE COLOR: Swapped from red to highly visible tactical Neon Lime (#a3e635) */}
         <a
           href="https://www.qsomap.com/QSOmapProduction/qsomapforosmQRZ.php?call=AF0DB"
           target="_blank"
@@ -308,7 +309,7 @@ export default function Page() {
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
             COUNTRIES CONTACTED ↗
           </span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#ef4444", marginTop: "0.35rem" }}>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a3e635", marginTop: "0.35rem" }}>
             {stats.dxcc}
           </div>
         </a>
