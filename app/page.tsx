@@ -249,7 +249,7 @@ export default function Page() {
             currentMode: newestFifteen[0].mode || "FT8"
           });
 
-          // FIXED: Deduplication system aggregates overlapping grid squares into single clear pathways
+          // Deduplication system aggregates overlapping grid squares into single clear pathways
           if (json.geoMap && Array.isArray(json.geoMap)) {
             const gridCounters: { [key: string]: number } = {};
             const uniqueGridMap: { [key: string]: any } = {};
@@ -290,7 +290,6 @@ export default function Page() {
                 endLat: pt.lat,
                 endLng: pt.lng,
                 color: assignedTargetColor,
-                // Informative aggregated text overlay on hover
                 label: `Sector: ${gridKey} (${contactCountForGrid} Contacts Mapped)`
               };
             });
@@ -686,7 +685,7 @@ export default function Page() {
                 arcDashLength={0.4}
                 arcDashGap={0.15}
                 arcDashAnimateTime={2500}
-                arcStroke={0.5} // Slightly heavier line stroke since paths are completely clean now
+                arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 labelsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, text: "•", color: arc.color, size: 0.5 }))}
                 labelText="text"
