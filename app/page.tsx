@@ -119,7 +119,6 @@ export default function Page() {
           setLogs(newestFifteen);
           setIsLiveStream(true);
 
-          // FIXED: Cleans the output token to read "20 Meters" instead of appending redundant "M Meters" suffixes
           const rawBand = newestFifteen[0].band ? newestFifteen[0].band : "20M";
           const displayBand = rawBand.toUpperCase().endsWith("M") 
             ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
@@ -278,9 +277,8 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Telemetry Strip */}
+      {/* Telemetry Strip (All numeric fields fully color-isolated) */}
       <section className="telemetry-strip">
-        {/* FIXED: Shifted the numeric display value color here from white to dynamic aviation cyan */}
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
           <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.currentBand}</div>
@@ -298,10 +296,9 @@ export default function Page() {
 
         <div className="terminal-panel" style={{ padding: "1rem 1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED QSOs</span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#06b6d4", marginTop: "0.35rem" }}>{stats.confirmed}</div>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#a855f7", marginTop: "0.35rem" }}>{stats.confirmed}</div>
         </div>
 
-        {/* FIXED: Shifted the numeric value here from light blue to distinct solar amber to eliminate matching wall collision */}
         <a
           href="https://www.qsomap.com/QSOmapProduction/qsomapforosmQRZ.php?call=AF0DB"
           target="_blank"
@@ -311,7 +308,7 @@ export default function Page() {
           <span style={{ fontSize: "0.9rem", color: "#e5e5e5", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>
             COUNTRIES CONTACTED ↗
           </span>
-          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#f59e0b", marginTop: "0.35rem" }}>
+          <div style={{ fontSize: "1.65rem", fontWeight: 800, color: "#ef4444", marginTop: "0.35rem" }}>
             {stats.dxcc}
           </div>
         </a>
