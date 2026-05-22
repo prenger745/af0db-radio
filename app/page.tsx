@@ -687,7 +687,12 @@ export default function Page() {
                 arcDashAnimateTime={2500}
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
-                // FIXED: Removed secondary manual labelsData layer completely to eliminate the double dot rendering glitch entirely
+                
+                // HIGH-PRECISION NODE MARKERS: Feeds deduplicated endpoints straight to the globe surface array
+                pointsData={geoArcs.map(arc => ({ lat: arc.endLat, lng: arc.endLng, color: arc.color }))}
+                pointColor="color"
+                pointRadius={0.35}
+                pointsMerge={true}
               />
             </div>
           </div>
