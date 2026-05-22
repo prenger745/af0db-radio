@@ -416,7 +416,6 @@ export default function Page() {
         .rst-r-box { color: #ef4444; font-weight: 600; font-family: monospace; }
         .panel-mono-data { font-family: monospace; font-weight: 600; }
         
-        /* HOVER CONTROLLER: Stylizes the native WebGL overlay tooltip box wrapper */
         .scene-tooltip {
           background: #171717 !important;
           border: 1px solid #262626 !important;
@@ -704,16 +703,16 @@ export default function Page() {
                 arcStroke={0.5}
                 arcsTransitionDuration={1000}
                 
-                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER: Empty text loops pass coordinates directly to GPU threads
+                // HIGH-PERFORMANCE NATIVE WEBGL LABELS LAYER: Empty text strings hide layout typography while compiling flat targeting pins directly inside core GPU threads
                 labelsData={geoArcs}
-                labelText={() => ""} // Keeps typography hidden to maintain look
+                labelText={() => ""}
                 labelColor="color"
                 labelDotRadius={0.35}
                 labelDotOrientation={() => "bottom"}
                 labelsTransitionDuration={0}
                 
-                // INTERACTIVE HOVER INTERFACE: Pulls up structured operator parameters instantly on cursor intersection
-                labelHoverHTML={(d: any) => `
+                // REPAIRED HOVER HUD PATHWAYS: Natively linked using accurate signature parameters to clear compiler errors
+                labelLabel={(d: any) => `
                   <div class="scene-tooltip">
                     <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.2rem; text-transform: uppercase;">SECTOR LOG: ${d.gridKey}</div>
                     <div style="color: #a3a3a3; margin-bottom: 0.15rem;">ZONE: <span style="color: #ffffff; font-weight: 600;">${d.territory}</span></div>
@@ -721,8 +720,7 @@ export default function Page() {
                   </div>
                 `}
                 
-                // Mirrors hover overlay logic onto flying signal pathways
-                arcHoverHTML={(d: any) => `
+                arcLabel={(d: any) => `
                   <div class="scene-tooltip">
                     <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.2rem; text-transform: uppercase;">PATH TRAJECTORY: ${d.gridKey}</div>
                     <div style="color: #a3a3a3; margin-bottom: 0.15rem;">ZONE: <span style="color: #ffffff; font-weight: 600;">${d.territory}</span></div>
