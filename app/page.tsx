@@ -87,7 +87,7 @@ export default function Page() {
   
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
   
-  // HIGH-TECH TOPOLOGY LAYER: Stores structural landmass arrays safely inside the local cache thread
+  // CACHED VECTOR OUTLINES: Pulls pre-computed country polygons directly to ensure immediate compilation
   const [landmasses, setLandmasses] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,22 +114,18 @@ export default function Page() {
     const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 1800);
     const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 2400);
 
-    // FETCH TACTICAL LANDMASS MAP: Pulls clean vector topology geometry to build the mainframe wireframe globe
-    fetch("//unpkg.com/world-atlas@2.0.2/countries-110m.json")
+    // NATIVE GEOJSON HANDSHAKE: Pulls clean, native polygon shapes straight from standard public dataset repositories
+    fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson")
       .then(res => res.json())
-      .then(atlas => {
-        // Convert map features into clean, raw 3D polygon structures dynamically
-        if (atlas && atlas.objects && atlas.objects.countries) {
-          import("topojson-client").then((topo) => {
-            const geojson: any = topo.feature(atlas, atlas.objects.countries);
-            setLandmasses(geojson.features);
-          });
+      .then(data => {
+        if (data && data.features) {
+          setLandmasses(data.features);
         }
       }).catch(() => {});
 
     return () => {
       clearTimeout(telemetryTimeout);
-      clearTimeout(workspaceWorkspace);
+      clearTimeout(workspaceTimeout);
     };
   }, []);
 
@@ -280,7 +276,6 @@ export default function Page() {
           const fT = rT.length >= 4 ? `${rT.substring(0, 2)}:${rT.substring(2, 4)}` : rT;
           
           const countryString = extractTag("country");
-          
           const qslStatus = extractTag("qsl_rcvd").toUpperCase();
           const lotwStatus = extractTag("lotw_qsl_rcvd").toUpperCase();
           const eqslStatus = extractTag("eqsl_qsl_rcvd").toUpperCase();
@@ -386,7 +381,7 @@ export default function Page() {
                 (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
 
               return {
-                startLat: 38.6158, // Base QTH: Ottawa, KS
+                startLat: 38.6158,
                 startLng: -95.2686,
                 endLat: pt.lat,
                 endLng: pt.lng,
@@ -460,7 +455,7 @@ export default function Page() {
 
   return (
     <div style={{
-      backgroundColor: "#050505", // Deepened base backdrop layout background
+      backgroundColor: "#050505", 
       color: "#e5e5e5",
       minHeight: "100vh",
       padding: isMobileScreen ? "0.75rem" : "1.5rem",
@@ -849,29 +844,26 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#030303"
                   
-                  // PREMIUM MONOCHROME MATRIX SKINNER: Replaces old flat image with sharp topology vector arrays
+                  // FIXED DIRECT VECTOR GRAPHICS MESH: Reads native GeoJSON parameters with zero external build requirements
                   polygonsData={landmasses}
-                  polygonCapColor={() => "#0c1310"} // Dark phosphor land mass shade
-                  polygonSideColor={() => "#141f1a"} // Structural side wall thickness
-                  polygonStrokeColor={() => "#1a2e24"} // High-tech shoreline coordinate outlines
+                  polygonCapColor={() => "#0c1310"} 
+                  polygonSideColor={() => "#141f1a"} 
+                  polygonStrokeColor={() => "#1a2e24"} 
                   
-                  // KINETIC SIGNAL FLUID ENERGY BEAMS: Upgrades old static pathways to moving data streams
                   arcsData={geoArcs}
                   arcColor="color"
                   arcDashLength={0.45}
                   arcDashGap={0.1}
-                  arcDashAnimateTime={1400} // Accelerates signal travel execution speeds safely
+                  arcDashAnimateTime={1400} 
                   arcStroke={0.4}
                   arcsTransitionDuration={0}
                   
-                  // HIGH-ACCELERATION RADAR RING RIPPLES: Injects live pulsing vector ripples at endpoints
                   ringsData={geoArcs}
                   ringColor="color"
                   ringMaxRadius={2.8}
                   ringPropagationSpeed={1.5}
                   ringRepeatPeriod={1600}
                   
-                  // ATMOSPHERIC ENVELOPE: Enables a clean orbital neon gas field wrap around the world
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
                   atmosphereRadiusScale={0.15}
