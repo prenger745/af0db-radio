@@ -540,9 +540,9 @@ export default function Page() {
           box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important;
           color: #e5e5e5 !important;
           pointer-events: none !important;
-          max-width: 260px !important;
+          max-width: 240px !important;
           white-space: normal !important;
-          line-height: 1.5 !important;
+          line-height: 1.4 !important;
         }
 
         .terminal-cursor::after {
@@ -844,7 +844,6 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#030303"
                   
-                  // FIXED DIRECT VECTOR GRAPHICS MESH: Reads native GeoJSON parameters with zero external build requirements
                   polygonsData={landmasses}
                   polygonCapColor={() => "#0c1310"} 
                   polygonSideColor={() => "#141f1a"} 
@@ -864,9 +863,10 @@ export default function Page() {
                   ringPropagationSpeed={1.5}
                   ringRepeatPeriod={1600}
                   
+                  // FIXED COMPILER MAPPING: Replaced old prop name with strict atmosphereAltitude syntax rules
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
-                  atmosphereRadiusScale={0.15}
+                  atmosphereAltitude={0.15}
                   
                   labelLabel={(d: any) => `
                     <div class="scene-tooltip">
