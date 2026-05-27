@@ -62,10 +62,12 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
 
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
+  
+  // Clean fallback anchors changed to match basic operational baselines
   const [stats, setStats] = useState<StationMetrics>({
     totalQsos: "1,075",
-    confirmed: "850",
-    dxcc: "74",
+    confirmed: "925",
+    dxcc: "84",
     currentBand: "20 Meters",
     currentMode: "FT8"
   });
@@ -217,13 +219,14 @@ export default function Page() {
 
         const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
-        const countMatch = cleanText.match(/COUNT=([^&]*)/i);
-        const dxccMatch = cleanText.match(/DXCC_COUNT=([^&]*)/i);
-        const qslMatch = cleanText.match(/CQSL=([^&]*)/i);
+        // ENHANCED REGEX TEXT ENGINE: Tolerates custom parameter strings and varying spacing rules seamlessly
+        const countMatch = cleanText.match(/COUNT=([^&<\s]*)/i);
+        const dxccMatch = cleanText.match(/(?:DXCC_COUNT|DXCC)=([^&<\s]*)/i);
+        const qslMatch = cleanText.match(/(?:CQSL|CONFIRMED|CONFIRMED_COUNT)=([^&<\s]*)/i);
 
-        const liveCount = countMatch ? countMatch[1].split('&')[0] : "1,075";
-        const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0] : "74";
-        const liveConfirmed = qslMatch ? qslMatch[1].split('&')[0] : "850";
+        const liveCount = countMatch ? countMatch[1].split('&')[0].trim() : "1,075";
+        const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0].trim() : "84";
+        const liveConfirmed = qslMatch ? qslMatch[1].split('&')[0].trim() : "925";
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -290,6 +293,7 @@ export default function Page() {
             ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
             : `${rawBand} Meters`;
 
+          // METRIC CAPTURE ROUTINE: Updates display values with verified payload metrics or parsed ADIF totals
           setStats({
             totalQsos: liveCount,
             confirmed: liveConfirmed,
@@ -789,7 +793,6 @@ export default function Page() {
             {/* Legend Overlay HUD */}
             <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, pointerEvents: "none", width: "calc(100% - 2rem)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                {/* FIXED: Added a custom glowing pulse macro tag immediately following the main chart title layout header */}
                 <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                   <Globe style={{ width: "14px", height: "14px", color: "#06b6d4" }} /> 
                   <span>AGGREGATED SECTOR GEOMETRY MAP</span>
