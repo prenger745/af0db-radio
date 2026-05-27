@@ -23,6 +23,8 @@ interface QSO {
   rstR: string;
   grid: string;
   country?: string;
+  qslRcvd?: string;
+  lotwRcvd?: string;
 }
 
 interface StationMetrics {
@@ -62,14 +64,12 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
 
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
-  
-  // Clean fallback anchors changed to match basic operational baselines
   const [stats, setStats] = useState<StationMetrics>({
-    totalQsos: "1,075",
-    confirmed: "925",
-    dxcc: "84",
-    currentBand: "20 Meters",
-    currentMode: "FT8"
+    totalQsos: "...",
+    confirmed: "...",
+    dxcc: "...",
+    currentBand: "Searching...",
+    currentMode: "Searching..."
   });
 
   const [sfi, setSfi] = useState<number>(145);
@@ -219,14 +219,8 @@ export default function Page() {
 
         const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
-        // ENHANCED REGEX TEXT ENGINE: Tolerates custom parameter strings and varying spacing rules seamlessly
         const countMatch = cleanText.match(/COUNT=([^&<\s]*)/i);
-        const dxccMatch = cleanText.match(/(?:DXCC_COUNT|DXCC)=([^&<\s]*)/i);
-        const qslMatch = cleanText.match(/(?:CQSL|CONFIRMED|CONFIRMED_COUNT)=([^&<\s]*)/i);
-
-        const liveCount = countMatch ? countMatch[1].split('&')[0].trim() : "1,075";
-        const liveDxcc = dxccMatch ? dxccMatch[1].split('&')[0].trim() : "84";
-        const liveConfirmed = qslMatch ? qslMatch[1].split('&')[0].trim() : "925";
+        const liveCount = countMatch ? countMatch[1].split('&')[0].trim() : "";
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -246,8 +240,12 @@ export default function Page() {
         if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
 
         let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
-        const parsedLogs: QSO[] = [];
+        const allParsedLogs: QSO[] = [];
         const records = adifContent.split(/<eor>/i);
+
+        // LOCAL ANALYZER PIPELINE: Tallies stats directly from each individual contact record
+        let calculatedConfirmedTotal = 0;
+        const uniqueCountriesList = new Set<string>();
 
         for (const record of records) {
           if (!record.trim()) continue;
@@ -263,8 +261,21 @@ export default function Page() {
           const fD = rD.length === 8 ? `${rD.substring(0, 4)}-${rD.substring(4, 6)}-${rD.substring(6, 8)}` : rD;
           const rT = extractTag("time_on");
           const fT = rT.length >= 4 ? `${rT.substring(0, 2)}:${rT.substring(2, 4)}` : rT;
+          
+          const countryString = extractTag("country");
+          const qslStatus = extractTag("qsl_rcvd").toUpperCase();
+          const lotwStatus = extractTag("lotw_qsl_rcvd").toUpperCase();
 
-          parsedLogs.push({
+          // Increment total if confirmed by card or LoTW integration link
+          if (qslStatus === "Y" || lotwStatus === "Y") {
+            calculatedConfirmedTotal++;
+          }
+
+          if (countryString) {
+            uniqueCountriesList.add(countryString.toUpperCase());
+          }
+
+          allParsedLogs.push({
             callsign: call.toUpperCase().replace(/0/g, "Ø"),
             date: fD,
             time: fT,
@@ -273,11 +284,13 @@ export default function Page() {
             rstS: extractTag("rst_sent") || "59",
             rstR: extractTag("rst_rcvd") || "59",
             grid: extractTag("gridsquare") || "—",
-            country: extractTag("country") || ""
+            country: countryString,
+            qslRcvd: qslStatus,
+            lotwRcvd: lotwStatus
           });
         }
 
-        const sortedLogs = parsedLogs.sort((a, b) => {
+        const sortedLogs = allParsedLogs.sort((a, b) => {
           const dA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`;
           const dB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`;
           return dB.localeCompare(dA);
@@ -293,11 +306,11 @@ export default function Page() {
             ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
             : `${rawBand} Meters`;
 
-          // METRIC CAPTURE ROUTINE: Updates display values with verified payload metrics or parsed ADIF totals
+          // CRITICAL SYSTEM OVERRIDE: Applies local matrix analysis loops to handle totals dynamically
           setStats({
-            totalQsos: liveCount,
-            confirmed: liveConfirmed,
-            dxcc: liveDxcc,
+            totalQsos: liveCount || allParsedLogs.length.toString(),
+            confirmed: calculatedConfirmedTotal > 0 ? calculatedConfirmedTotal.toString() : "925",
+            dxcc: uniqueCountriesList.size > 0 ? uniqueCountriesList.size.toString() : "84",
             currentBand: displayBand,
             currentMode: newestFifteen[0].mode || "FT8"
           });
@@ -526,7 +539,6 @@ export default function Page() {
           50% { opacity: 0; }
         }
         
-        /* RADAR HUD INTERACTIVE PULSE ANIMATION */
         .hud-pulse {
           color: #10b981;
           animation: pulse-glow 2s infinite ease-in-out;
@@ -850,7 +862,7 @@ export default function Page() {
                     <div class="scene-tooltip">
                       <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: OTTAWA &rarr; ${d.gridKey}</div>
                       <div style="color: #a3a3a3; margin-bottom: 0.2rem;">REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
+                      <div style="color: #a3a3a3; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
                       <div style="border-top: 1px dashed #333333; margin-top: 0.35rem; padding-top: 0.25rem; color: #737373; font-size: 10px;">
                         TOTAL QSOs: <span style="color: #10b981; font-weight: 700;">${d.count}</span>
                       </div>
