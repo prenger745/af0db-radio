@@ -388,6 +388,23 @@ export default function Page() {
             const pt = sectorData.base;
             const callUpper = pt.callsign.toUpperCase();
 
+            // STRICT GRID MATH: Overrides bad QRZ lat/lng coords and perfectly centers the destination on the maidenhead square
+            let exactLat = pt.lat;
+            let exactLng = pt.lng;
+
+            if (gridKey && gridKey.length === 4) {
+              const g = gridKey.toUpperCase();
+              const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+              const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+              const lonSquare = parseInt(g.charAt(2)) * 2;
+              const latSquare = parseInt(g.charAt(3)) * 1;
+              
+              if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+                exactLng = lonField + lonSquare + 1; 
+                exactLat = latField + latSquare + 0.5; 
+              }
+            }
+
             const isUSAPrefix = callUpper.startsWith("W") || 
                                 callUpper.startsWith("K") || 
                                 callUpper.startsWith("N") || 
@@ -396,8 +413,8 @@ export default function Page() {
                                 callUpper.startsWith("AC") || 
                                 callUpper.startsWith("AD");
             
-            const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
-                                    pt.lng >= -125.000000 && pt.lng <= -66.934570;
+            const isUSACoordinate = exactLat >= 24.396305 && exactLat <= 49.384358 && 
+                                    exactLng >= -125.000000 && exactLng <= -66.934570;
 
             const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
             const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
@@ -408,10 +425,10 @@ export default function Page() {
             return {
               startLat: 38.6158,
               startLng: -95.2686,
-              lat: pt.lat,
-              lng: pt.lng,
-              endLat: pt.lat,
-              endLng: pt.lng,
+              lat: exactLat,
+              lng: exactLng,
+              endLat: exactLat,
+              endLng: exactLng,
               color: assignedTargetColor,
               gridKey: gridKey,
               territory: territoryType,
@@ -875,7 +892,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 4: RESTORED Space weather info + Prop Ratings */}
+          {/* Card 4: Space weather info */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
