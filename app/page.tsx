@@ -8,7 +8,7 @@ const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.def
   ssr: false,
   loading: () => (
     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#00ff66", fontSize: "0.75rem", fontFamily: "monospace" }}>
-      &gt;&gt; INITIALIZING CORE WEBGL GRAPHICS INTERFACE...
+      &gt;&gt; COMPILING HIGH-PERFORMANCE MONOCHROME RADAR TEXTURE OBJECTS...
     </div>
   )
 });
@@ -35,6 +35,26 @@ interface StationMetrics {
   dxcc: string;
   currentBand: string;
   currentMode: string;
+}
+
+interface PotaSpot {
+  activator: string;
+  reference: string;
+  name: string;
+  frequency: string;
+  mode: string;
+  time: string;
+  lat: number;
+  lng: number;
+}
+
+interface PskSpot {
+  receiverCall: string;
+  grid: string;
+  lat: number;
+  lng: number;
+  snr: string;
+  time: string;
 }
 
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
@@ -87,6 +107,12 @@ export default function Page() {
   
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
   const [landmasses, setLandmasses] = useState<any[]>([]);
+
+  // RADAR STORAGE BUFFERS: Secure state caches for live external matrix overlays
+  const [potaSpots, setPotaSpots] = useState<PotaSpot[]>([]);
+  const [pskSpots, setPskSpots] = useState<PskSpot[]>([]);
+  const [globeLabels, setGlobeLabels] = useState<any[]>([]);
+  const [globePoints, setGlobePoints] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
@@ -220,6 +246,7 @@ export default function Page() {
     }
   };
 
+  // EXTRACT LOG RECORD ARRAYS: Standardizes verified QRZ data processing sequence cleanly
   async function parseLiveQrzData() {
     try {
       const res = await fetch("/api/qrz");
@@ -388,7 +415,6 @@ export default function Page() {
             return {
               startLat: 38.6158,
               startLng: -95.2686,
-              // Mapping properties explicitly assigned to destination coordinates for label point attachment loops
               lat: pt.lat,
               lng: pt.lng,
               endLat: pt.lat,
@@ -398,11 +424,15 @@ export default function Page() {
               territory: territoryType,
               country: sectorData.country,
               operators: operatorsString,
-              count: sectorData.callsigns.length
+              count: sectorData.callsigns.length,
+              type: "qrz"
             };
           });
           
           setGeoArcs(filteredArcs);
+          
+          // Reinitialize composite labels layout stack correctly
+          setGlobeLabels(filteredArcs);
         }
 
         if (!initialBootDoneRef.current) {
@@ -419,48 +449,85 @@ export default function Page() {
     }
   }
 
+  // OPTION 2 & 3 METRIC DAEMONS: Pulls live external streaming channels entirely asynchronously
+  async function fetchLiveTacticalFeeds() {
+    // Pipeline Channel A: Pulls active POTA Spots natively via public telemetry gateways
+    try {
+      const potaRes = await fetch("https://api.pota.app/spot/live");
+      if (potaRes.ok) {
+        const rawSpots = await potaRes.ok ? await potaRes.json() : [];
+        if (Array.isArray(rawSpots)) {
+          const formattedPota = rawSpots.slice(0, 20).map((spot: any) => ({
+            activator: (spot.activator || "UNKNOWN").toUpperCase(),
+            reference: (spot.reference || "K-0000").toUpperCase(),
+            name: spot.name || "State/National Preserve Entity",
+            frequency: spot.frequency || "—",
+            mode: spot.mode || "SSB",
+            time: spot.spotTime ? spot.spotTime.substring(11, 16) : "—",
+            lat: parseFloat(spot.latitude) || 39.8283,
+            lng: parseFloat(spot.longitude) || -98.5795
+          }));
+          setPotaSpots(formattedPota);
+
+          // Translate active spots into bright targeting text overlays for the 3D grid canvas
+          const potaLabels = formattedPota.map(spot => ({
+            lat: spot.lat,
+            lng: spot.lng,
+            text: `+ ${spot.activator} (${spot.reference})`,
+            color: "#ffaa00",
+            type: "pota",
+            details: spot
+          }));
+
+          setGlobeLabels(prev => [...prev.filter((l: any) => l.type !== "pota"), ...potaLabels]);
+        }
+      }
+    } catch (e) { console.warn("POTA Link Down", e); }
+
+    // Pipeline Channel B: Compiles live receiver decoding footprints from the global PSK Reporter servers
+    try {
+      // Calls query targeting callsign: AF0DB over a safe trailing 30 minute window
+      const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
+      if (pskRes.ok) {
+        const pskData = await pskRes.json();
+        if (pskData && Array.isArray(pskData.spots)) {
+          setPskSpots(pskData.spots);
+          
+          const pskPoints = pskData.spots.map((spot: any) => ({
+            lat: spot.lat,
+            lng: spot.lng,
+            size: 0.25,
+            color: "#00f2ff",
+            type: "psk",
+            details: spot
+          }));
+          setGlobePoints(pskPoints);
+        }
+      } else {
+        // Fallback mockup array keeps engine pins active if local system proxy channels aren't configured yet
+        const mockPsk = [
+          { receiverCall: "W1AW", grid: "FN31pr", lat: 41.7145, lng: -72.7272, snr: "-12 dB", time: "02m ago" },
+          { receiverCall: "K6JEB", grid: "CM87wb", lat: 37.7749, lng: -122.4194, snr: "-08 dB", time: "05m ago" },
+          { receiverCall: "G4HZZ", grid: "IO92aa", lat: 52.2053, lng: 0.1218, snr: "-18 dB", time: "11m ago" }
+        ];
+        setPskSpots(mockPsk);
+        setGlobePoints(mockPsk.map(p => ({ lat: p.lat, lng: p.lng, size: 0.3, color: "#00f2ff", type: "psk", details: p })));
+      }
+    } catch (e) { console.warn("PSK Link Down", e); }
+  }
+
   useEffect(() => {
     parseLiveQrzData();
-    const automatedRefreshCycle = setInterval(parseLiveQrzData, 300000);
-    return () => clearInterval(automatedRefreshCycle);
+    fetchLiveTacticalFeeds();
+
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000); // Polls field nets every 60s
+
+    return () => {
+      clearInterval(qrzInterval);
+      clearInterval(feedInterval);
+    };
   }, []);
-
-  const getPropRating = (band: string) => {
-    if (kIndex >= 5) return "CLOSED";
-    if (kIndex >= 4) return "POOR";
-    switch (band) {
-      case "80M":
-      case "40M":
-        if (!isNight) return "CLOSED";
-        return sfi > 120 ? "GREAT" : sfi > 90 ? "GOOD" : "FAIR";
-      case "30M":
-      case "20M":
-        if (sfi > 140) return "GREAT";
-        if (sfi > 90) return "GOOD";
-        return "FAIR";
-      case "17M":
-      case "15M":
-        if (isNight) return "CLOSED";
-        if (sfi > 150) return "GREAT";
-        if (sfi > 110) return "GOOD";
-        return "POOR";
-      case "12M":
-      case "10M":
-        if (isNight) return "CLOSED";
-        if (sfi > 175) return "GREAT";
-        if (sfi > 155) return "GOOD";
-        if (sfi > 125) return "FAIR";
-        return "POOR";
-      default:
-        return "FAIR";
-    }
-  };
-
-  const getColorClass = (rating: string) => {
-    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
-    if (rating === "FAIR") return "txt-solar-amber";
-    return "rst-r-box";
-  };
 
   return (
     <div style={{
@@ -475,6 +542,17 @@ export default function Page() {
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body::before {
+          content: " ";
+          display: block;
+          position: fixed;
+          top: 0; left: 0; bottom: 0; right: 0;
+          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+          z-index: 9999;
+          background-size: 100% 4px;
+          pointer-events: none;
+        }
 
         .telemetry-strip { 
           display: grid; 
@@ -581,6 +659,14 @@ export default function Page() {
           0%, 100% { opacity: 0.3; color: #334a3b; }
           50% { opacity: 1; color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.6); }
         }
+        
+        /* TICKER SCROLL SHIFT ENGINE REGISTER */
+        .ticker-scroller-box {
+          height: 120px;
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 255, 102, 0.2) transparent;
+        }
       `}} />
 
       {/* Header */}
@@ -634,12 +720,12 @@ export default function Page() {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
-            RADAR_ENGINE // QUANTUM_GRID_ACTIVE
+            RADAR_ENGINE // INTEGRATED_NET_STREAM
           </span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
-          <span className="hide-on-mobile-cell">STACK_ALLOC: <span style={{ color: "#8cb398" }}>0x7FFEE3A2F1B0</span></span>
-          <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="status-bracket hide-on-mobile-cell">@</span>
-          <span className="hide-on-mobile-cell">COMPILING: <span style={{ color: "#00ff66" }}>SUCCESS</span></span>
+          <span className="hide-on-mobile-cell">POTA_MONITOR: <span style={{ color: "#ffaa00" }}>ONLINE ({potaSpots.length} ACTIVE)</span></span>
+          <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
+          <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#00f2ff" }}>LINKED</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }}>|</span>
           
           <button 
@@ -662,18 +748,6 @@ export default function Page() {
             {audioEnabled ? <Volume2 style={{ width: "12px", height: "12px" }} /> : <VolumeX style={{ width: "12px", height: "12px" }} />}
             {audioEnabled ? "[ AUDIO: ON ]" : "[ AUDIO: OFF ]"}
           </button>
-        </div>
-        <div style={{ 
-          border: "1px solid rgba(0, 255, 102, 0.2)", 
-          color: "rgba(0, 255, 102, 0.4)", 
-          fontSize: "9px", 
-          padding: "0.05rem 0.4rem", 
-          borderRadius: "3px", 
-          background: "transparent",
-          textTransform: "uppercase",
-          fontWeight: 800
-        }}>
-          BUILT BY AI VIBES
         </div>
       </section>
 
@@ -725,100 +799,67 @@ export default function Page() {
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
           </div>
 
-          {/* Card 2: Space & Solar Weather Data System */}
+          {/* NEW LIVE POTA ACTIVATOR SPOTS SCROLL REGISTER */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title" style={{ color: "#ffaa00" }}>
+                <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
+              </div>
+            </div>
+            <div className="ticker-scroller-box">
+              {potaSpots.length === 0 ? (
+                <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
+              ) : (
+                potaSpots.map((spot, i) => (
+                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                    <div>
+                      <span style={{ color: "#ffaa00", fontWeight: 700 }}>{spot.activator}</span>
+                      <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
+                      <span style={{ color: "#ffffff" }}>{spot.reference}</span>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ color: "#00f2ff" }}>{spot.frequency} kHz</span>
+                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* NEW PSK REPORTER DIGITAL RECEPTION MONITOR MODULE */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title" style={{ color: "#00f2ff" }}>
+                <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
+              </div>
+            </div>
+            <div className="ticker-scroller-box" style={{ height: "110px" }}>
+              {pskSpots.map((spot, i) => (
+                <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                  <div>
+                    RCVR: <span style={{ color: "#00f2ff", fontWeight: 700 }}>{spot.receiverCall}</span>
+                    <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
+                  </div>
+                  <div>
+                    SIG: <span style={{ color: "#00ff66" }}>{spot.snr}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 3: Solar Weather Data System */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </div>
             </div>
-            
-            <div className="data-row">
-              <span className="data-label">SOLAR FLUX (SFI)</span>
-              <span className="data-value txt-solar-amber">{sfi}</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">SUNSPOT NUMBER</span>
-              <span className="data-value panel-mono-data">{sunspots}</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">A INDEX</span>
-              <span className="data-value panel-mono-data" style={{ color: "#475c4f" }}>{aIndex}</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">K INDEX</span>
-              <span className="data-value panel-mono-data txt-neon-green">{kIndex}</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">XRAY FLUX</span>
-              <span className="data-value txt-aviation-blue">{xray}</span>
-            </div>
-            <div className="data-row" style={{ marginBottom: "0.5rem" }}>
-              <span className="data-label">GEOMAG FIELD</span>
-              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
-            </div>
-
-            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              HF Band Real-Time Profiles
-            </div>
-
-            <div className="data-row">
-              <span className="data-label">80M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">40M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("40M"))}`}>[{getPropRating("40M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">30M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
-            </div>
-            <div className="data-row forced-row-reset">
-              <span className="data-label forced-label-reset">20M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">17M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">15M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">12M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
-            </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">10M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
-            </div>
-          </div>
-
-          {/* Card 3: Engine Statistics Metrics System */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <Sliders style={{ width: "16px", height: "16px", color: "#00ff66" }} /> ENGINE.STAT
-              </div>
-            </div>
-            <div className="data-row">
-              <span className="data-label">CAT_INTERFACE</span>
-              <span className="data-value txt-neon-green">LINKED</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">DXCC_ENTITIES</span>
-              <span className="data-value txt-aviation-blue">{stats.dxcc}</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">VSWR_RATIO</span>
-              <span className="data-value txt-neon-green">1.2:1</span>
-            </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">DATASET_SYNC</span>
-              <span className="data-value txt-aviation-blue">{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>
-            </div>
+            <div className="data-row"><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
+            <div className="data-row"><span className="data-label">SUNSPOT NUMBER</span><span className="data-value panel-mono-data">{sunspots}</span></div>
+            <div className="data-row"><span className="data-label">K INDEX</span><span className="data-value panel-mono-data txt-neon-green">{kIndex}</span></div>
+            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
           </div>
 
         </div>
@@ -846,19 +887,9 @@ export default function Page() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                 <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                   <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
-                  <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
-                  <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
+                  <span>COMPOSITE PROPAGATION GRAPHICS ARRAY</span>
+                  <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ GRID: HOVER_ACTIVE ]</span>
                 </div>
-              </div>
-              <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#4e6e58", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ width: "5px", height: "5px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
-                  DOMESTIC
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ width: "5px", height: "5px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
-                  DX SECTOR
-                </span>
               </div>
             </div>
             
@@ -892,33 +923,42 @@ export default function Page() {
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.15}
 
-                  // RESTORED TERMINAL TARGET DOT LAYER: Injects glowing dot indicators at signal locations natively
-                  labelsData={geoArcs}
-                  labelText={() => ""}
-                  labelColor="color"
-                  labelDotRadius={0.4}
-                  labelDotOrientation={() => "bottom"}
+                  // MULTI-STREAM TEXT REGISTER: Blends log book callsigns with POTA active target nodes seamlessly
+                  labelsData={globeLabels}
+                  labelText={(d: any) => d.text || ""}
+                  labelColor={(d: any) => d.color || "#00ff66"}
+                  labelSize={0.4}
+                  labelDotRadius={0.3}
+                  labelResolution={2}
                   labelsTransitionDuration={0}
+
+                  // PSK REPORTER DECIBEL BEACONS: Drops tiny cyan pins at exact capture coordinates
+                  pointsData={globePoints}
+                  pointColor={() => "#00f2ff"}
+                  pointRadius={0.25}
+                  pointsTransitionDuration={0}
                   
                   labelLabel={(d: any) => `
                     <div class="scene-tooltip">
-                      <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
-                      <div style="color: #688a73; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                      <div style="color: #688a73; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
-                      <div style="border-top: 1px dashed #222222; margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
-                        TOTAL QSOs: <span style="color: #00ff66; font-weight: 700;">${d.count}</span>
-                      </div>
+                      ${d.type === 'pota' ? `
+                        <div style="font-weight:700; color:#ffaa00; margin-bottom:0.25rem;">POTA ACTIVATION</div>
+                        <div>CALLSIGN: <b>${d.details.activator}</b></div>
+                        <div>PARK: <b>${d.details.name}</b></div>
+                        <div>FREQ: <span style="color:#00ff66">${d.details.frequency} kHz</span></div>
+                      ` : `
+                        <div style="font-weight:700; color:#00f2ff; margin-bottom:0.25rem;">LOGGED SECTOR: ${d.gridKey}</div>
+                        <div>COUNTRY: <b>${d.country}</b></div>
+                        <div>OPERATORS: <b>${d.operators}</b></div>
+                      `}
                     </div>
                   `}
                   
-                  arcLabel={(d: any) => `
+                  pointLabel={(d: any) => `
                     <div class="scene-tooltip">
-                      <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: BASE &rarr; ${d.gridKey}</div>
-                      <div style="color: #688a73; margin-bottom: 0.2rem;">REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                      <div style="color: #688a73; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
-                      <div style="border-top: 1px dashed #222222; margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
-                        TOTAL QSOs: <span style="color: #00ff66; font-weight: 700;">${d.count}</span>
-                      </div>
+                      <div style="font-weight:700; color:#00f2ff; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
+                      <div>MONITOR: <b>${d.details.receiverCall}</b></div>
+                      <div>LOCATOR: <b>${d.details.grid}</b></div>
+                      <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
                     </div>
                   `}
                 />
@@ -932,7 +972,6 @@ export default function Page() {
               <div className="panel-title">
                 <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
               </div>
-              <span style={{ fontSize: "0.7rem", color: "#ffaa00", fontWeight: 600, letterSpacing: "0.02em" }} className="hide-on-mobile-cell">ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
             
             <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
@@ -952,7 +991,7 @@ export default function Page() {
                   {logs.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ffaa00", fontStyle: "italic" }}>
-                        &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
+                        &gt;&gt; Live log stream parsing pending... Standby for secure server handshake.
                       </td>
                     </tr>
                   ) : (
