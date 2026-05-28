@@ -4,8 +4,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Queries the live global POTA spot firehose with a timestamp cache-buster
-    const res = await fetch(`https://api.pota.app/spot/live?_=${Date.now()}`, {
+    // FIXED: Now pointing to /spot/activator instead of the broken /spot/live
+    const res = await fetch(`https://api.pota.app/spot/activator?_=${Date.now()}`, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "application/json"
