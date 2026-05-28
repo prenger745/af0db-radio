@@ -98,6 +98,8 @@ export default function Page() {
   const [showTelemetry, setShowTelemetry] = useState(false);
   const [showWorkspace, setShowWorkspace] = useState(false);
 
+  const initialBootDoneRef = useRef(false);
+
   const targetTitle = "DANIEL McGURK // AFØDB STATION LOG";
   const targetSubtitle = "Real-Time QRZ API Live Data Stream";
 
@@ -218,7 +220,6 @@ export default function Page() {
     }
   };
 
-  // REBUILT REFRESH DAEMON: Triggers a direct dataset download and dynamic tally sequence
   async function parseLiveQrzData() {
     try {
       const res = await fetch("/api/qrz");
@@ -249,7 +250,6 @@ export default function Page() {
       const allParsedLogs: QSO[] = [];
       const records = adifContent.split(/<eor>/i);
 
-      // BULLETPROOF DIRECT TALLY MATRIX: Performs math across rows dynamically to prevent drop errors
       let calculatedConfirmedTotal = 0;
       const uniqueCountriesList = new Set<string>();
 
@@ -274,7 +274,6 @@ export default function Page() {
         const eqslStatus = extractTag("eqsl_qsl_rcvd").toUpperCase();
         const qrzStatus = extractTag("qrzcom_qsl_rcvd").toUpperCase();
 
-        // Count confirmation if any standard validation flag is set to 'Y'
         if (qslStatus === "Y" || lotwStatus === "Y" || eqslStatus === "Y" || qrzStatus === "Y") {
           calculatedConfirmedTotal++;
         }
@@ -316,7 +315,6 @@ export default function Page() {
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
 
-        // DYNAMIC STATE UPDATE: Sets the exact number of parsed file entries directly
         setStats({
           totalQsos: allParsedLogs.length.toString(),
           confirmed: calculatedConfirmedTotal.toString(),
@@ -386,15 +384,16 @@ export default function Page() {
               country: sectorData.country,
               operators: operatorsString,
               count: sectorData.callsigns.length
-          };
+            };
           });
           
           setGeoArcs(filteredArcs);
         }
 
-        if (!baseBootTriggered) {
+        // FIXED CHIME EMULATION LAYER: Evaluates mutable reference bounds correctly to clear out compilation panics
+        if (!initialBootDoneRef.current) {
           playTerminalBeep("boot");
-          baseBootTriggered = true;
+          initialBootDoneRef.current = true;
         } else {
           playTerminalBeep("sync");
         }
@@ -408,7 +407,6 @@ export default function Page() {
 
   useEffect(() => {
     parseLiveQrzData();
-    // AUTOMATED REFRESH DAEMON: Sets up a continuous background loop to sync every 5 minutes
     const automatedRefreshCycle = setInterval(parseLiveQrzData, 300000);
     return () => clearInterval(automatedRefreshCycle);
   }, []);
@@ -582,7 +580,6 @@ export default function Page() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
-          {/* MANUAL REFRESH CONTROL: Tapping this HUD string directly fires a fresh server pull requests instantly */}
           <button 
             onClick={() => parseLiveQrzData()}
             style={{
