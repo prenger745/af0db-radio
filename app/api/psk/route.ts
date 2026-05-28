@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// MAIDENHEAD GRID TO COORDINATE TRANSLATOR
+// MAIDENHEAD GRID TO COORDINATE TRANSLATOR: Converts 4 or 6 character grids (e.g. EM28) into Lat/Lng decimals for the 3D globe
 function gridToLatLon(grid: string): { lat: number, lng: number } | null {
   if (!grid || grid.length < 4) return null;
   const g = grid.toUpperCase();
@@ -28,16 +28,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const callsign = searchParams.get("callsign") || "AF0DB";
   
-  // Queries the trailing 2 hours (-7200s) to guarantee a thick, persistent signal heatmap
-  const targetUrl = `https://pskreporter.info/cgi-bin/pskdata.pl?senderCallsign=${callsign}&flowStartSeconds=-7200`;
+  // FIXED ENDPOINT: Uses the dedicated 'retrieve' subdomain for active database queries
+  const targetUrl = `https://retrieve.pskreporter.info/query?senderCallsign=${callsign}&flowStartSeconds=-7200`;
 
   try {
     const res = await fetch(targetUrl, { 
       headers: { 
-        // Spoofing standard browser headers to bypass strict IP/Bot filters on the PSK backend
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "application/xml, text/xml, */*"
       },
+      // Cache set to 60 seconds to prevent hammering the PSK network and getting IP banned
       next: { revalidate: 60 } 
     });
 
@@ -47,14 +47,13 @@ export async function GET(request: Request) {
 
     const xmlData = await res.text();
 
-    // BULLETPROOF REGEX PARSER: Extracts the node regardless of self-closing slashes or line breaks
+    // REGEX PARSER: Extracts individual <receptionReport> nodes from the raw database dump
     const reportMatches = xmlData.match(/<receptionReport\b[^>]*>/ig) || [];
     
     const liveSpots = [];
 
     for (const report of reportMatches) {
       const extractAttr = (attr: string) => {
-        // Broadened regex to capture standard XML attribute structures dynamically
         const m = report.match(new RegExp(`${attr}\\s*=\\s*"([^"]*)"`, "i"));
         return m ? m[1] : "";
       };
@@ -69,6 +68,7 @@ export async function GET(request: Request) {
       const coords = gridToLatLon(grid);
       if (!coords) continue;
 
+      // Converts absolute Unix epoch stamps into localized "Xm ago" tags
       let timeString = "Just now";
       if (flowSeconds) {
         const reportTime = parseInt(flowSeconds) * 1000;
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // Filters down to unique stations, preferring their most recent decode
+    // DUPLICATE FILTER: Keeps the UI clean by only showing the most recent decode per receiving station
     const uniqueSpotsMap = new Map();
     liveSpots.forEach(spot => {
       uniqueSpotsMap.set(spot.receiverCall, spot);
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
         const bTime = parseInt(b.time.replace(/\D/g, '')) || 0;
         return aTime - bTime;
       })
-      .slice(0, 20); // Upped the render limit to capture more of your signal spread
+      .slice(0, 20);
 
     return NextResponse.json({
       active: true,
