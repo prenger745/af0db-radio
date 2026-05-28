@@ -66,12 +66,18 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
 
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
+  
+  // SECURE BASELINE ANCHORS: Hardcoded real-world baselines to prevent data-parsing drops completely
+  const FIXED_TOTAL = 1075;
+  const FIXED_CONFIRMED = 937;
+  const FIXED_DXCC = 84;
+
   const [stats, setStats] = useState<StationMetrics>({
-    totalQsos: "...",
-    confirmed: "...",
-    dxcc: "...",
-    currentBand: "Searching...",
-    currentMode: "Searching..."
+    totalQsos: FIXED_TOTAL.toString(),
+    confirmed: FIXED_CONFIRMED.toString(),
+    dxcc: FIXED_DXCC.toString(),
+    currentBand: "20 Meters",
+    currentMode: "FT8"
   });
 
   const [sfi, setSfi] = useState<number>(145);
@@ -86,8 +92,6 @@ export default function Page() {
   const [isNight, setIsNight] = useState<boolean>(false);
   
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
-  
-  // CACHED VECTOR OUTLINES: Pulls pre-computed country polygons directly to ensure immediate compilation
   const [landmasses, setLandmasses] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,7 +118,6 @@ export default function Page() {
     const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 1800);
     const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 2400);
 
-    // NATIVE GEOJSON HANDSHAKE: Pulls clean, native polygon shapes straight from standard public dataset repositories
     fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson")
       .then(res => res.json())
       .then(data => {
@@ -234,7 +237,7 @@ export default function Page() {
         const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
         const countMatch = cleanText.match(/COUNT=([^&<\s]*)/i);
-        const liveCount = countMatch ? countMatch[1].split('&')[0].trim() : "";
+        const rawLiveCount = countMatch ? parseInt(countMatch[1].split('&')[0].trim()) : 0;
 
         const currentHour = new Date().getUTCHours();
         setIsNight(currentHour < 11 || currentHour > 23);
@@ -322,10 +325,15 @@ export default function Page() {
             ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
             : `${rawBand} Meters`;
 
+          // COMPARATIVE CEILING COMPUTATION: Math.max completely protects totals from dropping below your confirmed operational baselines
+          const finalTotal = Math.max(FIXED_TOTAL, rawLiveCount || allParsedLogs.length);
+          const finalConfirmed = Math.max(FIXED_CONFIRMED, calculatedConfirmedTotal);
+          const finalDxcc = Math.max(FIXED_DXCC, uniqueCountriesList.size);
+
           setStats({
-            totalQsos: liveCount || allParsedLogs.length.toString(),
-            confirmed: calculatedConfirmedTotal > 0 ? calculatedConfirmedTotal.toString() : "937",
-            dxcc: uniqueCountriesList.size > 0 ? uniqueCountriesList.size.toString() : "84",
+            totalQsos: finalTotal.toString(),
+            confirmed: finalConfirmed.toString(),
+            dxcc: finalDxcc.toString(),
             currentBand: displayBand,
             currentMode: newestFifteen[0].mode || "FT8"
           });
@@ -863,7 +871,6 @@ export default function Page() {
                   ringPropagationSpeed={1.5}
                   ringRepeatPeriod={1600}
                   
-                  // FIXED COMPILER MAPPING: Replaced old prop name with strict atmosphereAltitude syntax rules
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.15}
