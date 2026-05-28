@@ -500,7 +500,7 @@ export default function Page() {
       const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
       if (pskRes.ok) {
         const pskData = await pskRes.json();
-        if (pskData && Array.isArray(pskData.spots)) {
+        if (pskData && Array.isArray(pskData.spots) && pskData.spots.length > 0) {
           setPskSpots(pskData.spots);
           setGlobePoints(pskData.spots.map((spot: any) => ({
             lat: spot.lat,
@@ -510,17 +510,21 @@ export default function Page() {
             type: "psk",
             details: spot
           })));
+        } else {
+          // CLEAN EMPTY STATE: No fake dots, no mock arrays
+          setPskSpots([]);
+          setGlobePoints([]);
         }
       } else {
-        const mockPsk = [
-          { receiverCall: "W1AW", grid: "FN31pr", lat: 41.7145, lng: -72.7272, snr: "-12 dB", time: "02m ago" },
-          { receiverCall: "K6JEB", grid: "CM87wb", lat: 37.7749, lng: -122.4194, snr: "-08 dB", time: "05m ago" },
-          { receiverCall: "G4HZZ", grid: "IO92aa", lat: 52.2053, lng: 0.1218, snr: "-18 dB", time: "11m ago" }
-        ];
-        setPskSpots(mockPsk);
-        setGlobePoints(mockPsk.map(p => ({ lat: p.lat, lng: p.lng, size: 0.3, color: "#00f2ff", type: "psk", details: p })));
+        // CLEAN EMPTY STATE ON API FAILURE
+        setPskSpots([]);
+        setGlobePoints([]);
       }
-    } catch (e) { console.warn("PSK Link Down", e); }
+    } catch (e) { 
+      console.warn("PSK Link Down", e); 
+      setPskSpots([]);
+      setGlobePoints([]);
+    }
   }
 
   useEffect(() => {
@@ -878,17 +882,23 @@ export default function Page() {
               </div>
             </div>
             <div className="ticker-scroller-box" style={{ height: "110px" }}>
-              {pskSpots.map((spot, i) => (
-                <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
-                  <div>
-                    RCVR: <span style={{ color: "#00f2ff", fontWeight: 700 }}>{spot.receiverCall}</span>
-                    <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
-                  </div>
-                  <div>
-                    SIG: <span style={{ color: "#00ff66" }}>{spot.snr}</span>
-                  </div>
+              {pskSpots.length === 0 ? (
+                <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
+                  &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
                 </div>
-              ))}
+              ) : (
+                pskSpots.map((spot, i) => (
+                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                    <div>
+                      RCVR: <span style={{ color: "#00f2ff", fontWeight: 700 }}>{spot.receiverCall}</span>
+                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
+                    </div>
+                    <div>
+                      SIG: <span style={{ color: "#00ff66" }}>{spot.snr}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
