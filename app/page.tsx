@@ -377,6 +377,7 @@ export default function Page() {
             const pt = sectorData.base;
             const callUpper = pt.callsign.toUpperCase();
 
+            // STRICT GRID MATH: Overrides bad QRZ lat/lng coords and perfectly centers the destination on the maidenhead square
             let exactLat = pt.lat;
             let exactLng = pt.lng;
 
@@ -931,7 +932,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 4: FULLY RESTORED Space weather info */}
+          {/* Card 4: FULLY RESTORED Space weather info WITH N0NBH ATTRIBUTION */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
@@ -982,6 +983,19 @@ export default function Page() {
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
+            </div>
+
+            <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
+              <a 
+                href="https://www.hamqsl.com/solar.html" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ color: "#4e6e58", textDecoration: "none", fontWeight: "700", letterSpacing: "0.05em" }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "#00ff66"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "#4e6e58"}
+              >
+                TELEMETRY FEED VIA NØNBH // HAMQSL.COM ↗
+              </a>
             </div>
           </div>
 
