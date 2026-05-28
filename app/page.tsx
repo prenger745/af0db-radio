@@ -449,7 +449,7 @@ export default function Page() {
 
   async function fetchLiveTacticalFeeds() {
     try {
-      const potaRes = await fetch("https://api.pota.app/spot/live");
+      const potaRes = await fetch("/api/pota?_=" + Date.now(), { cache: "no-store" });
       if (potaRes.ok) {
         const rawSpots = await potaRes.json();
         if (Array.isArray(rawSpots)) {
