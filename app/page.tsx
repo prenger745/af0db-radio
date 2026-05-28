@@ -347,7 +347,6 @@ export default function Page() {
         if (json.geoMap && Array.isArray(json.geoMap)) {
           const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
-          // FIXED MAPPING LIMITATION: Slices to exactly the top 15 records inside the Geographic array to stop chaotic historical bloat
           const newestMapData = json.geoMap.slice(0, 15);
           newestMapData.forEach((pt: any) => {
             if (!pt.grid) return;
@@ -426,12 +425,26 @@ export default function Page() {
               operators: operatorsString,
               count: sectorData.callsigns.length,
               type: "qrz",
-              text: ""
+              text: `+ ${sectorData.callsigns[0]}`
             };
           });
           
           setGeoArcs(filteredArcs);
-          setGlobeLabels(filteredArcs);
+          
+          // MAP RENDER SYNC CRITICAL ADJUSTMENT: Combines vectors but ensures POTA does not attempt to draw blank flight paths
+          const potaLabels = potaSpots.map(spot => ({
+            lat: spot.lat,
+            lng: spot.lng,
+            text: `* ${spot.activator} (${spot.reference})`,
+            color: "#ffaa00",
+            type: "pota",
+            gridKey: spot.reference,
+            country: "United States",
+            operators: spot.activator,
+            details: spot
+          }));
+
+          setGlobeLabels([...filteredArcs, ...potaLabels]);
         }
 
         if (!initialBootDoneRef.current) {
@@ -465,23 +478,6 @@ export default function Page() {
             lng: parseFloat(spot.longitude) || -98.5795
           }));
           setPotaSpots(formattedPota);
-
-          const potaLabels = formattedPota.map(spot => ({
-            lat: spot.lat,
-            lng: spot.lng,
-            text: `+ ${spot.activator} (${spot.reference})`,
-            color: "#ffaa00",
-            type: "pota",
-            gridKey: spot.reference,
-            country: "United States",
-            operators: spot.activator,
-            details: spot
-          }));
-
-          setGlobeLabels(prev => [
-            ...prev.filter((l: any) => l.type === "qrz"), 
-            ...potaLabels
-          ]);
         }
       }
     } catch (e) { console.warn("POTA Link Down", e); }
@@ -495,8 +491,6 @@ export default function Page() {
           setGlobePoints(pskData.spots.map((spot: any) => ({
             lat: spot.lat,
             lng: spot.lng,
-            size: 0.25,
-            color: "#00f2ff",
             type: "psk",
             details: spot
           })));
@@ -575,6 +569,35 @@ export default function Page() {
       clearInterval(solarInterval);
     };
   }, []);
+
+  useEffect(() => {
+    if (geoArcs.length > 0 || potaSpots.length > 0) {
+      const qrzLabels = geoArcs.map(arc => ({
+        lat: arc.lat,
+        lng: arc.lng,
+        text: arc.text,
+        color: arc.color,
+        type: "qrz",
+        gridKey: arc.gridKey,
+        country: arc.country,
+        operators: arc.operators
+      }));
+
+      const potaLabels = potaSpots.map(spot => ({
+        lat: spot.lat,
+        lng: spot.lng,
+        text: `* ${spot.activator}`,
+        color: "#ffaa00",
+        type: "pota",
+        gridKey: spot.reference,
+        country: "United States",
+        operators: spot.activator,
+        details: spot
+      }));
+
+      setGlobeLabels([...qrzLabels, ...potaLabels]);
+    }
+  }, [geoArcs, potaSpots]);
 
   const getPropRating = (band: string) => {
     const timeKey = isNight ? "night" : "day";
@@ -1056,30 +1079,36 @@ export default function Page() {
                   arcDashLength={0.45}
                   arcDashGap={0.1}
                   arcDashAnimateTime={1400} 
-                  arcStroke={0.4}
+                  arcStroke={0.5}
                   arcsTransitionDuration={0}
+                  arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
                   
+                  // FIXED CYLINDER BLOCK: Renders elegant, non-clipping surface tracking rings instead of raw 3D tower points
                   ringsData={geoArcs}
                   ringColor="color"
-                  ringMaxRadius={2.8}
-                  ringPropagationSpeed={1.5}
-                  ringRepeatPeriod={1600}
+                  ringMaxRadius={2.5}
+                  ringPropagationSpeed={1.2}
+                  ringRepeatPeriod={1800}
                   
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
-                  atmosphereAltitude={0.15}
+                  atmosphereAltitude={0.12}
 
+                  // FIXED SURFACE CLIPPING: Pushes the text tracking layer explicitly to a 0.05 altitude above geographic polygon meshes
                   labelsData={globeLabels}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.color || "#00ff66"}
                   labelSize={0.4}
-                  labelDotRadius={0.4} 
+                  labelDotRadius={0.3} 
+                  labelAltitude={0.05}
                   labelResolution={2}
                   labelsTransitionDuration={0}
 
+                  // FIXED PSK NODES: Renders clean reception points directly above landmass structures
                   pointsData={globePoints}
                   pointColor={() => "#00f2ff"}
-                  pointRadius={0.25}
+                  pointRadius={0.18}
+                  pointAltitude={0.02}
                   pointsTransitionDuration={0}
                   
                   labelLabel={(d: any) => {
@@ -1087,9 +1116,8 @@ export default function Page() {
                       return `
                         <div class="scene-tooltip">
                           <div style="font-weight:700; color:#ffaa00; margin-bottom:0.25rem;">POTA ACTIVATION</div>
-                          <div>CALLSIGN: <b>${d.details.activator}</b></div>
-                          <div>PARK ID: <b>${d.details.reference}</b></div>
-                          <div>FREQ: <span style="color:#00ff66">${d.details.frequency} kHz</span></div>
+                          <div>CALLSIGN: <b>${d.operators}</b></div>
+                          <div>PARK ID: <b>${d.gridKey}</b></div>
                         </div>
                       `;
                     }
