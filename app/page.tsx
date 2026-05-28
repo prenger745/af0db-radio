@@ -347,7 +347,9 @@ export default function Page() {
         if (json.geoMap && Array.isArray(json.geoMap)) {
           const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
-          json.geoMap.forEach((pt: any) => {
+          // FIXED MAPPING LIMITATION: Slices to exactly the top 15 records inside the Geographic array to stop chaotic historical bloat
+          const newestMapData = json.geoMap.slice(0, 15);
+          newestMapData.forEach((pt: any) => {
             if (!pt.grid) return;
             const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
             const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
@@ -377,7 +379,6 @@ export default function Page() {
             const pt = sectorData.base;
             const callUpper = pt.callsign.toUpperCase();
 
-            // STRICT GRID MATH: Overrides bad QRZ lat/lng coords and perfectly centers the destination on the maidenhead square
             let exactLat = pt.lat;
             let exactLng = pt.lng;
 
@@ -514,7 +515,6 @@ export default function Page() {
     }
   }
 
-  // DEDICATED SOLAR TELEMETRY FETCHER: Automatically parses exact live XML nodes to bypass default layout rendering limits
   async function fetchSolarData() {
     try {
       const res = await fetch("/api/solar?_=" + Date.now(), { cache: "no-store" });
@@ -539,7 +539,6 @@ export default function Page() {
       if (sigNoiseM) setSigNoise(sigNoiseM[1].trim().toUpperCase());
       if (windM) setSolarWind(windM[1].trim());
 
-      // PULLS ACTUAL N0NBH CALCULATED CONDITIONS RATHER THAN GUESSING
       const extractBand = (band: string, time: string) => {
         const m = xmlText.match(new RegExp(`<band name="${band}" time="${time}">([^<]*)<\\/band>`, "i"));
         return m ? m[1].toUpperCase() : "FAIR";
@@ -932,7 +931,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 4: FULLY RESTORED Space weather info WITH N0NBH ATTRIBUTION */}
+          {/* Card 4: Space weather info WITH N0NBH ATTRIBUTION */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
