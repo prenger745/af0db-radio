@@ -67,11 +67,11 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
   const [stats, setStats] = useState<StationMetrics>({
-    totalQsos: "1,204",
-    confirmed: "942",
-    dxcc: "84",
-    currentBand: "20 Meters",
-    currentMode: "FT8"
+    totalQsos: "...",
+    confirmed: "...",
+    dxcc: "...",
+    currentBand: "Searching...",
+    currentMode: "Searching..."
   });
 
   const [sfi, setSfi] = useState<number>(145);
@@ -250,8 +250,7 @@ export default function Page() {
       const allParsedLogs: QSO[] = [];
       const records = adifContent.split(/<eor>/i);
 
-      // TARGETED FILE TRACKING: Counts records inside the current API payload chunk directly
-      let chunkConfirmedCount = 0;
+      let calculatedConfirmedTotal = 0;
       const uniqueCountriesList = new Set<string>();
 
       for (const record of records) {
@@ -276,7 +275,7 @@ export default function Page() {
         const qrzStatus = extractTag("qrzcom_qsl_rcvd").toUpperCase();
 
         if (qslStatus === "Y" || lotwStatus === "Y" || eqslStatus === "Y" || qrzStatus === "Y") {
-          chunkConfirmedCount++;
+          calculatedConfirmedTotal++;
         }
 
         if (countryString) {
@@ -316,24 +315,10 @@ export default function Page() {
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
 
-        // DYNAMIC CONSOLE COUPLING CALIBRATION: Uses direct header markers to override truncated array feeds completely
-        const qrzGlobalCountMatch = cleanText.match(/(?:COUNT|TOTAL)=([^&<\s]*)/i);
-        const qrzGlobalCqslMatch = cleanText.match(/(?:CQSL|CONFIRMED)=([^&<\s]*)/i);
-        const qrzGlobalDxccMatch = cleanText.match(/(?:DXCC_COUNT|DXCC)=([^&<\s]*)/i);
-
-        const parsedGlobalCount = qrzGlobalCountMatch ? parseInt(qrzGlobalCountMatch[1].split('&')[0]) : 0;
-        const parsedGlobalCqsl = qrzGlobalCqslMatch ? parseInt(qrzGlobalCqslMatch[1].split('&')[0]) : 0;
-        const parsedGlobalDxcc = qrzGlobalDxccMatch ? parseInt(qrzGlobalDxccMatch[1].split('&')[0]) : 0;
-
-        // FIXED INDEX METRIC COMPILER: Uses exact math boundary parameters to lock display numbers accurately
-        const finalCalculatedTotal = parsedGlobalCount || Math.max(1204, allParsedLogs.length);
-        const finalCalculatedConfirmed = parsedGlobalCqsl || (chunkConfirmedCount + 214); // Structural offset calibration ensures true totals match
-        const finalCalculatedDxcc = parsedGlobalDxcc || Math.max(84, uniqueCountriesList.size);
-
         setStats({
-          totalQsos: finalCalculatedTotal.toString(),
-          confirmed: finalCalculatedConfirmed.toString(),
-          dxcc: finalCalculatedDxcc.toString(),
+          totalQsos: allParsedLogs.length.toString(),
+          confirmed: calculatedConfirmedTotal.toString(),
+          dxcc: uniqueCountriesList.size.toString(),
           currentBand: displayBand,
           currentMode: newestFifteen[0].mode || "FT8"
         });
@@ -464,23 +449,36 @@ export default function Page() {
 
   return (
     <div style={{
-      backgroundColor: "#050505", 
-      color: "#e5e5e5",
+      backgroundColor: "#030403", 
+      color: "#a3c2ae", 
       minHeight: "100vh",
       padding: isMobileScreen ? "0.75rem" : "1.5rem",
       fontFamily: "monospace", 
       boxSizing: "border-box",
-      letterSpacing: "0.02em"
+      letterSpacing: "0.05em",
+      position: "relative"
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body::before {
+          content: " ";
+          display: block;
+          position: fixed;
+          top: 0; left: 0; bottom: 0; right: 0;
+          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+          z-index: 9999;
+          background-size: 100% 4px, 6px 100%;
+          pointer-events: none;
+        }
+
         .telemetry-strip { 
           display: grid; 
           grid-template-columns: repeat(1, 1fr); 
           gap: 0.75rem; 
           margin-bottom: 1rem; 
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateY(5px);
           transition: opacity 0.6s ease, transform 0.6s ease;
         }
         .telemetry-strip.active { opacity: 1; transform: translateY(0); }
@@ -498,60 +496,68 @@ export default function Page() {
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 340px 1fr; gap: 1.5rem; } }
 
         .terminal-panel {
-          background: #0d0d0d;
-          border: 1px solid #1c1c1c;
-          border-radius: 6px;
+          background: #060907;
+          border: 1px solid rgba(0, 255, 102, 0.2);
+          border-radius: 4px;
           padding: 1rem;
-          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.7);
+          box-shadow: inset 0 0 15px rgba(0, 255, 102, 0.05), 0 4px 20px rgba(0,0,0,0.8);
           width: 100%;
           max-width: 100%;
+          position: relative;
         }
         @media (min-width: 640px) { .terminal-panel { padding: 1.25rem; } }
 
-        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1c1c1c; padding-bottom: 0.75rem; margin-bottom: 1rem; }
-        .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
+        .terminal-panel::before {
+          content: "+";
+          position: absolute;
+          top: 2px; left: 4px;
+          font-size: 9px; color: rgba(0, 255, 102, 0.4);
+        }
+
+        .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
+        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #ffaa00; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem; }
         
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #141414; font-size: 0.85rem; background: transparent !important; }
-        .data-label { color: #8a8a8a !important; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-        .data-value { font-weight: 600; text-align: right; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; }
+        .data-label { color: #688a73 !important; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .data-value { font-weight: 600; text-align: right; color: #d0edd9; }
         
         .forced-row-reset { background: transparent !important; padding-left: 0 !important; padding-right: 0 !important; border-radius: 0 !important; }
-        .forced-label-reset { color: #8a8a8a !important; font-weight: 600 !important; }
+        .forced-label-reset { color: #688a73 !important; font-weight: 600 !important; }
 
-        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
-        .matrix-table th { background: #0f0f0f; border-bottom: 1px solid #1c1c1c; padding: 0.75rem 0.5rem; color: #8a8a8a; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
-        .matrix-table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #141414; color: #cccccc; }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
+        .matrix-table th { background: #0a0f0c; border-bottom: 1px solid rgba(0, 255, 102, 0.2); padding: 0.75rem 0.5rem; color: #688a73; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; }
+        .matrix-table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(0, 255, 102, 0.08); color: #c2decb; }
         @media (min-width: 640px) { .matrix-table th, .matrix-table td { padding: 0.75rem 1rem; } }
-        .matrix-table tr:nth-child(even) { background: #0b0b0b; }
-        .matrix-table tr:hover { background: #141414; }
+        .matrix-table tr:nth-child(even) { background: #080c09; }
+        .matrix-table tr:hover { background: rgba(0, 255, 102, 0.05); }
 
         @media (max-width: 580px) {
           .hide-on-mobile-cell { display: none !important; }
         }
 
-        .txt-neon-green { color: #00ff66; text-shadow: 0 0 4px rgba(0,255,102,0.2); }
-        .txt-solar-amber { color: #ff9100; }
-        .txt-aviation-blue { color: #00f2ff; }
-        .status-bracket { font-size: 0.75rem; color: #404040; font-weight: 600; }
+        .txt-neon-green { color: #00ff66; text-shadow: 0 0 6px rgba(0,255,102,0.4); }
+        .txt-solar-amber { color: #ffaa00; text-shadow: 0 0 4px rgba(255,170,0,0.3); }
+        .txt-aviation-blue { color: #00f2ff; text-shadow: 0 0 4px rgba(0,242,255,0.3); }
+        .status-bracket { font-size: 0.75rem; color: #334a3b; font-weight: 600; }
         .status-text { color: #00ff66; font-weight: 700; }
-        .badge-mode-tactical { border: 1px solid #ff9100; color: #ff9100; font-size: 11px; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(255,145,0,0.04); }
+        .badge-mode-tactical { border: 1px solid rgba(0, 255, 102, 0.4); color: #00ff66; font-size: 10px; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 3px; background: rgba(0,255,102,0.03); }
         .rst-s-box { color: #00ff66; font-weight: 600; }
-        .rst-r-box { color: #ef4444; font-weight: 600; }
+        .rst-r-box { color: #ff3333; font-weight: 600; }
         .panel-mono-data { font-weight: 600; }
         
         .scene-tooltip {
-          background: #0a0a0a !important;
-          border: 1px solid #222222 !important;
-          border-radius: 4px !important;
+          background: #040605 !important;
+          border: 1px solid #00ff66 !important;
+          border-radius: 3px !important;
           padding: 0.75rem 1rem !important;
           font-family: monospace !important;
           font-size: 11px !important;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important;
-          color: #e5e5e5 !important;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.9) !important;
+          color: #c2decb !important;
           pointer-events: none !important;
           max-width: 240px !important;
           white-space: normal !important;
-          line-height: 1.4 !important;
+          line-height: 1.5 !important;
         }
 
         .terminal-cursor::after {
@@ -568,8 +574,8 @@ export default function Page() {
           font-weight: 700;
         }
         @keyframes pulse-glow {
-          0%, 100% { opacity: 0.4; color: #404040; }
-          50% { opacity: 1; color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.5); }
+          0%, 100% { opacity: 0.3; color: #334a3b; }
+          50% { opacity: 1; color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.6); }
         }
       `}} />
 
@@ -579,50 +585,45 @@ export default function Page() {
         flexDirection: isMobileScreen ? "column" : "row",
         alignItems: isMobileScreen ? "flex-start" : "center",
         justifyContent: "space-between", 
-        borderBottom: "1px solid #1c1c1c", 
+        borderBottom: "1px solid rgba(0, 255, 102, 0.2)", 
         paddingBottom: "1rem", 
         marginBottom: "1rem",
         gap: isMobileScreen ? "0.75rem" : "0px"
       }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em" }}>
-            <Radio style={{ width: "20px", height: "20px", color: "#ff9100" }} /> 
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
+            <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
-          <p style={{ fontSize: "0.7rem", color: "#525252", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 500, minHeight: "12px" }}>
+          <p style={{ fontSize: "0.65rem", color: "#425e4c", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, minHeight: "12px" }}>
             <span className={mainTitleText.length >= targetTitle.length && subTitleText.length < targetSubtitle.length ? "terminal-cursor" : ""}>{subTitleText}</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
           <button 
             onClick={() => parseLiveQrzData()}
-            style={{
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              cursor: "pointer"
-            }}
+            style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}
           >
             <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
           </button>
-          <span className="status-bracket">[<span className="status-text" style={{ color: "#ff9100" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
+          <span className="status-bracket">[<span className="status-text" style={{ color: "#ffaa00" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
       <section style={{
-        background: "rgba(0, 255, 102, 0.01)",
-        border: "1px dashed #1c1c1c",
+        background: "rgba(0, 255, 102, 0.02)",
+        border: "1px dashed rgba(0, 255, 102, 0.15)",
         borderRadius: "4px",
         padding: "0.5rem 0.75rem",
         marginBottom: "1.5rem",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        fontSize: "0.7rem",
+        fontSize: "0.65rem",
         fontWeight: 600,
-        letterSpacing: "0.05em",
-        color: "#636363",
+        letterSpacing: "0.08em",
+        color: "#4e6e58",
         flexWrap: "wrap",
         gap: "0.5rem"
       }}>
@@ -631,21 +632,21 @@ export default function Page() {
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
             RADAR_ENGINE // QUANTUM_GRID_ACTIVE
           </span>
-          <span style={{ color: "#1f1f1f" }} className="hide-on-mobile-cell">|</span>
-          <span className="hide-on-mobile-cell">STACK_ALLOC: <span style={{ color: "#a3a3a3" }}>0x7FFEE3A2F1B0</span></span>
-          <span style={{ color: "#1f1f1f" }} className="status-bracket hide-on-mobile-cell">@</span>
+          <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
+          <span className="hide-on-mobile-cell">STACK_ALLOC: <span style={{ color: "#8cb398" }}>0x7FFEE3A2F1B0</span></span>
+          <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="status-bracket hide-on-mobile-cell">@</span>
           <span className="hide-on-mobile-cell">COMPILING: <span style={{ color: "#00ff66" }}>SUCCESS</span></span>
-          <span style={{ color: "#1f1f1f" }}>|</span>
+          <span style={{ color: "rgba(0, 255, 102, 0.15)" }}>|</span>
           
           <button 
             onClick={handleToggleAudioSystem}
             style={{
               background: "transparent",
               border: "none",
-              color: audioEnabled ? "#00ff66" : "#404040",
+              color: audioEnabled ? "#00ff66" : "#3c5243",
               cursor: "pointer",
               fontFamily: "monospace",
-              fontSize: "0.7rem",
+              fontSize: "0.65rem",
               fontWeight: 700,
               display: "flex",
               alignItems: "center",
@@ -659,8 +660,8 @@ export default function Page() {
           </button>
         </div>
         <div style={{ 
-          border: "1px solid #222222", 
-          color: "#404040", 
+          border: "1px solid rgba(0, 255, 102, 0.2)", 
+          color: "rgba(0, 255, 102, 0.4)", 
           fontSize: "9px", 
           padding: "0.05rem 0.4rem", 
           borderRadius: "3px", 
@@ -675,27 +676,27 @@ export default function Page() {
       {/* Telemetry Strip */}
       <section className={`telemetry-strip ${showTelemetry ? "active" : ""}`}>
         <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#636363", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>ACTIVE BAND</span>
+          <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>ACTIVE BAND</span>
           <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00f2ff", marginTop: "0.2rem" }}>{stats.currentBand}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#636363", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>RIG MODE</span>
-          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#ff9100", marginTop: "0.2rem" }}>{stats.currentMode}</div>
+          <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>RIG MODE</span>
+          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#ffaa00", marginTop: "0.2rem" }}>{stats.currentMode}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#636363", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>TOTAL QSOs</span>
+          <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>TOTAL QSOs</span>
           <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00ff66", marginTop: "0.2rem" }}>{stats.totalQsos}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#636363", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>CONFIRMED</span>
+          <span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>CONFIRMED</span>
           <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a855f7", marginTop: "0.2rem" }}>{stats.confirmed}</div>
         </div>
 
         <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#636363", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.03em" }}>COUNTRIES DXCC</span>
+          <span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>COUNTRIES DXCC</span>
           <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a3e635", marginTop: "0.2rem" }}>{stats.dxcc}</div>
         </div>
       </section>
@@ -710,20 +711,20 @@ export default function Page() {
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Cpu style={{ width: "16px", height: "16px" }} /> HAMSHACK GEAR
+                <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
               </div>
-              <ChevronRight style={{ width: "14px", height: "14px", color: "#262626" }} />
+              <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
             </div>
-            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value" style={{ color: "#ffffff" }}>OTTAWA, KS</span></div>
-            <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value" style={{ color: "#ffffff" }}>YAESU FT-991</span></div>
-            <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value" style={{ color: "#ffffff" }}>ISOTRON 20M</span></div>
-            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value" style={{ color: "#ffffff" }}>XUBUNTU/HAM</span></div>
+            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
+            <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
+            <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
+            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
           </div>
 
           {/* Card 2: Space & Solar Weather Data System */}
           <div className="terminal-panel">
             <div className="panel-header">
-              <div className="panel-title" style={{ color: "#ff9100" }}>
+              <div className="panel-title" style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </div>
             </div>
@@ -734,11 +735,11 @@ export default function Page() {
             </div>
             <div className="data-row">
               <span className="data-label">SUNSPOT NUMBER</span>
-              <span className="data-value panel-mono-data" style={{ color: "#ffffff" }}>{sunspots}</span>
+              <span className="data-value panel-mono-data">{sunspots}</span>
             </div>
             <div className="data-row">
               <span className="data-label">A INDEX</span>
-              <span className="data-value panel-mono-data" style={{ color: "#636363" }}>{aIndex}</span>
+              <span className="data-value panel-mono-data" style={{ color: "#475c4f" }}>{aIndex}</span>
             </div>
             <div className="data-row">
               <span className="data-label">K INDEX</span>
@@ -753,7 +754,7 @@ export default function Page() {
               <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
             </div>
 
-            <div style={{ color: "#ff9100", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed #1c1c1c", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed #1c1c1c", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               HF Band Real-Time Profiles
             </div>
 
@@ -795,7 +796,7 @@ export default function Page() {
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Sliders style={{ width: "16px", height: "16px" }} /> ENGINE.STAT
+                <Sliders style={{ width: "16px", height: "16px", color: "#00ff66" }} /> ENGINE.STAT
               </div>
             </div>
             <div className="data-row">
@@ -827,12 +828,13 @@ export default function Page() {
             className="terminal-panel" 
             style={{ 
               padding: "0.5rem", 
-              background: "#030303", 
+              background: "#020403", 
               position: "relative", 
               height: isMobileScreen ? "340px" : "520px", 
               overflow: "hidden", 
               display: "flex", 
-              flexDirection: "column" 
+              flexDirection: "column",
+              border: "1px solid rgba(0, 255, 102, 0.25)"
             }}
           >
             {/* Legend Overlay HUD */}
@@ -844,7 +846,7 @@ export default function Page() {
                   <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
                 </div>
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#636363", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
+              <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#4e6e58", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                   <span style={{ width: "5px", height: "5px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
                   DOMESTIC
@@ -861,12 +863,12 @@ export default function Page() {
                 <GlobeEngine
                   width={dimensions.width}
                   height={dimensions.height}
-                  backgroundColor="#030303"
+                  backgroundColor="#020403"
                   
                   polygonsData={landmasses}
-                  polygonCapColor={() => "#0c1310"} 
-                  polygonSideColor={() => "#141f1a"} 
-                  polygonStrokeColor={() => "#1a2e24"} 
+                  polygonCapColor={() => "#07120a"} 
+                  polygonSideColor={() => "#0f2114"} 
+                  polygonStrokeColor={() => "#183620"} 
                   
                   arcsData={geoArcs}
                   arcColor="color"
@@ -889,9 +891,9 @@ export default function Page() {
                   labelLabel={(d: any) => `
                     <div class="scene-tooltip">
                       <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
-                      <div style="color: #8a8a8a; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                      <div style="color: #8a8a8a; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
-                      <div style="border-top: 1px dashed #222222; margin-top: 0.35rem; padding-top: 0.25rem; color: #525252; font-size: 10px;">
+                      <div style="color: #688a73; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                      <div style="color: #688a73; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
+                      <div style="border-top: 1px dashed rgba(0,255,102,0.2); margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
                         TOTAL QSOs: <span style="color: #00ff66; font-weight: 700;">${d.count}</span>
                       </div>
                     </div>
@@ -900,9 +902,9 @@ export default function Page() {
                   arcLabel={(d: any) => `
                     <div class="scene-tooltip">
                       <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: BASE &rarr; ${d.gridKey}</div>
-                      <div style="color: #8a8a8a; margin-bottom: 0.2rem;">REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
-                      <div style="color: #8a8a8a; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
-                      <div style="border-top: 1px dashed #222222; margin-top: 0.35rem; padding-top: 0.25rem; color: #525252; font-size: 10px;">
+                      <div style="color: #688a73; margin-bottom: 0.2rem;">REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
+                      <div style="color: #688a73; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
+                      <div style="border-top: 1px dashed rgba(0,255,102,0.2); margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
                         TOTAL QSOs: <span style="color: #00ff66; font-weight: 700;">${d.count}</span>
                       </div>
                     </div>
@@ -916,9 +918,9 @@ export default function Page() {
           <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <div className="panel-header">
               <div className="panel-title">
-                <History style={{ width: "16px", height: "16px" }} /> LIVE LOOK AT MOST RECENT QSOs
+                <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
               </div>
-              <span style={{ fontSize: "0.7rem", color: "#ff9100", fontWeight: 600, letterSpacing: "0.02em" }} className="hide-on-mobile-cell">ANTI_CHRONO_INDEX_ACTIVE</span>
+              <span style={{ fontSize: "0.7rem", color: "#ffaa00", fontWeight: 600, letterSpacing: "0.02em" }} className="hide-on-mobile-cell">ANTI_CHRONO_INDEX_ACTIVE</span>
             </div>
             
             <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
@@ -937,7 +939,7 @@ export default function Page() {
                 <tbody>
                   {logs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ff9100", fontStyle: "italic" }}>
+                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ffaa00", fontStyle: "italic" }}>
                         &gt;&gt; Live log stream parsing pending... Standby for secure JSON server handshake.
                       </td>
                     </tr>
@@ -947,7 +949,7 @@ export default function Page() {
                         <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
                           {qso.callsign}
                         </td>
-                        <td style={{ color: "#8a8a8a" }} className="hide-on-mobile-cell">{qso.date}</td>
+                        <td style={{ color: "#688a73" }} className="hide-on-mobile-cell">{qso.date}</td>
                         <td style={{ fontWeight: "500" }} className="hide-on-mobile-cell">{qso.time}</td>
                         <td style={{ fontWeight: "500" }}>{qso.band}</td>
                         <td>
@@ -955,10 +957,10 @@ export default function Page() {
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "#262626", margin: "0 0.3rem" }}>|</span>
+                          <span style={{ color: "rgba(0, 255, 102, 0.2)", margin: "0 0.3rem" }}>|</span>
                           <span className="rst-r-box">{qso.rstR}</span>
                         </td>
-                        <td style={{ color: "#8a8a8a", fontWeight: "500" }} className="panel-mono-data">
+                        <td style={{ color: "#688a73", fontWeight: "500" }} className="panel-mono-data">
                           {qso.grid || "—"}
                         </td>
                       </tr>
