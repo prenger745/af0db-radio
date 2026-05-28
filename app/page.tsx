@@ -569,6 +569,17 @@ export default function Page() {
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body::before {
+          content: " ";
+          display: block;
+          position: fixed;
+          top: 0; left: 0; bottom: 0; right: 0;
+          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+          z-index: 9999;
+          background-size: 100% 4px;
+          pointer-events: none;
+        }
 
         .telemetry-strip { 
           display: grid; 
@@ -864,7 +875,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 4: Space weather info */}
+          {/* Card 4: RESTORED Space weather info + Prop Ratings */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
@@ -874,7 +885,44 @@ export default function Page() {
             <div className="data-row"><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
             <div className="data-row"><span className="data-label">SUNSPOT NUMBER</span><span className="data-value panel-mono-data">{sunspots}</span></div>
             <div className="data-row"><span className="data-label">K INDEX</span><span className="data-value panel-mono-data txt-neon-green">{kIndex}</span></div>
-            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
+            <div className="data-row" style={{ borderBottom: "none", marginBottom: "0.5rem" }}><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
+            
+            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              HF Band Real-Time Profiles
+            </div>
+
+            <div className="data-row">
+              <span className="data-label">80M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">40M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("40M"))}`}>[{getPropRating("40M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">30M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
+            </div>
+            <div className="data-row forced-row-reset">
+              <span className="data-label forced-label-reset">20M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">17M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">15M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">12M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">10M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
+            </div>
           </div>
 
         </div>
