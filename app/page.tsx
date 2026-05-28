@@ -66,18 +66,12 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
 
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
-  
-  // SECURE BASELINE ANCHORS: Hardcoded real-world baselines to prevent data-parsing drops completely
-  const FIXED_TOTAL = 1075;
-  const FIXED_CONFIRMED = 937;
-  const FIXED_DXCC = 84;
-
   const [stats, setStats] = useState<StationMetrics>({
-    totalQsos: FIXED_TOTAL.toString(),
-    confirmed: FIXED_CONFIRMED.toString(),
-    dxcc: FIXED_DXCC.toString(),
-    currentBand: "20 Meters",
-    currentMode: "FT8"
+    totalQsos: "...",
+    confirmed: "...",
+    dxcc: "...",
+    currentBand: "Searching...",
+    currentMode: "Searching..."
   });
 
   const [sfi, setSfi] = useState<number>(145);
@@ -224,202 +218,197 @@ export default function Page() {
     }
   };
 
-  useEffect(() => {
-    let baseBootTriggered = false;
+  // REBUILT REFRESH DAEMON: Triggers a direct dataset download and dynamic tally sequence
+  async function parseLiveQrzData() {
+    try {
+      const res = await fetch("/api/qrz");
+      if (!res.ok) throw new Error("Proxy offline");
+      const json = await res.json();
+      if (json.error || !json.data) throw new Error("No data");
 
-    async function parseLiveQrzData() {
-      try {
-        const res = await fetch("/api/qrz");
-        if (!res.ok) throw new Error("Proxy offline");
-        const json = await res.json();
-        if (json.error || !json.data) throw new Error("No data");
+      const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
-        const cleanText = json.data.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+      const currentHour = new Date().getUTCHours();
+      setIsNight(currentHour < 11 || currentHour > 23);
 
-        const countMatch = cleanText.match(/COUNT=([^&<\s]*)/i);
-        const rawLiveCount = countMatch ? parseInt(countMatch[1].split('&')[0].trim()) : 0;
+      const sfiM = cleanText.match(/<solarflux>([^<]*)/i);
+      const sspotsM = cleanText.match(/<sunspots>([^<]*)/i);
+      const aM = cleanText.match(/<aindex>([^<]*)/i);
+      const kM = cleanText.match(/<kindex>([^<]*)/i);
+      const xrayM = cleanText.match(/<xray>([^<]*)/i);
+      const condM = cleanText.match(/<geomagfield>([^<]*)/i);
 
-        const currentHour = new Date().getUTCHours();
-        setIsNight(currentHour < 11 || currentHour > 23);
+      if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
+      if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
+      if (aM) setAIndex(aM[1].trim() || "10");
+      if (kM) setKIndex(parseInt(kM[1].trim()) || 1);
+      if (xrayM) setXray(xrayM[1].trim() || "A0.0");
+      if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
 
-        const sfiM = cleanText.match(/<solarflux>([^<]*)/i);
-        const sspotsM = cleanText.match(/<sunspots>([^<]*)/i);
-        const aM = cleanText.match(/<aindex>([^<]*)/i);
-        const kM = cleanText.match(/<kindex>([^<]*)/i);
-        const xrayM = cleanText.match(/<xray>([^<]*)/i);
-        const condM = cleanText.match(/<geomagfield>([^<]*)/i);
+      let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
+      const allParsedLogs: QSO[] = [];
+      const records = adifContent.split(/<eor>/i);
 
-        if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
-        if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
-        if (aM) setAIndex(aM[1].trim() || "10");
-        if (kM) setKIndex(parseInt(kM[1].trim()) || 1);
-        if (xrayM) setXray(xrayM[1].trim() || "A0.0");
-        if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
+      // BULLETPROOF DIRECT TALLY MATRIX: Performs math across rows dynamically to prevent drop errors
+      let calculatedConfirmedTotal = 0;
+      const uniqueCountriesList = new Set<string>();
 
-        let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
-        const allParsedLogs: QSO[] = [];
-        const records = adifContent.split(/<eor>/i);
+      for (const record of records) {
+        if (!record.trim()) continue;
+        const extractTag = (tag: string) => {
+          const m = record.match(new RegExp(`<${tag}:\\d+>([^<]*)`, "i"));
+          return m ? m[1].trim() : "";
+        };
 
-        let calculatedConfirmedTotal = 0;
-        const uniqueCountriesList = new Set<string>();
+        const call = extractTag("call");
+        if (!call) continue;
 
-        for (const record of records) {
-          if (!record.trim()) continue;
-          const extractTag = (tag: string) => {
-            const m = record.match(new RegExp(`<${tag}:\\d+>([^<]*)`, "i"));
-            return m ? m[1].trim() : "";
-          };
+        const rD = extractTag("qso_date");
+        const fD = rD.length === 8 ? `${rD.substring(0, 4)}-${rD.substring(4, 6)}-${rD.substring(6, 8)}` : rD;
+        const rT = extractTag("time_on");
+        const fT = rT.length >= 4 ? `${rT.substring(0, 2)}:${rT.substring(2, 4)}` : rT;
+        
+        const countryString = extractTag("country");
+        const qslStatus = extractTag("qsl_rcvd").toUpperCase();
+        const lotwStatus = extractTag("lotw_qsl_rcvd").toUpperCase();
+        const eqslStatus = extractTag("eqsl_qsl_rcvd").toUpperCase();
+        const qrzStatus = extractTag("qrzcom_qsl_rcvd").toUpperCase();
 
-          const call = extractTag("call");
-          if (!call) continue;
-
-          const rD = extractTag("qso_date");
-          const fD = rD.length === 8 ? `${rD.substring(0, 4)}-${rD.substring(4, 6)}-${rD.substring(6, 8)}` : rD;
-          const rT = extractTag("time_on");
-          const fT = rT.length >= 4 ? `${rT.substring(0, 2)}:${rT.substring(2, 4)}` : rT;
-          
-          const countryString = extractTag("country");
-          const qslStatus = extractTag("qsl_rcvd").toUpperCase();
-          const lotwStatus = extractTag("lotw_qsl_rcvd").toUpperCase();
-          const eqslStatus = extractTag("eqsl_qsl_rcvd").toUpperCase();
-          const qrzStatus = extractTag("qrzcom_qsl_rcvd").toUpperCase();
-
-          if (qslStatus === "Y" || lotwStatus === "Y" || eqslStatus === "Y" || qrzStatus === "Y") {
-            calculatedConfirmedTotal++;
-          }
-
-          if (countryString) {
-            uniqueCountriesList.add(countryString.toUpperCase());
-          }
-
-          allParsedLogs.push({
-            callsign: call.toUpperCase().replace(/0/g, "Ø"),
-            date: fD,
-            time: fT,
-            band: extractTag("band") || "—",
-            mode: extractTag("mode") || "—",
-            rstS: extractTag("rst_sent") || "59",
-            rstR: extractTag("rst_rcvd") || "59",
-            grid: extractTag("gridsquare") || "—",
-            country: countryString,
-            qslRcvd: qslStatus,
-            lotwRcvd: lotwStatus,
-            eqslRcvd: eqslStatus,
-            qrzRcvd: qrzStatus
-          });
+        // Count confirmation if any standard validation flag is set to 'Y'
+        if (qslStatus === "Y" || lotwStatus === "Y" || eqslStatus === "Y" || qrzStatus === "Y") {
+          calculatedConfirmedTotal++;
         }
 
-        const sortedLogs = allParsedLogs.sort((a, b) => {
-          const dA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`;
-          const dB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`;
-          return dB.localeCompare(dA);
+        if (countryString) {
+          uniqueCountriesList.add(countryString.toUpperCase());
+        }
+
+        allParsedLogs.push({
+          callsign: call.toUpperCase().replace(/0/g, "Ø"),
+          date: fD,
+          time: fT,
+          band: extractTag("band") || "—",
+          mode: extractTag("mode") || "—",
+          rstS: extractTag("rst_sent") || "59",
+          rstR: extractTag("rst_rcvd") || "59",
+          grid: extractTag("gridsquare") || "—",
+          country: countryString,
+          qslRcvd: qslStatus,
+          lotwRcvd: lotwStatus,
+          eqslRcvd: eqslStatus,
+          qrzRcvd: qrzStatus
+        });
+      }
+
+      const sortedLogs = allParsedLogs.sort((a, b) => {
+        const dA = `${a.date.replace(/-/g, '')}T${a.time.replace(/:/g, '')}`;
+        const dB = `${b.date.replace(/-/g, '')}T${b.time.replace(/:/g, '')}`;
+        return dB.localeCompare(dA);
+      });
+
+      if (sortedLogs.length > 0) {
+        const newestFifteen = sortedLogs.slice(0, 15);
+        setLogs(newestFifteen);
+        setIsLiveStream(true);
+
+        const rawBand = newestFifteen[0].band ? newestFifteen[0].band : "20M";
+        const displayBand = rawBand.toUpperCase().endsWith("M") 
+          ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
+          : `${rawBand} Meters`;
+
+        // DYNAMIC STATE UPDATE: Sets the exact number of parsed file entries directly
+        setStats({
+          totalQsos: allParsedLogs.length.toString(),
+          confirmed: calculatedConfirmedTotal.toString(),
+          dxcc: uniqueCountriesList.size.toString(),
+          currentBand: displayBand,
+          currentMode: newestFifteen[0].mode || "FT8"
         });
 
-        if (sortedLogs.length > 0) {
-          const newestFifteen = sortedLogs.slice(0, 15);
-          setLogs(newestFifteen);
-          setIsLiveStream(true);
+        if (json.geoMap && Array.isArray(json.geoMap)) {
+          const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
-          const rawBand = newestFifteen[0].band ? newestFifteen[0].band : "20M";
-          const displayBand = rawBand.toUpperCase().endsWith("M") 
-            ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
-            : `${rawBand} Meters`;
+          json.geoMap.forEach((pt: any) => {
+            if (!pt.grid) return;
+            const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
+            const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
+            
+            let stationCountry = pt.country || "";
+            if (!stationCountry) {
+              stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
+                ? "United States" 
+                : "International DX";
+            }
 
-          // COMPARATIVE CEILING COMPUTATION: Math.max completely protects totals from dropping below your confirmed operational baselines
-          const finalTotal = Math.max(FIXED_TOTAL, rawLiveCount || allParsedLogs.length);
-          const finalConfirmed = Math.max(FIXED_CONFIRMED, calculatedConfirmedTotal);
-          const finalDxcc = Math.max(FIXED_DXCC, uniqueCountriesList.size);
-
-          setStats({
-            totalQsos: finalTotal.toString(),
-            confirmed: finalConfirmed.toString(),
-            dxcc: finalDxcc.toString(),
-            currentBand: displayBand,
-            currentMode: newestFifteen[0].mode || "FT8"
+            if (!uniqueGridMap[cleanGrid4]) {
+              uniqueGridMap[cleanGrid4] = {
+                base: pt,
+                callsigns: [stationCall],
+                country: stationCountry
+              };
+            } else {
+              if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
+                uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
+              }
+            }
           });
 
-          if (json.geoMap && Array.isArray(json.geoMap)) {
-            const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
+          const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
+            const sectorData = uniqueGridMap[gridKey];
+            const pt = sectorData.base;
+            const callUpper = pt.callsign.toUpperCase();
 
-            json.geoMap.forEach((pt: any) => {
-              if (!pt.grid) return;
-              const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
-              const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
-              
-              let stationCountry = pt.country || "";
-              if (!stationCountry) {
-                stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
-                  ? "United States" 
-                  : "International DX";
-              }
-
-              if (!uniqueGridMap[cleanGrid4]) {
-                uniqueGridMap[cleanGrid4] = {
-                  base: pt,
-                  callsigns: [stationCall],
-                  country: stationCountry
-                };
-              } else {
-                if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
-                  uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
-                }
-              }
-            });
-
-            const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-              const sectorData = uniqueGridMap[gridKey];
-              const pt = sectorData.base;
-              const callUpper = pt.callsign.toUpperCase();
-
-              const isUSAPrefix = callUpper.startsWith("W") || 
-                                  callUpper.startsWith("K") || 
-                                  callUpper.startsWith("N") || 
-                                  callUpper.startsWith("AA") || 
-                                  callUpper.startsWith("AB") || 
-                                  callUpper.startsWith("AC") || 
-                                  callUpper.startsWith("AD");
-              
-              const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
-                                      pt.lng >= -125.000000 && pt.lng <= -66.934570;
-
-              const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
-              const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
-              
-              const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
-                (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
-
-              return {
-                startLat: 38.6158,
-                startLng: -95.2686,
-                endLat: pt.lat,
-                endLng: pt.lng,
-                color: assignedTargetColor,
-                gridKey: gridKey,
-                territory: territoryType,
-                country: sectorData.country,
-                operators: operatorsString,
-                count: sectorData.callsigns.length
-              };
-            });
+            const isUSAPrefix = callUpper.startsWith("W") || 
+                                callUpper.startsWith("K") || 
+                                callUpper.startsWith("N") || 
+                                callUpper.startsWith("AA") || 
+                                callUpper.startsWith("AB") || 
+                                callUpper.startsWith("AC") || 
+                                callUpper.startsWith("AD");
             
-            setGeoArcs(filteredArcs);
-          }
+            const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
+                                    pt.lng >= -125.000000 && pt.lng <= -66.934570;
 
-          if (!baseBootTriggered) {
-            playTerminalBeep("boot");
-            baseBootTriggered = true;
-          } else {
-            playTerminalBeep("sync");
-          }
+            const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
+            const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
+            
+            const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
+              (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
+
+            return {
+              startLat: 38.6158,
+              startLng: -95.2686,
+              endLat: pt.lat,
+              endLng: pt.lng,
+              color: assignedTargetColor,
+              gridKey: gridKey,
+              territory: territoryType,
+              country: sectorData.country,
+              operators: operatorsString,
+              count: sectorData.callsigns.length
+          };
+          });
+          
+          setGeoArcs(filteredArcs);
         }
-      } catch (err) {
-        console.warn(err);
-      } finally {
-        setLoading(false);
-      }
-    }
 
+        if (!baseBootTriggered) {
+          playTerminalBeep("boot");
+          baseBootTriggered = true;
+        } else {
+          playTerminalBeep("sync");
+        }
+      }
+    } catch (err) {
+      console.warn(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
     parseLiveQrzData();
+    // AUTOMATED REFRESH DAEMON: Sets up a continuous background loop to sync every 5 minutes
     const automatedRefreshCycle = setInterval(parseLiveQrzData, 300000);
     return () => clearInterval(automatedRefreshCycle);
   }, []);
@@ -593,7 +582,18 @@ export default function Page() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
-          <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
+          {/* MANUAL REFRESH CONTROL: Tapping this HUD string directly fires a fresh server pull requests instantly */}
+          <button 
+            onClick={() => parseLiveQrzData()}
+            style={{
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              cursor: "pointer"
+            }}
+          >
+            <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
+          </button>
           <span className="status-bracket">[<span className="status-text" style={{ color: "#ff9100" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
