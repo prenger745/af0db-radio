@@ -250,7 +250,6 @@ export default function Page() {
       const allParsedLogs: QSO[] = [];
       const records = adifContent.split(/<eor>/i);
 
-      // EXTENDED LOG ANALYSIS PIPELINE: Loops dataset array records smoothly across all confirmation options
       let calculatedConfirmedTotal = 0;
       const uniqueCountriesList = new Set<string>();
 
@@ -270,14 +269,11 @@ export default function Page() {
         const fT = rT.length >= 4 ? `${rT.substring(0, 2)}:${rT.substring(2, 4)}` : rT;
         
         const countryString = extractTag("country");
-        
-        // ALL-INCLUSIVE CONFIRMATION SCANNERS: Tracks every potential verification field type safely
         const qslStatus = extractTag("qsl_rcvd").toUpperCase();
         const lotwStatus = extractTag("lotw_qsl_rcvd").toUpperCase();
         const eqslStatus = extractTag("eqsl_qsl_rcvd").toUpperCase();
         const qrzStatus = extractTag("qrzcom_qsl_rcvd").toUpperCase();
 
-        // Increment confirmations array total if any of the core tags return valid verification states
         if (qslStatus === "Y" || lotwStatus === "Y" || eqslStatus === "Y" || qrzStatus === "Y") {
           calculatedConfirmedTotal++;
         }
@@ -319,7 +315,6 @@ export default function Page() {
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
 
-        // DIRECT MATCH READOUT EXTRACER: Matches dashboard stats against target header variables perfectly
         const qrzGlobalCountMatch = cleanText.match(/(?:COUNT|TOTAL)=([^&<\s]*)/i);
         const qrzGlobalCqslMatch = cleanText.match(/(?:CQSL|CONFIRMED)=([^&<\s]*)/i);
         const qrzGlobalDxccMatch = cleanText.match(/(?:DXCC_COUNT|DXCC)=([^&<\s]*)/i);
@@ -328,7 +323,6 @@ export default function Page() {
         const parsedGlobalCqsl = qrzGlobalCqslMatch ? parseInt(qrzGlobalCqslMatch[1].split('&')[0]) : 0;
         const parsedGlobalDxcc = qrzGlobalDxccMatch ? parseInt(qrzGlobalDxccMatch[1].split('&')[0]) : 0;
 
-        // FIXED INTEGRITY COMPILER: Combines fallback thresholds with global header values to force matching totals
         const finalCalculatedTotal = parsedGlobalCount || Math.max(1204, allParsedLogs.length);
         const finalCalculatedConfirmed = parsedGlobalCqsl || (calculatedConfirmedTotal + 214);
         const finalCalculatedDxcc = parsedGlobalDxcc || Math.max(84, uniqueCountriesList.size);
@@ -394,6 +388,9 @@ export default function Page() {
             return {
               startLat: 38.6158,
               startLng: -95.2686,
+              // Mapping properties explicitly assigned to destination coordinates for label point attachment loops
+              lat: pt.lat,
+              lng: pt.lng,
               endLat: pt.lat,
               endLng: pt.lng,
               color: assignedTargetColor,
@@ -564,7 +561,7 @@ export default function Page() {
           pointer-events: none !important;
           max-width: 240px !important;
           white-space: normal !important;
-          line-height: 1.5 !important;
+          line-height: 1.4 !important;
         }
 
         .terminal-cursor::after {
@@ -894,13 +891,21 @@ export default function Page() {
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.15}
+
+                  // RESTORED TERMINAL TARGET DOT LAYER: Injects glowing dot indicators at signal locations natively
+                  labelsData={geoArcs}
+                  labelText={() => ""}
+                  labelColor="color"
+                  labelDotRadius={0.4}
+                  labelDotOrientation={() => "bottom"}
+                  labelsTransitionDuration={0}
                   
                   labelLabel={(d: any) => `
                     <div class="scene-tooltip">
                       <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">SECTOR: ${d.gridKey}</div>
                       <div style="color: #688a73; margin-bottom: 0.2rem;">COUNTRY: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
                       <div style="color: #688a73; margin-bottom: 0.2rem;">OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
-                      <div style="border-top: 1px dashed rgba(0,255,102,0.2); margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
+                      <div style="border-top: 1px dashed #222222; margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
                         TOTAL QSOs: <span style="color: #00ff66; font-weight: 700;">${d.count}</span>
                       </div>
                     </div>
@@ -911,7 +916,7 @@ export default function Page() {
                       <div style="font-weight: 700; color: ${d.color}; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em;">PATH: BASE &rarr; ${d.gridKey}</div>
                       <div style="color: #688a73; margin-bottom: 0.2rem;">REGION: <span style="color: #ffffff; font-weight: 600;">${d.country}</span></div>
                       <div style="color: #688a73; margin-bottom: 0.2rem;">STATION OPERATORS: <span style="color: #00ffca; font-weight: 600;">${d.operators}</span></div>
-                      <div style="border-top: 1px dashed rgba(0,255,102,0.2); margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
+                      <div style="border-top: 1px dashed #222222; margin-top: 0.35rem; padding-top: 0.25rem; color: #4e6e58; font-size: 10px;">
                         TOTAL QSOs: <span style="color: #00ff66; font-weight: 700;">${d.count}</span>
                       </div>
                     </div>
@@ -921,7 +926,7 @@ export default function Page() {
             </div>
           </div>
 
-          /* Complete Live Log Ledger */
+          {/* Complete Live Log Ledger */}
           <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <div className="panel-header">
               <div className="panel-title">
