@@ -343,7 +343,6 @@ export default function Page() {
         const parsedGlobalCqsl = confirmedMatch ? parseInt(confirmedMatch[1].replace(/,/g, '')) : HARD_FLOOR_CONFIRMED;
         const parsedGlobalDxcc = dxccMatch ? parseInt(dxccMatch[1].replace(/,/g, '')) : HARD_FLOOR_DXCC;
 
-        // CEILING CAP FORCING HOOK: Safely links your accurate totals to prevent trailing calculation drop bugs
         const finalCalculatedTotal = Math.max(HARD_FLOOR_TOTAL, parsedGlobalCount);
         const finalCalculatedConfirmed = Math.max(HARD_FLOOR_CONFIRMED, parsedGlobalCqsl);
         const finalCalculatedDxcc = Math.max(HARD_FLOOR_DXCC, parsedGlobalDxcc);
@@ -371,12 +370,13 @@ export default function Page() {
                 : "International DX";
             }
 
+            // FIXED HANDSHAKE BLOCK: Ripped out typo container bracket duplication completely
             if (!uniqueGridMap[cleanGrid4]) {
-              uniqueGridMap[uniqueGridMap[cleanGrid4] = {
+              uniqueGridMap[cleanGrid4] = {
                 base: pt,
                 callsigns: [stationCall],
                 country: stationCountry
-              }];
+              };
             } else {
               if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
                 uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
@@ -420,7 +420,7 @@ export default function Page() {
               operators: operatorsString,
               count: sectorData.callsigns.length,
               type: "qrz",
-              text: "" // Keeps line text blank to ensure only destination dot parameters are responsive on hover loops
+              text: ""
             };
           });
           
@@ -472,7 +472,6 @@ export default function Page() {
             details: spot
           }));
 
-          // RE-COUPLING OVERLAY MATRICES: Syncs active layers together correctly without dropping QRZ data attributes
           setGlobeLabels(prev => [
             ...prev.filter((l: any) => l.type === "qrz"), 
             ...potaLabels
@@ -571,6 +570,17 @@ export default function Page() {
     }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body::before {
+          content: " ";
+          display: block;
+          position: fixed;
+          top: 0; left: 0; bottom: 0; right: 0;
+          background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+          z-index: 9999;
+          background-size: 100% 4px;
+          pointer-events: none;
+        }
 
         .telemetry-strip { 
           display: grid; 
@@ -950,12 +960,11 @@ export default function Page() {
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.15}
 
-                  // RESTORED RADAR COMPOSITE CHANNEL HOVER MATRIX LOOP
                   labelsData={globeLabels}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.color || "#00ff66"}
                   labelSize={0.4}
-                  labelDotRadius={0.4} // Forces active sizing constraints on station nodes natively
+                  labelDotRadius={0.4} 
                   labelResolution={2}
                   labelsTransitionDuration={0}
 
@@ -964,7 +973,6 @@ export default function Page() {
                   pointRadius={0.25}
                   pointsTransitionDuration={0}
                   
-                  // UNIFIED INTERACTIVE HOVER INTERPRETER: Dynamically maps tooltips via specific node signature tags
                   labelLabel={(d: any) => {
                     if (d.type === "pota") {
                       return `
