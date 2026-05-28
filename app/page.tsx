@@ -106,6 +106,9 @@ export default function Page() {
   const [kIndex, setKIndex] = useState<number>(1);
   const [xray, setXray] = useState<string>("A0.0");
   const [conditions, setConditions] = useState<string>("NORMAL / QUIET");
+  const [sigNoise, setSigNoise] = useState<string>("S0");
+  const [solarWind, setSolarWind] = useState<string>("0.0");
+  const [bandConds, setBandConds] = useState<{ [key: string]: string }>({});
 
   const [loading, setLoading] = useState(true);
   const [isLiveStream, setIsLiveStream] = useState(false);
@@ -374,7 +377,6 @@ export default function Page() {
             const pt = sectorData.base;
             const callUpper = pt.callsign.toUpperCase();
 
-            // STRICT GRID MATH: Overrides bad QRZ lat/lng coords and perfectly centers the destination on the maidenhead square
             let exactLat = pt.lat;
             let exactLng = pt.lng;
 
@@ -511,7 +513,7 @@ export default function Page() {
     }
   }
 
-  // DEDICATED SOLAR FETCHER
+  // DEDICATED SOLAR TELEMETRY FETCHER: Automatically parses exact live XML nodes to bypass default layout rendering limits
   async function fetchSolarData() {
     try {
       const res = await fetch("/api/solar");
@@ -524,6 +526,8 @@ export default function Page() {
       const kM = xmlText.match(/<kindex>([^<]*)/i);
       const xrayM = xmlText.match(/<xray>([^<]*)/i);
       const condM = xmlText.match(/<geomagfield>([^<]*)/i);
+      const sigNoiseM = xmlText.match(/<signalnoise>([^<]*)/i);
+      const windM = xmlText.match(/<solarwind>([^<]*)/i);
 
       if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
       if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
@@ -531,6 +535,26 @@ export default function Page() {
       if (kM) setKIndex(parseInt(kM[1].trim()) || 1);
       if (xrayM) setXray(xrayM[1].trim() || "A0.0");
       if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
+      if (sigNoiseM) setSigNoise(sigNoiseM[1].trim().toUpperCase());
+      if (windM) setSolarWind(windM[1].trim());
+
+      // PULLS ACTUAL N0NBH CALCULATED CONDITIONS RATHER THAN GUESSING
+      const extractBand = (band: string, time: string) => {
+        const m = xmlText.match(new RegExp(`<band name="${band}" time="${time}">([^<]*)<\\/band>`, "i"));
+        return m ? m[1].toUpperCase() : "FAIR";
+      };
+
+      setBandConds({
+        "80m-40m-day": extractBand("80m-40m", "day"),
+        "80m-40m-night": extractBand("80m-40m", "night"),
+        "30m-20m-day": extractBand("30m-20m", "day"),
+        "30m-20m-night": extractBand("30m-20m", "night"),
+        "17m-15m-day": extractBand("17m-15m", "day"),
+        "17m-15m-night": extractBand("17m-15m", "night"),
+        "12m-10m-day": extractBand("12m-10m", "day"),
+        "12m-10m-night": extractBand("12m-10m", "night"),
+      });
+
     } catch (err) {
       console.warn("Solar Data Sync Error:", err);
     }
@@ -553,31 +577,20 @@ export default function Page() {
   }, []);
 
   const getPropRating = (band: string) => {
-    if (kIndex >= 5) return "CLOSED";
-    if (kIndex >= 4) return "POOR";
+    const timeKey = isNight ? "night" : "day";
     switch (band) {
       case "80M":
       case "40M":
-        if (!isNight) return "CLOSED";
-        return sfi > 120 ? "GREAT" : sfi > 90 ? "GOOD" : "FAIR";
+        return bandConds[`80m-40m-${timeKey}`] || "FAIR";
       case "30M":
       case "20M":
-        if (sfi > 140) return "GREAT";
-        if (sfi > 90) return "GOOD";
-        return "FAIR";
+        return bandConds[`30m-20m-${timeKey}`] || "FAIR";
       case "17M":
       case "15M":
-        if (isNight) return "CLOSED";
-        if (sfi > 150) return "GREAT";
-        if (sfi > 110) return "GOOD";
-        return "POOR";
+        return bandConds[`17m-15m-${timeKey}`] || "FAIR";
       case "12M":
       case "10M":
-        if (isNight) return "CLOSED";
-        if (sfi > 175) return "GREAT";
-        if (sfi > 155) return "GOOD";
-        if (sfi > 125) return "FAIR";
-        return "POOR";
+        return bandConds[`12m-10m-${timeKey}`] || "FAIR";
       default:
         return "FAIR";
     }
@@ -918,7 +931,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 4: Space weather info */}
+          {/* Card 4: FULLY RESTORED Space weather info */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
@@ -927,7 +940,11 @@ export default function Page() {
             </div>
             <div className="data-row"><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
             <div className="data-row"><span className="data-label">SUNSPOT NUMBER</span><span className="data-value panel-mono-data">{sunspots}</span></div>
+            <div className="data-row"><span className="data-label">A INDEX</span><span className="data-value panel-mono-data txt-neon-green">{aIndex}</span></div>
             <div className="data-row"><span className="data-label">K INDEX</span><span className="data-value panel-mono-data txt-neon-green">{kIndex}</span></div>
+            <div className="data-row"><span className="data-label">X-RAY FLUX</span><span className="data-value txt-aviation-blue">{xray}</span></div>
+            <div className="data-row"><span className="data-label">SOLAR WIND</span><span className="data-value panel-mono-data">{solarWind} km/s</span></div>
+            <div className="data-row"><span className="data-label">NOISE FLOOR</span><span className="data-value txt-solar-amber">{sigNoise}</span></div>
             <div className="data-row" style={{ borderBottom: "none", marginBottom: "0.5rem" }}><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
             
             <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
