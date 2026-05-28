@@ -516,7 +516,7 @@ export default function Page() {
   // DEDICATED SOLAR TELEMETRY FETCHER: Automatically parses exact live XML nodes to bypass default layout rendering limits
   async function fetchSolarData() {
     try {
-      const res = await fetch("/api/solar");
+      const res = await fetch("/api/solar?_=" + Date.now(), { cache: "no-store" });
       if (!res.ok) return;
       const xmlText = await res.text();
       
