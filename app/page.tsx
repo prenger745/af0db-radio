@@ -263,20 +263,6 @@ export default function Page() {
       const currentHour = new Date().getUTCHours();
       setIsNight(currentHour < 11 || currentHour > 23);
 
-      const sfiM = cleanText.match(/<solarflux>([^<]*)/i);
-      const sspotsM = cleanText.match(/<sunspots>([^<]*)/i);
-      const aM = cleanText.match(/<aindex>([^<]*)/i);
-      const kM = cleanText.match(/<kindex>([^<]*)/i);
-      const xrayM = cleanText.match(/<xray>([^<]*)/i);
-      const condM = cleanText.match(/<geomagfield>([^<]*)/i);
-
-      if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
-      if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
-      if (aM) setAIndex(aM[1].trim() || "10");
-      if (kM) setKIndex(parseInt(kM[1].trim()) || 1);
-      if (xrayM) setXray(xrayM[1].trim() || "A0.0");
-      if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
-
       const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i);
       const confirmedMatch = cleanText.match(/(?:CONFIRMED|CQSL)=([0-9,]+)/i);
       const dxccMatch = cleanText.match(/(?:DXCC|DXCC_COUNT)=([0-9,]+)/i);
@@ -511,12 +497,10 @@ export default function Page() {
             details: spot
           })));
         } else {
-          // CLEAN EMPTY STATE: No fake dots, no mock arrays
           setPskSpots([]);
           setGlobePoints([]);
         }
       } else {
-        // CLEAN EMPTY STATE ON API FAILURE
         setPskSpots([]);
         setGlobePoints([]);
       }
@@ -527,16 +511,44 @@ export default function Page() {
     }
   }
 
+  // DEDICATED SOLAR FETCHER
+  async function fetchSolarData() {
+    try {
+      const res = await fetch("/api/solar");
+      if (!res.ok) return;
+      const xmlText = await res.text();
+      
+      const sfiM = xmlText.match(/<solarflux>([^<]*)/i);
+      const sspotsM = xmlText.match(/<sunspots>([^<]*)/i);
+      const aM = xmlText.match(/<aindex>([^<]*)/i);
+      const kM = xmlText.match(/<kindex>([^<]*)/i);
+      const xrayM = xmlText.match(/<xray>([^<]*)/i);
+      const condM = xmlText.match(/<geomagfield>([^<]*)/i);
+
+      if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
+      if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
+      if (aM) setAIndex(aM[1].trim() || "10");
+      if (kM) setKIndex(parseInt(kM[1].trim()) || 1);
+      if (xrayM) setXray(xrayM[1].trim() || "A0.0");
+      if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
+    } catch (err) {
+      console.warn("Solar Data Sync Error:", err);
+    }
+  }
+
   useEffect(() => {
     parseLiveQrzData();
     fetchLiveTacticalFeeds();
+    fetchSolarData();
 
     const qrzInterval = setInterval(parseLiveQrzData, 300000);
     const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000); 
+    const solarInterval = setInterval(fetchSolarData, 3600000); 
 
     return () => {
       clearInterval(qrzInterval);
       clearInterval(feedInterval);
+      clearInterval(solarInterval);
     };
   }, []);
 
@@ -738,7 +750,11 @@ export default function Page() {
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
           <button 
-            onClick={() => parseLiveQrzData()}
+            onClick={() => {
+              parseLiveQrzData();
+              fetchLiveTacticalFeeds();
+              fetchSolarData();
+            }}
             style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}
           >
             <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
