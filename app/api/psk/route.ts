@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    // FIXED LOGIC: Queries the master PSK database explicitly looking for where YOU were heard (senderCallsign) over the last 2 hours
     const pskUrl = "https://retrieve.pskreporter.info/query?senderCallsign=AF0DB&flowStartSeconds=-7200&statistics=0";
     
     const res = await fetch(pskUrl, {
@@ -19,11 +18,13 @@ export async function GET(request: Request) {
     
     const xmlText = await res.text();
 
-    // Core XML string-matching engine: Extracts up to 15 live decodes to fit your dashboard metrics layout
     const spots: any[] = [];
-    const matches = xmlText.matchAll(/<receptionReport\s+([^>]+)>/g);
     
-    for (const match of matches) {
+    // COMPILER FIX: Using standard RegExp execution loop instead of matchAll iterator
+    const regex = /<receptionReport\s+([^>]+)>/g;
+    let match;
+    
+    while ((match = regex.exec(xmlText)) !== null) {
       if (spots.length >= 15) break;
       const attrString = match[1];
       
@@ -35,7 +36,6 @@ export async function GET(request: Request) {
       if (receiverCallM && gridM) {
         const grid = gridM[1].toUpperCase();
         
-        // Accurate Maidenhead grid center decoding math to plot coordinates flawlessly on your WebGL globe layers
         let lat = 39.8283;
         let lng = -98.5795;
         if (grid.length >= 4) {
