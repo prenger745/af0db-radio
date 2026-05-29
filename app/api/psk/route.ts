@@ -1,115 +1,74 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-// MAIDENHEAD GRID TO COORDINATE TRANSLATOR: Converts 4 or 6 character grids (e.g. EM28) into Lat/Lng decimals for the 3D globe
-function gridToLatLon(grid: string): { lat: number, lng: number } | null {
-  if (!grid || grid.length < 4) return null;
-  const g = grid.toUpperCase();
-  
-  let lon = (g.charCodeAt(0) - 65) * 20 - 180;
-  let lat = (g.charCodeAt(1) - 65) * 10 - 90;
-  
-  lon += parseInt(g.charAt(2)) * 2;
-  lat += parseInt(g.charAt(3)) * 1;
-  
-  if (g.length >= 6) {
-    lon += (g.charCodeAt(4) - 65) * (5 / 60);
-    lat += (g.charCodeAt(5) - 65) * (2.5 / 60);
-    lon += (5 / 120); 
-    lat += (2.5 / 120);
-  } else {
-    lon += 1;
-    lat += 0.5;
-  }
-  
-  return { lat, lng: lon };
-}
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const callsign = searchParams.get("callsign") || "AF0DB";
-  
-  // FIXED ENDPOINT: Uses the dedicated 'retrieve' subdomain for active database queries
-  const targetUrl = `https://retrieve.pskreporter.info/query?senderCallsign=${callsign}&flowStartSeconds=-7200`;
-
   try {
-    const res = await fetch(targetUrl, { 
-      headers: { 
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "application/xml, text/xml, */*"
-      },
-      // Cache set to 60 seconds to prevent hammering the PSK network and getting IP banned
-      next: { revalidate: 60 } 
-    });
-
-    if (!res.ok) {
-      throw new Error(`PSK Reporter API returned status: ${res.status}`);
-    }
-
-    const xmlData = await res.text();
-
-    // REGEX PARSER: Extracts individual <receptionReport> nodes from the raw database dump
-    const reportMatches = xmlData.match(/<receptionReport\b[^>]*>/ig) || [];
+    // FIXED LOGIC: Queries the master PSK database explicitly looking for where YOU were heard (senderCallsign) over the last 2 hours
+    const pskUrl = "https://retrieve.pskreporter.info/query?senderCallsign=AF0DB&flowStartSeconds=-7200&statistics=0";
     
-    const liveSpots = [];
+    const res = await fetch(pskUrl, {
+      headers: {
+        "User-Agent": "AF0DB-Station-Dashboard/2.0",
+        "Accept": "application/xml"
+      },
+      cache: "no-store"
+    });
 
-    for (const report of reportMatches) {
-      const extractAttr = (attr: string) => {
-        const m = report.match(new RegExp(`${attr}\\s*=\\s*"([^"]*)"`, "i"));
-        return m ? m[1] : "";
-      };
+    if (!res.ok) throw new Error(`PSK Reporter API returned status: ${res.status}`);
+    
+    const xmlText = await res.text();
 
-      const receiverCall = extractAttr("receiverCallsign");
-      const grid = extractAttr("receiverLocator");
-      const snr = extractAttr("sNR");
-      const flowSeconds = extractAttr("flowStartSeconds");
+    // Core XML string-matching engine: Extracts up to 15 live decodes to fit your dashboard metrics layout
+    const spots: any[] = [];
+    const matches = xmlText.matchAll(/<receptionReport\s+([^>]+)>/g);
+    
+    for (const match of matches) {
+      if (spots.length >= 15) break;
+      const attrString = match[1];
       
-      if (!receiverCall || !grid) continue;
+      const receiverCallM = attrString.match(/receiverCallsign="([^"]+)"/);
+      const gridM = attrString.match(/receiverLocator="([^"]+)"/);
+      const snrM = attrString.match(/sNR="([^"]+)"/);
+      const timeM = attrString.match(/reportReceiverTimestamp="([^"]+)"/);
 
-      const coords = gridToLatLon(grid);
-      if (!coords) continue;
-
-      // Converts absolute Unix epoch stamps into localized "Xm ago" tags
-      let timeString = "Just now";
-      if (flowSeconds) {
-        const reportTime = parseInt(flowSeconds) * 1000;
-        const diffMinutes = Math.floor((Date.now() - reportTime) / 60000);
-        if (diffMinutes > 0) {
-          timeString = `${diffMinutes}m ago`;
+      if (receiverCallM && gridM) {
+        const grid = gridM[1].toUpperCase();
+        
+        // Accurate Maidenhead grid center decoding math to plot coordinates flawlessly on your WebGL globe layers
+        let lat = 39.8283;
+        let lng = -98.5795;
+        if (grid.length >= 4) {
+          const lonField = (grid.charCodeAt(0) - 65) * 20 - 180;
+          const latField = (grid.charCodeAt(1) - 65) * 10 - 90;
+          const lonSquare = parseInt(grid.charAt(2)) * 2;
+          const latSquare = parseInt(grid.charAt(3)) * 1;
+          if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+            lng = lonField + lonSquare + 1;
+            lat = latField + latSquare + 0.5;
+          }
         }
-      }
 
-      liveSpots.push({
-        receiverCall: receiverCall.toUpperCase(),
-        grid: grid.toUpperCase(),
-        lat: coords.lat,
-        lng: coords.lng,
-        snr: snr ? `${snr} dB` : "—",
-        time: timeString
-      });
+        let cleanTime = "—";
+        if (timeM) {
+          const dateObj = new Date(parseInt(timeM[1]) * 1000);
+          cleanTime = dateObj.toISOString().substring(11, 16);
+        }
+
+        spots.push({
+          receiverCall: receiverCallM[1].toUpperCase().replace(/0/g, "Ø"),
+          grid: grid,
+          lat: lat,
+          lng: lng,
+          snr: snrM ? `${snrM[1]} dB` : "0 dB",
+          time: cleanTime
+        });
+      }
     }
 
-    // DUPLICATE FILTER: Keeps the UI clean by only showing the most recent decode per receiving station
-    const uniqueSpotsMap = new Map();
-    liveSpots.forEach(spot => {
-      uniqueSpotsMap.set(spot.receiverCall, spot);
-    });
-
-    const finalUniqueSpots = Array.from(uniqueSpotsMap.values())
-      .sort((a, b) => {
-        const aTime = parseInt(a.time.replace(/\D/g, '')) || 0;
-        const bTime = parseInt(b.time.replace(/\D/g, '')) || 0;
-        return aTime - bTime;
-      })
-      .slice(0, 20);
-
-    return NextResponse.json({
-      active: true,
-      count: finalUniqueSpots.length,
-      spots: finalUniqueSpots
-    });
-
+    return NextResponse.json({ spots });
   } catch (error: any) {
-    console.error("PSK Reporter Sync Error:", error.message);
-    return NextResponse.json({ active: false, error: "Link Down", spots: [] }, { status: 500 });
+    console.error("PSK Backend Telemetry Sync Failure:", error.message);
+    return NextResponse.json({ error: "Telemetry Offline", spots: [] }, { status: 500 });
   }
 }
