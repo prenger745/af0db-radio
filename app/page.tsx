@@ -736,7 +736,7 @@ export default function Page() {
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
           <span className="hide-on-mobile-cell">POTA_MONITOR: <span style={{ color: "#00ff66" }}>ONLINE ({potaSpots.length} ACTIVE)</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
-          <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#00f2ff" }}>LINKED</span></span>
+          <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#a855f7" }}>LINKED</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }}>|</span>
           
           <button onClick={handleToggleAudioSystem} style={{ background: "transparent", border: "none", color: audioEnabled ? "#00ff66" : "#3c5243", cursor: "pointer", fontFamily: "monospace", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem", padding: 0, outline: "none" }}>
@@ -806,7 +806,7 @@ export default function Page() {
           {/* Card 3: PSK Reporter footprint register */}
           <div className="terminal-panel">
             <div className="panel-header">
-              <div className="panel-title" style={{ color: "#00f2ff" }}>
+              <div className="panel-title" style={{ color: "#a855f7" }}>
                 <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
               </div>
             </div>
@@ -819,7 +819,7 @@ export default function Page() {
                 pskSpots.map((spot, i) => (
                   <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
                     <div>
-                      RCVR: <span style={{ color: "#00f2ff", fontWeight: 700 }}>{spot.receiverCall}</span>
+                      RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
                       <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
                     </div>
                     <div>
@@ -976,7 +976,7 @@ export default function Page() {
 
                   labelsData={[...globeLabels, ...globePoints]}
                   labelText={(d: any) => d.text || ""}
-                  labelColor={(d: any) => d.type === "psk" ? "#00f2ff" : (d.color || "#00ff66")}
+                  labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
                   labelSize={0.45}
                   labelDotRadius={0.35} 
                   labelAltitude={0.065}
@@ -996,7 +996,7 @@ export default function Page() {
                     if (d.type === "psk") {
                       return `
                         <div class="scene-tooltip">
-                          <div style="font-weight:700; color:#00f2ff; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
+                          <div style="font-weight:700; color:#a855f7; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
                           <div>MONITOR: <b>${d.details.receiverCall}</b></div>
                           <div>LOCATOR: <b>${d.details.grid}</b></div>
                           <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
