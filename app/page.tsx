@@ -344,7 +344,6 @@ export default function Page() {
           currentMode: newestFifteen[0].mode || "FT8"
         });
 
-        // DEFINITIVE MAP CORRECTION: Arcs are completely built from the exact sorted table logs array to maintain absolute parity
         const uniqueGridMap: { [key: string]: { callsign: string; grid: string; country: string; lat: number; lng: number } } = {};
 
         newestFifteen.forEach((qso) => {
@@ -355,7 +354,6 @@ export default function Page() {
             let exactLat = 0;
             let exactLng = 0;
             
-            // Safe Maidenhead conversion engine to guarantee center target vectors
             const lonField = (cleanGrid4.charCodeAt(0) - 65) * 20 - 180;
             const latField = (cleanGrid4.charCodeAt(1) - 65) * 10 - 90;
             const lonSquare = parseInt(cleanGrid4.charAt(2)) * 2;
@@ -539,7 +537,7 @@ export default function Page() {
     };
   }, []);
 
-  // SYNCHRONIZED LAYER DISPATCHER: Merges map layers only after geoArcs handles current table array changes
+  // RESTORED MAP DISPATCHER HOOK: Re-incorporates the live PSK point array layer safely
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -1078,7 +1076,7 @@ export default function Page() {
                   labelResolution={3}
                   labelsTransitionDuration={0}
 
-                  // PSK NODES
+                  // FIXED PSK DECODE DOTS: Restored layer rendering so it explicitly sits high above land segments
                   pointsData={globePoints}
                   pointColor={() => "#00f2ff"}
                   pointRadius={0.18}
