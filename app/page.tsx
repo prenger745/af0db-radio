@@ -266,9 +266,11 @@ export default function Page() {
       const currentHour = new Date().getUTCHours();
       setIsNight(currentHour < 11 || currentHour > 23);
 
-      const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i);
-      const confirmedMatch = cleanText.match(/(?:CONFIRMED|CQSL)=([0-9,]+)/i);
-      const dxccMatch = cleanText.match(/(?:DXCC|DXCC_COUNT)=([0-9,]+)/i);
+      // --- SURGICAL FIX: Broadened regex to catch XML tags and direct JSON payload numbers ---
+      const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i) || cleanText.match(/<(?:count|qsos)>([0-9,]+)/i);
+      const confirmedMatch = cleanText.match(/(?:CONFIRMED|CQSL)=([0-9,]+)/i) || cleanText.match(/<cqsl>([0-9,]+)/i);
+      const dxccMatch = cleanText.match(/(?:DXCC|DXCC_COUNT)=([0-9,]+)/i) || cleanText.match(/<dxcc>([0-9,]+)/i);
+      // ---------------------------------------------------------------------------------------
 
       let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
       const allParsedLogs: QSO[] = [];
@@ -328,9 +330,11 @@ export default function Page() {
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
 
-        const parsedGlobalCount = countMatch ? parseInt(countMatch[1].replace(/,/g, '')) : HARD_FLOOR_TOTAL;
-        const parsedGlobalCqsl = confirmedMatch ? parseInt(confirmedMatch[1].replace(/,/g, '')) : HARD_FLOOR_CONFIRMED;
-        const parsedGlobalDxcc = dxccMatch ? parseInt(dxccMatch[1].replace(/,/g, '')) : HARD_FLOOR_DXCC;
+        // --- SURGICAL FIX: Allows the scanner to check for top-level JSON objects from the proxy first ---
+        const parsedGlobalCount = json.count ? parseInt(json.count) : (countMatch ? parseInt(countMatch[1].replace(/,/g, '')) : HARD_FLOOR_TOTAL);
+        const parsedGlobalCqsl = (json.cqsl || json.confirmed) ? parseInt(json.cqsl || json.confirmed) : (confirmedMatch ? parseInt(confirmedMatch[1].replace(/,/g, '')) : HARD_FLOOR_CONFIRMED);
+        const parsedGlobalDxcc = json.dxcc ? parseInt(json.dxcc) : (dxccMatch ? parseInt(dxccMatch[1].replace(/,/g, '')) : HARD_FLOOR_DXCC);
+        // -------------------------------------------------------------------------------------------------
 
         const finalCalculatedTotal = Math.max(HARD_FLOOR_TOTAL, parsedGlobalCount);
         const finalCalculatedConfirmed = Math.max(HARD_FLOOR_CONFIRMED, parsedGlobalCqsl);
@@ -931,12 +935,14 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#020403"
                   
+                  // LANDMASS GEOMETRY WRAPPER WITH CRITICAL CLIPPING PREVENTION EXPLICITLY INJECTED
                   polygonsData={landmasses}
                   polygonCapColor={() => "#07120a"} 
                   polygonSideColor={() => "#020403"} 
                   polygonStrokeColor={() => "#183620"} 
                   polygonAltitude={0.01}
                   
+                  // FLIGHT PATH ARCS: Tied securely to the table log coordinates and flush with target pins
                   arcsData={geoArcs}
                   arcColor="color"
                   arcDashLength={0.45}
@@ -948,6 +954,7 @@ export default function Page() {
                   arcStartAltitude={0.06}
                   arcEndAltitude={0.06}
                   
+                  // RADAR RING TARGETS: Raised to 0.065 to bypass overlapping continent geometry completely
                   ringsData={geoArcs}
                   ringColor="color"
                   ringMaxRadius={2.2}
@@ -959,6 +966,7 @@ export default function Page() {
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.12}
 
+                  // CALLSIGN INDICATORS & PSK FLOATING DOTS
                   labelsData={[...globeLabels, ...globePoints]}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.type === "psk" ? "#00f2ff" : (d.color || "#00ff66")}
