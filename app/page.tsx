@@ -823,7 +823,7 @@ export default function Page() {
                       <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
                     </div>
                     <div>
-                      SIG: <span style={{ color: "#00ff66" }}>{spot.snr}</span>
+                      SIG: <span style={{ color: "#a855f7" }}>{spot.snr}</span>
                     </div>
                   </div>
                 ))
