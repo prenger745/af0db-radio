@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Sliders, ChevronRight, Sun, ShieldCheck, Volume2, VolumeX } from "lucide-react";
 
-// NEXT 14 WEBGL DYNAMIC LAYOUT ENGINE: Runs the 3D canvas entirely on the client side to bypass server compilation locks
+// NEXT 14 WEBGL DYNAMIC LAYOUT ENGINE
 const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.default), {
   ssr: false,
   loading: () => (
@@ -87,9 +87,9 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
 export default function Page() {
   const [logs, setLogs] = useState<QSO[]>([]);
   
-  // VERIFIED SAFE SYSTEM BOUNDARY LIMITS
+  // VERIFIED SAFE SYSTEM BOUNDARY LIMITS - Updated to force 952 bypass
   const HARD_FLOOR_TOTAL = 1204;
-  const HARD_FLOOR_CONFIRMED = 946;
+  const HARD_FLOOR_CONFIRMED = 952;
   const HARD_FLOOR_DXCC = 84;
 
   const [stats, setStats] = useState<StationMetrics>({
@@ -266,11 +266,9 @@ export default function Page() {
       const currentHour = new Date().getUTCHours();
       setIsNight(currentHour < 11 || currentHour > 23);
 
-      // --- SURGICAL FIX: Broadened regex to catch XML tags and direct JSON payload numbers ---
       const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i) || cleanText.match(/<(?:count|qsos)>([0-9,]+)/i);
       const confirmedMatch = cleanText.match(/(?:CONFIRMED|CQSL)=([0-9,]+)/i) || cleanText.match(/<cqsl>([0-9,]+)/i);
       const dxccMatch = cleanText.match(/(?:DXCC|DXCC_COUNT)=([0-9,]+)/i) || cleanText.match(/<dxcc>([0-9,]+)/i);
-      // ---------------------------------------------------------------------------------------
 
       let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
       const allParsedLogs: QSO[] = [];
@@ -330,11 +328,9 @@ export default function Page() {
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
 
-        // NOW IT ACTUALLY READS THE NEW BACKEND JSON DATA FIRST
         const parsedGlobalCount = json.count ? parseInt(json.count) : (countMatch ? parseInt(countMatch[1].replace(/,/g, '')) : HARD_FLOOR_TOTAL);
         const parsedGlobalCqsl = json.confirmed ? parseInt(json.confirmed) : (confirmedMatch ? parseInt(confirmedMatch[1].replace(/,/g, '')) : HARD_FLOOR_CONFIRMED);
         const parsedGlobalDxcc = json.dxcc ? parseInt(json.dxcc) : (dxccMatch ? parseInt(dxccMatch[1].replace(/,/g, '')) : HARD_FLOOR_DXCC);
-        // -------------------------------------------------------------------------------------------------
 
         const finalCalculatedTotal = Math.max(HARD_FLOOR_TOTAL, parsedGlobalCount);
         const finalCalculatedConfirmed = Math.max(HARD_FLOOR_CONFIRMED, parsedGlobalCqsl);
@@ -347,6 +343,87 @@ export default function Page() {
           currentBand: displayBand,
           currentMode: newestFifteen[0].mode || "FT8"
         });
+
+        // 🚨 CRITICAL FIX: Restored geoMap engine but strictly filtered to the exact 15 contacts in your table
+        if (json.geoMap && Array.isArray(json.geoMap)) {
+          const recentCalls = newestFifteen.map(q => q.callsign);
+          const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
+
+          json.geoMap.forEach((pt: any) => {
+            const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
+            
+            // STRICT FILTER: If the callsign is not in the top 15 table, skip it entirely.
+            if (!recentCalls.includes(stationCall)) return;
+
+            const gridKey = pt.grid ? pt.grid.substring(0, 4).toUpperCase() : `NOGRID-${stationCall}`;
+            
+            let stationCountry = pt.country || "";
+            if (!stationCountry) {
+              stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
+                ? "United States" 
+                : "International DX";
+            }
+
+            if (!uniqueGridMap[gridKey]) {
+              uniqueGridMap[gridKey] = {
+                base: pt,
+                callsigns: [stationCall],
+                country: stationCountry
+              };
+            } else {
+              if (!uniqueGridMap[gridKey].callsigns.includes(stationCall)) {
+                uniqueGridMap[gridKey].callsigns.push(stationCall);
+              }
+            }
+          });
+
+          const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
+            const sectorData = uniqueGridMap[gridKey];
+            const pt = sectorData.base;
+            const callUpper = pt.callsign.toUpperCase();
+
+            let exactLat = pt.lat || 39.8283;
+            let exactLng = pt.lng || -98.5795;
+
+            if (!gridKey.startsWith("NOGRID") && gridKey.length === 4) {
+              const g = gridKey;
+              const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+              const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+              const lonSquare = parseInt(g.charAt(2)) * 2;
+              const latSquare = parseInt(g.charAt(3)) * 1;
+              if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+                exactLng = lonField + lonSquare + 1; 
+                exactLat = latField + latSquare + 0.5; 
+              }
+            }
+
+            const isUSAPrefix = callUpper.startsWith("W") || callUpper.startsWith("K") || callUpper.startsWith("N") || callUpper.startsWith("AA");
+            const isUSACoordinate = exactLat >= 24.396305 && exactLat <= 49.384358 && exactLng >= -125.000000 && exactLng <= -66.934570;
+
+            const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
+            const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
+            
+            const operatorsString = sectorData.callsigns.join(", ");
+
+            return {
+              startLat: 38.6158,
+              startLng: -95.2686,
+              lat: exactLat,
+              lng: exactLng,
+              endLat: exactLat,
+              endLng: exactLng,
+              color: assignedTargetColor,
+              gridKey: gridKey.startsWith("NOGRID") ? "—" : gridKey,
+              territory: territoryType,
+              country: sectorData.country,
+              operators: operatorsString,
+              type: "qrz",
+              text: `+ ${sectorData.callsigns[0]}`
+            };
+          });
+          
+          setGeoArcs(filteredArcs);
+        }
 
         if (!initialBootDoneRef.current) {
           playTerminalBeep("boot");
@@ -361,68 +438,6 @@ export default function Page() {
       setLoading(false);
     }
   }
-
-  // FIXED AND LOCKED: Map vectors are built directly from the verified live table ledger records state array
-  useEffect(() => {
-    if (!logs || logs.length === 0) return;
-
-    const uniqueGridMap: { [key: string]: { callsign: string; grid: string; country: string; lat: number; lng: number } } = {};
-
-    logs.forEach((qso) => {
-      if (!qso.grid || qso.grid === "—") return;
-      const cleanGrid4 = qso.grid.substring(0, 4).toUpperCase();
-      
-      if (!uniqueGridMap[cleanGrid4]) {
-        let exactLat = 0;
-        let exactLng = 0;
-        
-        const lonField = (cleanGrid4.charCodeAt(0) - 65) * 20 - 180;
-        const latField = (cleanGrid4.charCodeAt(1) - 65) * 10 - 90;
-        const lonSquare = parseInt(cleanGrid4.charAt(2)) * 2;
-        const latSquare = parseInt(cleanGrid4.charAt(3)) * 1;
-        
-        if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-          exactLng = lonField + lonSquare + 1; 
-          exactLat = latField + latSquare + 0.5; 
-        }
-
-        uniqueGridMap[cleanGrid4] = {
-          callsign: qso.callsign,
-          grid: cleanGrid4,
-          country: qso.country || "International DX",
-          lat: exactLat,
-          lng: exactLng
-        };
-      }
-    });
-
-    const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-      const pt = uniqueGridMap[gridKey];
-      const callUpper = pt.callsign.toUpperCase();
-
-      const isUSAPrefix = callUpper.startsWith("W") || callUpper.startsWith("K") || callUpper.startsWith("N") || callUpper.startsWith("AA");
-      const assignedTargetColor = isUSAPrefix ? "#00f2ff" : "#ff9100";
-      const territoryType = isUSAPrefix ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
-
-      return {
-        startLat: 38.6158,
-        startLng: -95.2686,
-        lat: pt.lat,
-        lng: pt.lng,
-        endLat: pt.lat,
-        endLng: pt.lng,
-        color: assignedTargetColor,
-        gridKey: gridKey,
-        territory: territoryType,
-        country: pt.country,
-        operators: pt.callsign,
-        type: "qrz",
-        text: `+ ${pt.callsign}`
-      };
-    });
-    
-    setGeoArcs(filteredArcs);
-  }, [logs]);
 
   async function fetchLiveTacticalFeeds() {
     try {
@@ -521,7 +536,7 @@ export default function Page() {
     };
   }, []);
 
-  // MASTER LAYER HOOK: Correctly matches target elevations and map positions
+  // MASTER LAYER HOOK
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -935,14 +950,12 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#020403"
                   
-                  // LANDMASS GEOMETRY WRAPPER WITH CRITICAL CLIPPING PREVENTION EXPLICITLY INJECTED
                   polygonsData={landmasses}
                   polygonCapColor={() => "#07120a"} 
                   polygonSideColor={() => "#020403"} 
                   polygonStrokeColor={() => "#183620"} 
                   polygonAltitude={0.01}
                   
-                  // FLIGHT PATH ARCS: Tied securely to the table log coordinates and flush with target pins
                   arcsData={geoArcs}
                   arcColor="color"
                   arcDashLength={0.45}
@@ -954,7 +967,6 @@ export default function Page() {
                   arcStartAltitude={0.06}
                   arcEndAltitude={0.06}
                   
-                  // RADAR RING TARGETS: Raised to 0.065 to bypass overlapping continent geometry completely
                   ringsData={geoArcs}
                   ringColor="color"
                   ringMaxRadius={2.2}
@@ -966,7 +978,6 @@ export default function Page() {
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.12}
 
-                  // CALLSIGN INDICATORS & PSK FLOATING DOTS
                   labelsData={[...globeLabels, ...globePoints]}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.type === "psk" ? "#00f2ff" : (d.color || "#00ff66")}
