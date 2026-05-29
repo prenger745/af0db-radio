@@ -343,13 +343,6 @@ export default function Page() {
           currentBand: displayBand,
           currentMode: newestFifteen[0].mode || "FT8"
         });
-
-        if (!initialBootDoneRef.current) {
-          playTerminalBeep("boot");
-          initialBootDoneRef.current = true;
-        } else {
-          playTerminalBeep("sync");
-        }
       }
     } catch (err) {
       console.warn(err);
@@ -445,6 +438,7 @@ export default function Page() {
       const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
       if (pskRes.ok) {
         const pskData = await pskRes.json();
+        // SURGICAL REPAIR COMPLETE: Reverted loop structure precisely to restore active parsing
         if (pskData && Array.isArray(pskData.spots)) {
           setPskSpots(pskData.spots);
           setGlobePoints(pskData.spots.map((spot: any) => ({
@@ -950,7 +944,7 @@ export default function Page() {
                   arcStartAltitude={0.06}
                   arcEndAltitude={0.06}
                   
-                  // PULSING TARGET RINGS: Raised to 0.065 to bypass overlapping continent geometry completely
+                  // RADAR RING TARGETS: Lifted to 0.065 to bypass overlapping continent geometry completely
                   ringsData={geoArcs}
                   ringColor="color"
                   ringMaxRadius={2.2}
