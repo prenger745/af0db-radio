@@ -548,8 +548,8 @@ export default function Page() {
     const potaLabels = potaSpots.map(spot => ({
       lat: spot.lat,
       lng: spot.lng,
-      text: "▲", // Using a clean, non-emoji technical geometric arrow/tree shape to eliminate rendering system errors
-      color: "#22c55e", // Direct CSS palette definition
+      text: "", // Kept empty to display a matching solid clean round visual point marker
+      color: "#00ff66", // Exact green matching the core theme lines
       type: "pota",
       gridKey: spot.reference,
       country: "United States",
@@ -727,14 +727,14 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignParagraph: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
             <span style={{ color: "#00ff66" }}>RADAR_ENGINE // INTEGRATED_NET_STREAM</span>
           </span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
-          <span className="hide-on-mobile-cell">POTA_MONITOR: <span style={{ color: "#ffaa00" }}>ONLINE ({potaSpots.length} ACTIVE)</span></span>
+          <span className="hide-on-mobile-cell">POTA_MONITOR: <span style={{ color: "#00ff66" }}>ONLINE ({potaSpots.length} ACTIVE)</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
           <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#00f2ff" }}>LINKED</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }}>|</span>
@@ -778,7 +778,7 @@ export default function Page() {
           {/* Card 2: Live POTA spots scroller register */}
           <div className="terminal-panel">
             <div className="panel-header">
-              <div className="panel-title" style={{ color: "#ffaa00" }}>
+              <div className="panel-title" style={{ color: "#00ff66" }}>
                 <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
               </div>
             </div>
@@ -789,7 +789,7 @@ export default function Page() {
                 potaSpots.map((spot, i) => (
                   <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
                     <div>
-                      <span style={{ color: "#ffaa00", fontWeight: 700 }}>{spot.activator}</span>
+                      <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
                       <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
                       <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                     </div>
@@ -978,7 +978,7 @@ export default function Page() {
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.type === "psk" ? "#00f2ff" : (d.color || "#00ff66")}
                   labelSize={0.45}
-                  labelDotRadius={(d: any) => d.type === "psk" ? 0.20 : 0.35} 
+                  labelDotRadius={0.35} 
                   labelAltitude={0.065}
                   labelResolution={3}
                   labelsTransitionDuration={0}
@@ -987,7 +987,7 @@ export default function Page() {
                     if (d.type === "pota") {
                       return `
                         <div class="scene-tooltip">
-                          <div style="font-weight:700; color:#ffaa00; margin-bottom:0.25rem;">POTA ACTIVATION</div>
+                          <div style="font-weight:700; color:#00ff66; margin-bottom:0.25rem;">POTA ACTIVATION</div>
                           <div>CALLSIGN: <b>${d.operators}</b></div>
                           <div>PARK ID: <b>${d.gridKey}</b></div>
                         </div>
