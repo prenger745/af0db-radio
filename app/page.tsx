@@ -548,8 +548,8 @@ export default function Page() {
     const potaLabels = potaSpots.map(spot => ({
       lat: spot.lat,
       lng: spot.lng,
-      text: `* ${spot.activator}`,
-      color: "#ffaa00",
+      text: "🌲",
+      color: "#22c55e",
       type: "pota",
       gridKey: spot.reference,
       country: "United States",
