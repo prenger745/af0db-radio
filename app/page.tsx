@@ -344,75 +344,93 @@ export default function Page() {
           currentMode: newestFifteen[0].mode || "FT8"
         });
 
-        const uniqueGridMap: { [key: string]: { callsign: string; grid: string; country: string; lat: number; lng: number } } = {};
+        if (json.geoMap && Array.isArray(json.geoMap)) {
+          const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
-        newestFifteen.forEach((qso) => {
-          if (!qso.grid || qso.grid === "—") return;
-          const cleanGrid4 = qso.grid.substring(0, 4).toUpperCase();
-          
-          if (!uniqueGridMap[cleanGrid4]) {
-            let exactLat = 0;
-            let exactLng = 0;
+          // REVERTED TO PERFECT WORKING HISTORICAL CONFIGURATION
+          json.geoMap.forEach((pt: any) => {
+            if (!pt.grid) return;
+            const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
+            const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
             
-            const lonField = (cleanGrid4.charCodeAt(0) - 65) * 20 - 180;
-            const latField = (cleanGrid4.charCodeAt(1) - 65) * 10 - 90;
-            const lonSquare = parseInt(cleanGrid4.charAt(2)) * 2;
-            const latSquare = parseInt(cleanGrid4.charAt(3)) * 1;
-            
-            if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-              exactLng = lonField + lonSquare + 1; 
-              exactLat = latField + latSquare + 0.5; 
-            } else {
-              exactLat = 39.8283;
-              exactLng = -98.5795;
+            let stationCountry = pt.country || "";
+            if (!stationCountry) {
+              stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
+                ? "United States" 
+                : "International DX";
             }
 
-            uniqueGridMap[cleanGrid4] = {
-              callsign: qso.callsign,
-              grid: cleanGrid4,
-              country: qso.country || "International DX",
+            if (!uniqueGridMap[cleanGrid4]) {
+              uniqueGridMap[cleanGrid4] = {
+                base: pt,
+                callsigns: [stationCall],
+                country: stationCountry
+              };
+            } else {
+              if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
+                uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
+              }
+            }
+          });
+
+          const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
+            const sectorData = uniqueGridMap[gridKey];
+            const pt = sectorData.base;
+            const callUpper = pt.callsign.toUpperCase();
+
+            let exactLat = pt.lat;
+            let exactLng = pt.lng;
+
+            if (gridKey && gridKey.length === 4) {
+              const g = gridKey.toUpperCase();
+              const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+              const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+              const lonSquare = parseInt(g.charAt(2)) * 2;
+              const latSquare = parseInt(g.charAt(3)) * 1;
+              
+              if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+                exactLng = lonField + lonSquare + 1; 
+                exactLat = latField + latSquare + 0.5; 
+              }
+            }
+
+            const isUSAPrefix = callUpper.startsWith("W") || 
+                                callUpper.startsWith("K") || 
+                                callUpper.startsWith("N") || 
+                                callUpper.startsWith("AA") || 
+                                callUpper.startsWith("AB") || 
+                                callUpper.startsWith("AC") || 
+                                callUpper.startsWith("AD");
+            
+            const isUSACoordinate = exactLat >= 24.396305 && exactLat <= 49.384358 && 
+                                    exactLng >= -125.000000 && exactLng <= -66.934570;
+
+            const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
+            const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
+            
+            const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
+              (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
+
+            return {
+              startLat: 38.6158,
+              startLng: -95.2686,
               lat: exactLat,
-              lng: exactLng
+              lng: exactLng,
+              endLat: exactLat,
+              endLng: exactLng,
+              color: assignedTargetColor,
+              gridKey: gridKey,
+              territory: territoryType,
+              country: sectorData.country,
+              operators: operatorsString,
+              count: sectorData.callsigns.length,
+              type: "qrz",
+              text: `+ ${sectorData.callsigns[0]}`
             };
-          }
-        });
-
-        const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-          const pt = uniqueGridMap[gridKey];
-          const callUpper = pt.callsign.toUpperCase();
-
-          const isUSAPrefix = callUpper.startsWith("W") || 
-                              callUpper.startsWith("K") || 
-                              callUpper.startsWith("N") || 
-                              callUpper.startsWith("AA") || 
-                              callUpper.startsWith("AB") || 
-                              callUpper.startsWith("AC") || 
-                              callUpper.startsWith("AD");
+          });
           
-          const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
-                                  pt.lng >= -125.000000 && pt.lng <= -66.934570;
-
-          const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
-          const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
-
-          return {
-            startLat: 38.6158,
-            startLng: -95.2686,
-            lat: pt.lat,
-            lng: pt.lng,
-            endLat: pt.lat,
-            endLng: pt.lng,
-            color: assignedTargetColor,
-            gridKey: gridKey,
-            territory: territoryType,
-            country: pt.country,
-            operators: pt.callsign,
-            type: "qrz",
-            text: `+ ${pt.callsign}`
-          };
-        });
-        
-        setGeoArcs(filteredArcs);
+          setGeoArcs(filteredArcs);
+        }
 
         if (!initialBootDoneRef.current) {
           playTerminalBeep("boot");
@@ -455,6 +473,7 @@ export default function Page() {
         const pskData = await pskRes.json();
         if (pskData && Array.isArray(pskData.spots) && pskData.spots.length > 0) {
           setPskSpots(pskData.spots);
+          // REVERTED: Restored the point compilation logic exactly how it used to work
           setGlobePoints(pskData.spots.map((spot: any) => ({
             lat: spot.lat,
             lng: spot.lng,
@@ -537,7 +556,7 @@ export default function Page() {
     };
   }, []);
 
-  // RESTORED MAP DISPATCHER HOOK: Re-incorporates the live PSK point array layer safely
+  // REVERTED TO STABLE ORIGINAL ARRAY HOOK CONFIGURATION
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -858,7 +877,7 @@ export default function Page() {
               </div>
               <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
             </div>
-            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
+            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTWAW, KS</span></div>
             <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
             <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
@@ -1035,14 +1054,14 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#020403"
                   
-                  // LANDMASS GEOMETRY WRAPPER WITH CRITICAL CLIPPING PREVENTION EXPLICITLY INJECTED
+                  // LANDMASS LAYER REVERTED TO SPECIFIED WORKING THICKNESS
                   polygonsData={landmasses}
                   polygonCapColor={() => "#07120a"} 
                   polygonSideColor={() => "#020403"} 
                   polygonStrokeColor={() => "#183620"} 
                   polygonAltitude={0.01}
                   
-                  // FLIGHT PATH ARCS: Tied securely to the table log coordinates and flush with target pins
+                  // FLIGHT PATH ARCS: Restored starting altitude anchors
                   arcsData={geoArcs}
                   arcColor="color"
                   arcDashLength={0.45}
@@ -1054,7 +1073,7 @@ export default function Page() {
                   arcStartAltitude={0.06}
                   arcEndAltitude={0.06}
                   
-                  // PULSING TARGET RINGS: Raised to 0.065 to bypass overlapping continent geometry completely
+                  // RADAR PULSING TARGETS
                   ringsData={geoArcs}
                   ringColor="color"
                   ringMaxRadius={2.2}
@@ -1066,7 +1085,7 @@ export default function Page() {
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.12}
 
-                  // CALLSIGN INDICATORS: Forced out to float directly on top of elevated geographic block files
+                  // STATION CALLSIGN LABELS
                   labelsData={globeLabels}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.color || "#00ff66"}
@@ -1076,7 +1095,7 @@ export default function Page() {
                   labelResolution={3}
                   labelsTransitionDuration={0}
 
-                  // FIXED PSK DECODE DOTS: Restored layer rendering so it explicitly sits high above land segments
+                  // PSK PROPAGATION POINTS: Fully restored tracking layers to bypass surface overlapping bounds
                   pointsData={globePoints}
                   pointColor={() => "#00f2ff"}
                   pointRadius={0.18}
