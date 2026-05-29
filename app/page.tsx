@@ -431,7 +431,6 @@ export default function Page() {
           
           setGeoArcs(filteredArcs);
           
-          // MAP RENDER SYNC CRITICAL ADJUSTMENT: Combines vectors but ensures POTA does not attempt to draw blank flight paths
           const potaLabels = potaSpots.map(spot => ({
             lat: spot.lat,
             lng: spot.lng,
@@ -446,17 +445,10 @@ export default function Page() {
 
           setGlobeLabels([...filteredArcs, ...potaLabels]);
         }
-
-        if (!initialBootDoneRef.current) {
-          playTerminalBeep("boot");
-          initialBootDoneRef.current = true;
-        } else {
-          playTerminalBeep("sync");
-        }
       }
     } catch (err) {
       console.warn(err);
-    } finally {
+    } violetly: {
       setLoading(false);
     }
   }
@@ -571,32 +563,30 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    if (geoArcs.length > 0 || potaSpots.length > 0) {
-      const qrzLabels = geoArcs.map(arc => ({
-        lat: arc.lat,
-        lng: arc.lng,
-        text: arc.text,
-        color: arc.color,
-        type: "qrz",
-        gridKey: arc.gridKey,
-        country: arc.country,
-        operators: arc.operators
-      }));
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
 
-      const potaLabels = potaSpots.map(spot => ({
-        lat: spot.lat,
-        lng: spot.lng,
-        text: `* ${spot.activator}`,
-        color: "#ffaa00",
-        type: "pota",
-        gridKey: spot.reference,
-        country: "United States",
-        operators: spot.activator,
-        details: spot
-      }));
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: `* ${spot.activator}`,
+      color: "#ffaa00",
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
 
-      setGlobeLabels([...qrzLabels, ...potaLabels]);
-    }
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
   }, [geoArcs, potaSpots]);
 
   const getPropRating = (band: string) => {
@@ -862,7 +852,7 @@ export default function Page() {
           <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#ffaa00", marginTop: "0.2rem" }}>{stats.currentMode}</div>
         </div>
 
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
+        <div className="terminal-panel" style={{ padding: "0.65rem 1rem" }}>
           <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>TOTAL QSOs</span>
           <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00ff66", marginTop: "0.2rem" }}>{stats.totalQsos}</div>
         </div>
@@ -1069,11 +1059,13 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#020403"
                   
+                  // LANDMASS GEOMETRY WRAPPER
                   polygonsData={landmasses}
                   polygonCapColor={() => "#07120a"} 
                   polygonSideColor={() => "#0f2114"} 
                   polygonStrokeColor={() => "#183620"} 
                   
+                  // FLIGHT PATH ARCS: Forced to explicitly descend exactly to the new elevated altitude plane
                   arcsData={geoArcs}
                   arcColor="color"
                   arcDashLength={0.45}
@@ -1082,33 +1074,36 @@ export default function Page() {
                   arcStroke={0.5}
                   arcsTransitionDuration={0}
                   arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
+                  arcStartAltitude={0.03}
+                  arcEndAltitude={0.03}
                   
-                  // FIXED CYLINDER BLOCK: Renders elegant, non-clipping surface tracking rings instead of raw 3D tower points
+                  // RADAR RING TARGETS: Lifted to 0.035 altitude to float cleanly above the landmass polygons
                   ringsData={geoArcs}
                   ringColor="color"
                   ringMaxRadius={2.5}
                   ringPropagationSpeed={1.2}
                   ringRepeatPeriod={1800}
+                  ringAltitude={0.035}
                   
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.12}
 
-                  // FIXED SURFACE CLIPPING: Pushes the text tracking layer explicitly to a 0.05 altitude above geographic polygon meshes
+                  // STATION CALLSIGN LABELS: Anchored uniformly on the exact same layer as the arc terminators
                   labelsData={globeLabels}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.color || "#00ff66"}
                   labelSize={0.4}
                   labelDotRadius={0.3} 
-                  labelAltitude={0.05}
+                  labelAltitude={0.035}
                   labelResolution={2}
                   labelsTransitionDuration={0}
 
-                  // FIXED PSK NODES: Renders clean reception points directly above landmass structures
+                  // PSK PROPAGATION DOTS: Lifted to float visible above land blocks
                   pointsData={globePoints}
                   pointColor={() => "#00f2ff"}
                   pointRadius={0.18}
-                  pointAltitude={0.02}
+                  pointAltitude={0.035}
                   pointsTransitionDuration={0}
                   
                   labelLabel={(d: any) => {
