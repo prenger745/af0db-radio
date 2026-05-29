@@ -794,7 +794,7 @@ export default function Page() {
                       <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <span style={{ color: "#00f2ff" }}>{spot.frequency} kHz</span>
+                      <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
                       <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
                     </div>
                   </div>
