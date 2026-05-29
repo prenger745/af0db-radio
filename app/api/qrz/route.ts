@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const apiKey = process.env.QRZ_API_KEY; 
+    const apiKey = process.env.QRZ_LOGBOOK_API_KEY; 
     
     if (!apiKey) {
       throw new Error("QRZ_API_KEY environment variable is missing.");
