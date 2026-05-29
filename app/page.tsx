@@ -266,7 +266,7 @@ export default function Page() {
       const currentHour = new Date().getUTCHours();
       setIsNight(currentHour < 11 || currentHour > 23);
 
-      const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i) || cleanText.match(/<?:count|qsos)>([0-9,]+)/i);
+      const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i) || cleanText.match(/(?:count|qsos)=([0-9,]+)/i);
       const confirmedMatch = cleanText.match(/(?:CONFIRMED|CQSL)=([0-9,]+)/i) || cleanText.match(/<cqsl>([0-9,]+)/i);
       const dxccMatch = cleanText.match(/(?:DXCC|DXCC_COUNT)=([0-9,]+)/i) || cleanText.match(/<dxcc>([0-9,]+)/i);
 
@@ -430,7 +430,7 @@ export default function Page() {
       }
     } catch (err) {
       console.warn(err);
-    }  finally {
+    } finally {
       setLoading(false);
     }
   }
