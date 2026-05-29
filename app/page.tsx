@@ -347,7 +347,13 @@ export default function Page() {
         if (json.geoMap && Array.isArray(json.geoMap)) {
           const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
 
-          const newestMapData = json.geoMap.slice(0, 15);
+          // FIXED PARSING ENGINE: Map indicators now explicitly iterate over the pre-sorted, sliced newest log states
+          const newestMapData = json.geoMap.sort((a: any, b: any) => {
+            const dA = `${a.date ? a.date.replace(/-/g, '') : ''}T${a.time ? a.time.replace(/:/g, '') : ''}`;
+            const dB = `${b.date ? b.date.replace(/-/g, '') : ''}T${b.time ? b.time.replace(/:/g, '') : ''}`;
+            return dB.localeCompare(dA);
+          }).slice(0, 15);
+
           newestMapData.forEach((pt: any) => {
             if (!pt.grid) return;
             const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
@@ -448,7 +454,7 @@ export default function Page() {
       }
     } catch (err) {
       console.warn(err);
-    } violetly: {
+    } finally {
       setLoading(false);
     }
   }
