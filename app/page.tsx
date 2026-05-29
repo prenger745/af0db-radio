@@ -330,9 +330,9 @@ export default function Page() {
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
 
-        // --- SURGICAL FIX: Allows the scanner to check for top-level JSON objects from the proxy first ---
+        // NOW IT ACTUALLY READS THE NEW BACKEND JSON DATA FIRST
         const parsedGlobalCount = json.count ? parseInt(json.count) : (countMatch ? parseInt(countMatch[1].replace(/,/g, '')) : HARD_FLOOR_TOTAL);
-        const parsedGlobalCqsl = (json.cqsl || json.confirmed) ? parseInt(json.cqsl || json.confirmed) : (confirmedMatch ? parseInt(confirmedMatch[1].replace(/,/g, '')) : HARD_FLOOR_CONFIRMED);
+        const parsedGlobalCqsl = json.confirmed ? parseInt(json.confirmed) : (confirmedMatch ? parseInt(confirmedMatch[1].replace(/,/g, '')) : HARD_FLOOR_CONFIRMED);
         const parsedGlobalDxcc = json.dxcc ? parseInt(json.dxcc) : (dxccMatch ? parseInt(dxccMatch[1].replace(/,/g, '')) : HARD_FLOOR_DXCC);
         // -------------------------------------------------------------------------------------------------
 
