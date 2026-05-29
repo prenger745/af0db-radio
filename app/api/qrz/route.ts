@@ -1,108 +1,44 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from 'next/server';
 
-export const dynamic = "force-dynamic"
-
-// HELPER: Translates Maidenhead Grid Squares (e.g., "EM28oo") into exact Dec-Deg Lat/Lng coordinates
-function gridToLatLng(grid: string): { lat: number; lng: number } | null {
-  if (!grid || grid.trim().length < 4) return null;
-  
-  const cleanGrid = grid.trim().toUpperCase();
-  
-  // Calculate main fields (180 deg sectors)
-  const lonField = cleanGrid.charCodeAt(0) - 65; // A-R
-  const latField = cleanGrid.charCodeAt(1) - 65; // A-R
-  
-  if (lonField < 0 || lonField > 17 || latField < 0 || latField > 17) return null;
-  
-  // Calculate squares (10 deg sectors)
-  const lonSquare = parseInt(cleanGrid.charAt(2), 10);
-  const latSquare = parseInt(cleanGrid.charAt(3), 10);
-  
-  if (isNaN(lonSquare) || isNaN(latSquare)) return null;
-  
-  let lng = (lonField * 20) + (lonSquare * 2) - 180;
-  let lat = (latField * 10) + latSquare - 90;
-  
-  // Account for optional sub-squares (2.5m x 5m micro-sectors)
-  if (cleanGrid.length >= 6) {
-    const lonSub = cleanGrid.charCodeAt(4) - 65;
-    const latSub = cleanGrid.charCodeAt(5) - 65;
-    if (lonSub >= 0 && lonSub <= 23 && latSub >= 0 && latSub <= 23) {
-      lng += (lonSub * (5 / 60)) + (2.5 / 60);
-      lat += (latSub * (2.5 / 60)) + (1.25 / 60);
-    } else {
-      lng += 1;
-      lat += 0.5;
-    }
-  } else {
-    lng += 1; // Center on the 4-character grid sector midpoint
-    lat += 0.5;
-  }
-  
-  return { lat, lng };
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const apiKey = process.env.QRZ_LOGBOOK_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: "Missing API Key" }, { status: 200 })
-    }
-
-    // ADDED EXTENDED=1 parameter to pull ALL logs instead of just the tiny recent cutoff window
-    const response = await fetch("https://logbook.qrz.com/api", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `KEY=${encodeURIComponent(apiKey)}&ACTION=FETCH&OPTION=TYPE%3AADIF&EXTENDED=1`,
-      cache: "no-store"
-    })
-
-    if (!response.ok) {
-      return NextResponse.json({ error: `HTTP_ERROR_${response.status}` }, { status: 200 })
-    }
-
-    const rawText = await response.text()
-    const cleanText = rawText.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
-
-    // SERVER-SIDE PARSING ENGINE
-    let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
-    const records = adifContent.split(/<eor>/i);
+    const apiKey = process.env.QRZ_API_KEY; 
     
-    const coordinatesMap: any[] = [];
-
-    for (const record of records) {
-      if (!record.trim()) continue;
-      
-      const extractTag = (tag: string) => {
-        const m = record.match(new RegExp(`<${tag}:\\d+>([^<]*)`, "i"));
-        return m ? m[1].trim() : "";
-      };
-
-      const callsign = extractTag("call").toUpperCase();
-      const grid = extractTag("gridsquare");
-      const mode = extractTag("mode") || "FT8";
-
-      if (callsign && grid) {
-        const loc = gridToLatLng(grid);
-        if (loc) {
-          coordinatesMap.push({
-            callsign,
-            mode,
-            grid: grid.toUpperCase(),
-            lat: loc.lat,
-            lng: loc.lng
-          });
-        }
-      }
+    if (!apiKey) {
+      throw new Error("QRZ_API_KEY environment variable is missing.");
     }
 
-    // Return the total raw response text block alongside our newly parsed spatial geo map
+    // 1. FETCH STATUS AGGREGATES: Gets your exact Confirmed, DXCC, and Total counts
+    const statusUrl = `https://logbook.qrz.com/api?KEY=${apiKey}&ACTION=STATUS`;
+    const statusRes = await fetch(statusUrl, { cache: 'no-store' });
+    const statusText = await statusRes.text();
+
+    // Parse the &-separated name=value pairs from the STATUS response
+    const statusData: any = {};
+    statusText.split('&').forEach(pair => {
+      const [key, value] = pair.split('=');
+      if (key && value) {
+        statusData[key.toLowerCase()] = value;
+      }
+    });
+
+    // 2. FETCH ADIF RECORDS: Gets your actual logbook entries for the map and ledger
+    const fetchUrl = `https://logbook.qrz.com/api?KEY=${apiKey}&ACTION=FETCH`;
+    const fetchRes = await fetch(fetchUrl, { cache: 'no-store' });
+    const fetchText = await fetchRes.text();
+
+    // 3. COMBINE AND SEND
     return NextResponse.json({ 
-      data: rawText,
-      geoMap: coordinatesMap
-    })
-  } catch (error) {
-    console.error("Proxy failure:", error)
-    return NextResponse.json({ error: "SERVER_EXCEPTION" }, { status: 500 })
+      data: fetchText, // The raw ADIF string your frontend parses for the 15 table rows
+      count: statusData.count || null,           // Total QSOs
+      confirmed: statusData.cqsl || null,        // Total Confirmed
+      dxcc: statusData.dxcc || null              // Total DXCC
+    });
+
+  } catch (error: any) {
+    console.error("QRZ Proxy Error:", error.message);
+    return NextResponse.json({ error: "QRZ Proxy Offline", data: "" }, { status: 500 });
   }
 }
