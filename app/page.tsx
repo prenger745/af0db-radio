@@ -158,7 +158,7 @@ export default function Page() {
 
     return () => {
       clearTimeout(telemetryTimeout);
-      clearTimeout(workspaceTimeout);
+      clearInterval(workspaceTimeout);
     };
   }, []);
 
@@ -266,12 +266,14 @@ export default function Page() {
       const currentHour = new Date().getUTCHours();
       setIsNight(currentHour < 11 || currentHour > 23);
 
-      const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i) || cleanText.match(/<(?:count|qsos)>([0-9,]+)/i);
+      const countMatch = cleanText.match(/(?:COUNT|TOTAL)=([0-9,]+)/i) || cleanText.match(/<?:count|qsos)>([0-9,]+)/i);
       const confirmedMatch = cleanText.match(/(?:CONFIRMED|CQSL)=([0-9,]+)/i) || cleanText.match(/<cqsl>([0-9,]+)/i);
       const dxccMatch = cleanText.match(/(?:DXCC|DXCC_COUNT)=([0-9,]+)/i) || cleanText.match(/<dxcc>([0-9,]+)/i);
 
       let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
       const allParsedLogs: QSO[] = [];
+      const rawGeoCoordinates: any[] = [];
+      
       const records = adifContent.split(/<eor>/i);
 
       for (const record of records) {
@@ -295,6 +297,10 @@ export default function Page() {
         const eqslStatus = extractTag("eqsl_qsl_rcvd").toUpperCase();
         const qrzStatus = extractTag("qrzcom_qsl_rcvd").toUpperCase();
 
+        const itemGrid = extractTag("gridsquare") || "—";
+        const rawLatStr = extractTag("lat");
+        const rawLngStr = extractTag("lon");
+
         allParsedLogs.push({
           callsign: call.toUpperCase().replace(/0/g, "Ø"),
           date: fD,
@@ -303,12 +309,36 @@ export default function Page() {
           mode: extractTag("mode") || "—",
           rstS: extractTag("rst_sent") || "59",
           rstR: extractTag("rst_rcvd") || "59",
-          grid: extractTag("gridsquare") || "—",
+          grid: itemGrid,
           country: countryString,
           qslRcvd: qslStatus,
           lotwRcvd: lotwStatus,
           eqslRcvd: eqslStatus,
           qrzRcvd: qrzStatus
+        });
+
+        let decimalLat = 0;
+        let decimalLng = 0;
+
+        if (rawLatStr && rawLngStr) {
+          const latParts = rawLatStr.match(/([NS])\s*(\d+)\s+([\d.]+)/i);
+          const lngParts = rawLngStr.match(/([EW])\s*(\d+)\s+([\d.]+)/i);
+          
+          if (latParts && lngParts) {
+            decimalLat = parseInt(latParts[2]) + parseFloat(latParts[3]) / 60;
+            if (latParts[1].toUpperCase() === "S") decimalLat *= -1;
+            
+            decimalLng = parseInt(lngParts[2]) + parseFloat(lngParts[3]) / 60;
+            if (lngParts[1].toUpperCase() === "W") decimalLng *= -1;
+          }
+        }
+
+        rawGeoCoordinates.push({
+          callsign: call,
+          grid: itemGrid,
+          country: countryString,
+          lat: decimalLat,
+          lng: decimalLng
         });
       }
 
@@ -344,86 +374,52 @@ export default function Page() {
           currentMode: newestFifteen[0].mode || "FT8"
         });
 
-        // 🚨 CRITICAL FIX: Restored geoMap engine but strictly filtered to the exact 15 contacts in your table
-        if (json.geoMap && Array.isArray(json.geoMap)) {
-          const recentCalls = newestFifteen.map(q => q.callsign);
-          const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
+        const recentCallsigns = newestFifteen.map(q => q.callsign.replace(/Ø/g, "0"));
+        const generatedArcs: any[] = [];
 
-          json.geoMap.forEach((pt: any) => {
-            const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
-            
-            // STRICT FILTER: If the callsign is not in the top 15 table, skip it entirely.
-            if (!recentCalls.includes(stationCall)) return;
+        rawGeoCoordinates.forEach((coord: any) => {
+          const checkCall = coord.callsign.toUpperCase();
+          if (!recentCallsigns.includes(checkCall)) return;
 
-            const gridKey = pt.grid ? pt.grid.substring(0, 4).toUpperCase() : `NOGRID-${stationCall}`;
-            
-            let stationCountry = pt.country || "";
-            if (!stationCountry) {
-              stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
-                ? "United States" 
-                : "International DX";
+          let exactLat = coord.lat;
+          let exactLng = coord.lng;
+
+          if ((exactLat === 0 && exactLng === 0) && coord.grid && coord.grid.length >= 4) {
+            const g = coord.grid.toUpperCase();
+            const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+            const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+            const lonSquare = parseInt(g.charAt(2)) * 2;
+            const latSquare = parseInt(g.charAt(3)) * 1;
+            if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+              exactLng = lonField + lonSquare + 1;
+              exactLat = latField + latSquare + 0.5;
             }
+          }
 
-            if (!uniqueGridMap[gridKey]) {
-              uniqueGridMap[gridKey] = {
-                base: pt,
-                callsigns: [stationCall],
-                country: stationCountry
-              };
-            } else {
-              if (!uniqueGridMap[gridKey].callsigns.includes(stationCall)) {
-                uniqueGridMap[gridKey].callsigns.push(stationCall);
-              }
-            }
+          if (exactLat === 0 && exactLng === 0) return;
+
+          const isUSAPrefix = checkCall.startsWith("W") || checkCall.startsWith("K") || checkCall.startsWith("N") || checkCall.startsWith("AA");
+          const assignedTargetColor = isUSAPrefix ? "#00f2ff" : "#ff9100";
+          const territoryType = isUSAPrefix ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
+
+          generatedArcs.push({
+            startLat: 38.6158,
+            startLng: -95.2686,
+            lat: exactLat,
+            lng: exactLng,
+            endLat: exactLat,
+            endLng: exactLng,
+            color: assignedTargetColor,
+            gridKey: coord.grid,
+            territory: territoryType,
+            country: coord.country || "Unknown DXCC",
+            operators: checkCall.replace(/0/g, "Ø"),
+            type: "qrz",
+            text: `+ ${checkCall.replace(/0/g, "Ø")}`
           });
+        });
 
-          const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-            const sectorData = uniqueGridMap[gridKey];
-            const pt = sectorData.base;
-            const callUpper = pt.callsign.toUpperCase();
-
-            let exactLat = pt.lat || 39.8283;
-            let exactLng = pt.lng || -98.5795;
-
-            if (!gridKey.startsWith("NOGRID") && gridKey.length === 4) {
-              const g = gridKey;
-              const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
-              const latField = (g.charCodeAt(1) - 65) * 10 - 90;
-              const lonSquare = parseInt(g.charAt(2)) * 2;
-              const latSquare = parseInt(g.charAt(3)) * 1;
-              if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-                exactLng = lonField + lonSquare + 1; 
-                exactLat = latField + latSquare + 0.5; 
-              }
-            }
-
-            const isUSAPrefix = callUpper.startsWith("W") || callUpper.startsWith("K") || callUpper.startsWith("N") || callUpper.startsWith("AA");
-            const isUSACoordinate = exactLat >= 24.396305 && exactLat <= 49.384358 && exactLng >= -125.000000 && exactLng <= -66.934570;
-
-            const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
-            const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
-            
-            const operatorsString = sectorData.callsigns.join(", ");
-
-            return {
-              startLat: 38.6158,
-              startLng: -95.2686,
-              lat: exactLat,
-              lng: exactLng,
-              endLat: exactLat,
-              endLng: exactLng,
-              color: assignedTargetColor,
-              gridKey: gridKey.startsWith("NOGRID") ? "—" : gridKey,
-              territory: territoryType,
-              country: sectorData.country,
-              operators: operatorsString,
-              type: "qrz",
-              text: `+ ${sectorData.callsigns[0]}`
-            };
-          });
-          
-          setGeoArcs(filteredArcs);
-        }
+        setGeoArcs(generatedArcs);
 
         if (!initialBootDoneRef.current) {
           playTerminalBeep("boot");
@@ -434,7 +430,7 @@ export default function Page() {
       }
     } catch (err) {
       console.warn(err);
-    } finally {
+    }  finally {
       setLoading(false);
     }
   }
@@ -735,7 +731,7 @@ export default function Page() {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
-            RADAR_ENGINE // INTEGRATED_NET_STREAM
+            <span style={{ color: "#00ff66" }}>RADAR_ENGINE // INTEGRATED_NET_STREAM</span>
           </span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
           <span className="hide-on-mobile-cell">POTA_MONITOR: <span style={{ color: "#ffaa00" }}>ONLINE ({potaSpots.length} ACTIVE)</span></span>
@@ -835,7 +831,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 4: Space weather info WITH N0NBH ATTRIBUTION */}
+          {/* Card 4: Space weather info */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
