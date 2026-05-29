@@ -344,112 +344,83 @@ export default function Page() {
           currentMode: newestFifteen[0].mode || "FT8"
         });
 
-        if (json.geoMap && Array.isArray(json.geoMap)) {
-          const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
+        // DEFINITIVE MAP CORRECTION: Arcs are completely built from the exact sorted table logs array to maintain absolute parity
+        const uniqueGridMap: { [key: string]: { callsign: string; grid: string; country: string; lat: number; lng: number } } = {};
 
-          // FIXED PARSING ENGINE: Map indicators now explicitly iterate over the pre-sorted, sliced newest log states
-          const newestMapData = json.geoMap.sort((a: any, b: any) => {
-            const dA = `${a.date ? a.date.replace(/-/g, '') : ''}T${a.time ? a.time.replace(/:/g, '') : ''}`;
-            const dB = `${b.date ? b.date.replace(/-/g, '') : ''}T${b.time ? b.time.replace(/:/g, '') : ''}`;
-            return dB.localeCompare(dA);
-          }).slice(0, 15);
-
-          newestMapData.forEach((pt: any) => {
-            if (!pt.grid) return;
-            const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
-            const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
+        newestFifteen.forEach((qso) => {
+          if (!qso.grid || qso.grid === "—") return;
+          const cleanGrid4 = qso.grid.substring(0, 4).toUpperCase();
+          
+          if (!uniqueGridMap[cleanGrid4]) {
+            let exactLat = 0;
+            let exactLng = 0;
             
-            let stationCountry = pt.country || "";
-            if (!stationCountry) {
-              stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
-                ? "United States" 
-                : "International DX";
-            }
-
-            if (!uniqueGridMap[cleanGrid4]) {
-              uniqueGridMap[cleanGrid4] = {
-                base: pt,
-                callsigns: [stationCall],
-                country: stationCountry
-              };
+            // Safe Maidenhead conversion engine to guarantee center target vectors
+            const lonField = (cleanGrid4.charCodeAt(0) - 65) * 20 - 180;
+            const latField = (cleanGrid4.charCodeAt(1) - 65) * 10 - 90;
+            const lonSquare = parseInt(cleanGrid4.charAt(2)) * 2;
+            const latSquare = parseInt(cleanGrid4.charAt(3)) * 1;
+            
+            if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+              exactLng = lonField + lonSquare + 1; 
+              exactLat = latField + latSquare + 0.5; 
             } else {
-              if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
-                uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
-              }
-            }
-          });
-
-          const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-            const sectorData = uniqueGridMap[gridKey];
-            const pt = sectorData.base;
-            const callUpper = pt.callsign.toUpperCase();
-
-            let exactLat = pt.lat;
-            let exactLng = pt.lng;
-
-            if (gridKey && gridKey.length === 4) {
-              const g = gridKey.toUpperCase();
-              const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
-              const latField = (g.charCodeAt(1) - 65) * 10 - 90;
-              const lonSquare = parseInt(g.charAt(2)) * 2;
-              const latSquare = parseInt(g.charAt(3)) * 1;
-              
-              if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-                exactLng = lonField + lonSquare + 1; 
-                exactLat = latField + latSquare + 0.5; 
-              }
+              exactLat = 39.8283;
+              exactLng = -98.5795;
             }
 
-            const isUSAPrefix = callUpper.startsWith("W") || 
-                                callUpper.startsWith("K") || 
-                                callUpper.startsWith("N") || 
-                                callUpper.startsWith("AA") || 
-                                callUpper.startsWith("AB") || 
-                                callUpper.startsWith("AC") || 
-                                callUpper.startsWith("AD");
-            
-            const isUSACoordinate = exactLat >= 24.396305 && exactLat <= 49.384358 && 
-                                    exactLng >= -125.000000 && exactLng <= -66.934570;
-
-            const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
-            const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
-            
-            const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
-              (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
-
-            return {
-              startLat: 38.6158,
-              startLng: -95.2686,
+            uniqueGridMap[cleanGrid4] = {
+              callsign: qso.callsign,
+              grid: cleanGrid4,
+              country: qso.country || "International DX",
               lat: exactLat,
-              lng: exactLng,
-              endLat: exactLat,
-              endLng: exactLng,
-              color: assignedTargetColor,
-              gridKey: gridKey,
-              territory: territoryType,
-              country: sectorData.country,
-              operators: operatorsString,
-              count: sectorData.callsigns.length,
-              type: "qrz",
-              text: `+ ${sectorData.callsigns[0]}`
+              lng: exactLng
             };
-          });
-          
-          setGeoArcs(filteredArcs);
-          
-          const potaLabels = potaSpots.map(spot => ({
-            lat: spot.lat,
-            lng: spot.lng,
-            text: `* ${spot.activator} (${spot.reference})`,
-            color: "#ffaa00",
-            type: "pota",
-            gridKey: spot.reference,
-            country: "United States",
-            operators: spot.activator,
-            details: spot
-          }));
+          }
+        });
 
-          setGlobeLabels([...filteredArcs, ...potaLabels]);
+        const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
+          const pt = uniqueGridMap[gridKey];
+          const callUpper = pt.callsign.toUpperCase();
+
+          const isUSAPrefix = callUpper.startsWith("W") || 
+                              callUpper.startsWith("K") || 
+                              callUpper.startsWith("N") || 
+                              callUpper.startsWith("AA") || 
+                              callUpper.startsWith("AB") || 
+                              callUpper.startsWith("AC") || 
+                              callUpper.startsWith("AD");
+          
+          const isUSACoordinate = pt.lat >= 24.396305 && pt.lat <= 49.384358 && 
+                                  pt.lng >= -125.000000 && pt.lng <= -66.934570;
+
+          const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
+          const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
+
+          return {
+            startLat: 38.6158,
+            startLng: -95.2686,
+            lat: pt.lat,
+            lng: pt.lng,
+            endLat: pt.lat,
+            endLng: pt.lng,
+            color: assignedTargetColor,
+            gridKey: gridKey,
+            territory: territoryType,
+            country: pt.country,
+            operators: pt.callsign,
+            type: "qrz",
+            text: `+ ${pt.callsign}`
+          };
+        });
+        
+        setGeoArcs(filteredArcs);
+
+        if (!initialBootDoneRef.current) {
+          playTerminalBeep("boot");
+          initialBootDoneRef.current = true;
+        } else {
+          playTerminalBeep("sync");
         }
       }
     } catch (err) {
@@ -568,6 +539,7 @@ export default function Page() {
     };
   }, []);
 
+  // SYNCHRONIZED LAYER DISPATCHER: Merges map layers only after geoArcs handles current table array changes
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -1065,13 +1037,14 @@ export default function Page() {
                   height={dimensions.height}
                   backgroundColor="#020403"
                   
-                  // LANDMASS GEOMETRY WRAPPER
+                  // LANDMASS GEOMETRY WRAPPER WITH CRITICAL CLIPPING PREVENTION EXPLICITLY INJECTED
                   polygonsData={landmasses}
                   polygonCapColor={() => "#07120a"} 
-                  polygonSideColor={() => "#0f2114"} 
+                  polygonSideColor={() => "#020403"} 
                   polygonStrokeColor={() => "#183620"} 
+                  polygonAltitude={0.01}
                   
-                  // FLIGHT PATH ARCS: Forced to explicitly descend exactly to the new elevated altitude plane
+                  // FLIGHT PATH ARCS: Tied securely to the table log coordinates and flush with target pins
                   arcsData={geoArcs}
                   arcColor="color"
                   arcDashLength={0.45}
@@ -1080,36 +1053,36 @@ export default function Page() {
                   arcStroke={0.5}
                   arcsTransitionDuration={0}
                   arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
-                  arcStartAltitude={0.03}
-                  arcEndAltitude={0.03}
+                  arcStartAltitude={0.06}
+                  arcEndAltitude={0.06}
                   
-                  // RADAR RING TARGETS: Lifted to 0.035 altitude to float cleanly above the landmass polygons
+                  // PULSING TARGET RINGS: Raised to 0.065 to bypass overlapping continent geometry completely
                   ringsData={geoArcs}
                   ringColor="color"
-                  ringMaxRadius={2.5}
-                  ringPropagationSpeed={1.2}
-                  ringRepeatPeriod={1800}
-                  ringAltitude={0.035}
+                  ringMaxRadius={2.2}
+                  ringPropagationSpeed={1.0}
+                  ringRepeatPeriod={1600}
+                  ringAltitude={0.065}
                   
                   showAtmosphere={true}
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.12}
 
-                  // STATION CALLSIGN LABELS: Anchored uniformly on the exact same layer as the arc terminators
+                  // CALLSIGN INDICATORS: Forced out to float directly on top of elevated geographic block files
                   labelsData={globeLabels}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.color || "#00ff66"}
-                  labelSize={0.4}
-                  labelDotRadius={0.3} 
-                  labelAltitude={0.035}
-                  labelResolution={2}
+                  labelSize={0.45}
+                  labelDotRadius={0.35} 
+                  labelAltitude={0.065}
+                  labelResolution={3}
                   labelsTransitionDuration={0}
 
-                  // PSK PROPAGATION DOTS: Lifted to float visible above land blocks
+                  // PSK NODES
                   pointsData={globePoints}
                   pointColor={() => "#00f2ff"}
                   pointRadius={0.18}
-                  pointAltitude={0.035}
+                  pointAltitude={0.065}
                   pointsTransitionDuration={0}
                   
                   labelLabel={(d: any) => {
