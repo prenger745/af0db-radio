@@ -10,12 +10,11 @@ export async function GET() {
       throw new Error("QRZ_API_KEY environment variable is missing.");
     }
 
-    // 1. FETCH STATUS AGGREGATES: Gets your exact Confirmed, DXCC, and Total counts
+    // 1. FETCH STATUS AGGREGATES
     const statusUrl = `https://logbook.qrz.com/api?KEY=${apiKey}&ACTION=STATUS`;
     const statusRes = await fetch(statusUrl, { cache: 'no-store' });
     const statusText = await statusRes.text();
 
-    // Parse the &-separated name=value pairs from the STATUS response
     const statusData: any = {};
     statusText.split('&').forEach(pair => {
       const [key, value] = pair.split('=');
@@ -24,17 +23,17 @@ export async function GET() {
       }
     });
 
-    // 2. FETCH ADIF RECORDS: Gets your actual logbook entries for the map and ledger
+    // 2. FETCH ADIF RECORDS
     const fetchUrl = `https://logbook.qrz.com/api?KEY=${apiKey}&ACTION=FETCH`;
     const fetchRes = await fetch(fetchUrl, { cache: 'no-store' });
     const fetchText = await fetchRes.text();
 
-    // 3. COMBINE AND SEND
+    // 3. COMBINE AND SEND (With enhanced QRZ variable aliases)
     return NextResponse.json({ 
-      data: fetchText, // The raw ADIF string your frontend parses for the 15 table rows
-      count: statusData.count || null,           // Total QSOs
-      confirmed: statusData.cqsl || null,        // Total Confirmed
-      dxcc: statusData.dxcc || null              // Total DXCC
+      data: fetchText, 
+      count: statusData.count || null,           
+      confirmed: statusData.cqsl || statusData.confirmed || null, 
+      dxcc: statusData.dxcc_count || statusData.dxcc || null 
     });
 
   } catch (error: any) {
