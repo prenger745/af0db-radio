@@ -548,8 +548,8 @@ export default function Page() {
     const potaLabels = potaSpots.map(spot => ({
       lat: spot.lat,
       lng: spot.lng,
-      text: "🌲",
-      color: "#22c55e",
+      text: "▲", // Using a clean, non-emoji technical geometric arrow/tree shape to eliminate rendering system errors
+      color: "#22c55e", // Direct CSS palette definition
       type: "pota",
       gridKey: spot.reference,
       country: "United States",
