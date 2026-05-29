@@ -344,93 +344,6 @@ export default function Page() {
           currentMode: newestFifteen[0].mode || "FT8"
         });
 
-        if (json.geoMap && Array.isArray(json.geoMap)) {
-          const uniqueGridMap: { [key: string]: { base: any; callsigns: string[]; country: string } } = {};
-
-          json.geoMap.forEach((pt: any) => {
-            if (!pt.grid) return;
-            const cleanGrid4 = pt.grid.substring(0, 4).toUpperCase();
-            const stationCall = pt.callsign ? pt.callsign.toUpperCase().replace(/0/g, "Ø") : "UNKNOWN";
-            
-            let stationCountry = pt.country || "";
-            if (!stationCountry) {
-              stationCountry = (stationCall.startsWith("W") || stationCall.startsWith("K") || stationCall.startsWith("N") || stationCall.startsWith("AA")) 
-                ? "United States" 
-                : "International DX";
-            }
-
-            if (!uniqueGridMap[cleanGrid4]) {
-              uniqueGridMap[cleanGrid4] = {
-                base: pt,
-                callsigns: [stationCall],
-                country: stationCountry
-              };
-            } else {
-              if (!uniqueGridMap[cleanGrid4].callsigns.includes(stationCall)) {
-                uniqueGridMap[cleanGrid4].callsigns.push(stationCall);
-              }
-            }
-          });
-
-          const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
-            const sectorData = uniqueGridMap[gridKey];
-            const pt = sectorData.base;
-            const callUpper = pt.callsign.toUpperCase();
-
-            let exactLat = pt.lat;
-            let exactLng = pt.lng;
-
-            if (gridKey && gridKey.length === 4) {
-              const g = gridKey.toUpperCase();
-              const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
-              const latField = (g.charCodeAt(1) - 65) * 10 - 90;
-              const lonSquare = parseInt(g.charAt(2)) * 2;
-              const latSquare = parseInt(g.charAt(3)) * 1;
-              
-              if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-                exactLng = lonField + lonSquare + 1; 
-                exactLat = latField + latSquare + 0.5; 
-              }
-            }
-
-            const isUSAPrefix = callUpper.startsWith("W") || 
-                                callUpper.startsWith("K") || 
-                                callUpper.startsWith("N") || 
-                                callUpper.startsWith("AA") || 
-                                callUpper.startsWith("AB") || 
-                                callUpper.startsWith("AC") || 
-                                callUpper.startsWith("AD");
-            
-            const isUSACoordinate = exactLat >= 24.396305 && exactLat <= 49.384358 && 
-                                    exactLng >= -125.000000 && exactLng <= -66.934570;
-
-            const assignedTargetColor = (isUSAPrefix || isUSACoordinate) ? "#00f2ff" : "#ff9100";
-            const territoryType = (isUSAPrefix || isUSACoordinate) ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
-            
-            const operatorsString = sectorData.callsigns.slice(0, 8).join(", ") + 
-              (sectorData.callsigns.length > 8 ? ` (+${sectorData.callsigns.length - 8} more)` : "");
-
-            return {
-              startLat: 38.6158,
-              startLng: -95.2686,
-              lat: exactLat,
-              lng: exactLng,
-              endLat: exactLat,
-              endLng: exactLng,
-              color: assignedTargetColor,
-              gridKey: gridKey,
-              territory: territoryType,
-              country: sectorData.country,
-              operators: operatorsString,
-              count: sectorData.callsigns.length,
-              type: "qrz",
-              text: `+ ${sectorData.callsigns[0]}`
-            };
-          });
-          
-          setGeoArcs(filteredArcs);
-        }
-
         if (!initialBootDoneRef.current) {
           playTerminalBeep("boot");
           initialBootDoneRef.current = true;
@@ -444,6 +357,68 @@ export default function Page() {
       setLoading(false);
     }
   }
+
+  // FIXED AND LOCKED: Map vectors are built directly from the verified live table ledger records state array
+  useEffect(() => {
+    if (!logs || logs.length === 0) return;
+
+    const uniqueGridMap: { [key: string]: { callsign: string; grid: string; country: string; lat: number; lng: number } } = {};
+
+    logs.forEach((qso) => {
+      if (!qso.grid || qso.grid === "—") return;
+      const cleanGrid4 = qso.grid.substring(0, 4).toUpperCase();
+      
+      if (!uniqueGridMap[cleanGrid4]) {
+        let exactLat = 0;
+        let exactLng = 0;
+        
+        const lonField = (cleanGrid4.charCodeAt(0) - 65) * 20 - 180;
+        const latField = (cleanGrid4.charCodeAt(1) - 65) * 10 - 90;
+        const lonSquare = parseInt(cleanGrid4.charAt(2)) * 2;
+        const latSquare = parseInt(cleanGrid4.charAt(3)) * 1;
+        
+        if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+          exactLng = lonField + lonSquare + 1; 
+          exactLat = latField + latSquare + 0.5; 
+        }
+
+        uniqueGridMap[cleanGrid4] = {
+          callsign: qso.callsign,
+          grid: cleanGrid4,
+          country: qso.country || "International DX",
+          lat: exactLat,
+          lng: exactLng
+        };
+      }
+    });
+
+    const filteredArcs = Object.keys(uniqueGridMap).map((gridKey) => {
+      const pt = uniqueGridMap[gridKey];
+      const callUpper = pt.callsign.toUpperCase();
+
+      const isUSAPrefix = callUpper.startsWith("W") || callUpper.startsWith("K") || callUpper.startsWith("N") || callUpper.startsWith("AA");
+      const assignedTargetColor = isUSAPrefix ? "#00f2ff" : "#ff9100";
+      const territoryType = isUSAPrefix ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
+
+      return {
+        startLat: 38.6158,
+        startLng: -95.2686,
+        lat: pt.lat,
+        lng: pt.lng,
+        endLat: pt.lat,
+        endLng: pt.lng,
+        color: assignedTargetColor,
+        gridKey: gridKey,
+        territory: territoryType,
+        country: pt.country,
+        operators: pt.callsign,
+        type: "qrz",
+        text: `+ ${pt.callsign}`
+      };
+    });
+    
+    setGeoArcs(filteredArcs);
+  }, [logs]);
 
   async function fetchLiveTacticalFeeds() {
     try {
@@ -470,7 +445,7 @@ export default function Page() {
       const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
       if (pskRes.ok) {
         const pskData = await pskRes.json();
-        if (pskData && Array.isArray(pskData.spots) && pskData.spots.length > 0) {
+        if (pskData && Array.isArray(pskData.spots)) {
           setPskSpots(pskData.spots);
           setGlobePoints(pskData.spots.map((spot: any) => ({
             lat: spot.lat,
@@ -478,19 +453,9 @@ export default function Page() {
             type: "psk",
             details: spot
           })));
-        } else {
-          setPskSpots([]);
-          setGlobePoints([]);
         }
-      } else {
-        setPskSpots([]);
-        setGlobePoints([]);
       }
-    } catch (e) { 
-      console.warn("PSK Link Down", e); 
-      setPskSpots([]);
-      setGlobePoints([]);
-    }
+    } catch (e) { console.warn("PSK Link Down", e); }
   }
 
   async function fetchSolarData() {
@@ -533,9 +498,7 @@ export default function Page() {
         "12m-10m-night": extractBand("12m-10m", "night"),
       });
 
-    } catch (err) {
-      console.warn("Solar Data Sync Error:", err);
-    }
+    } catch (err) { console.warn(err); }
   }
 
   useEffect(() => {
@@ -554,6 +517,7 @@ export default function Page() {
     };
   }, []);
 
+  // MASTER LAYER HOOK: Correctly matches target elevations and map positions
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -584,20 +548,11 @@ export default function Page() {
   const getPropRating = (band: string) => {
     const timeKey = isNight ? "night" : "day";
     switch (band) {
-      case "80M":
-      case "40M":
-        return bandConds[`80m-40m-${timeKey}`] || "FAIR";
-      case "30M":
-      case "20M":
-        return bandConds[`30m-20m-${timeKey}`] || "FAIR";
-      case "17M":
-      case "15M":
-        return bandConds[`17m-15m-${timeKey}`] || "FAIR";
-      case "12M":
-      case "10M":
-        return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-      default:
-        return "FAIR";
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
     }
   };
 
@@ -608,16 +563,7 @@ export default function Page() {
   };
 
   return (
-    <div style={{
-      backgroundColor: "#030403", 
-      color: "#a3c2ae", 
-      minHeight: "100vh",
-      padding: isMobileScreen ? "0.75rem" : "1.5rem",
-      fontFamily: "monospace", 
-      boxSizing: "border-box",
-      letterSpacing: "0.05em",
-      position: "relative"
-    }}>
+    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
@@ -747,16 +693,7 @@ export default function Page() {
       `}} />
 
       {/* Header */}
-      <header style={{ 
-        display: "flex", 
-        flexDirection: isMobileScreen ? "column" : "row",
-        alignItems: isMobileScreen ? "flex-start" : "center",
-        justifyContent: "space-between", 
-        borderBottom: "1px solid rgba(0, 255, 102, 0.2)", 
-        paddingBottom: "1rem", 
-        marginBottom: "1rem",
-        gap: isMobileScreen ? "0.75rem" : "0px"
-      }}>
+      <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
           <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
@@ -767,14 +704,7 @@ export default function Page() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
-          <button 
-            onClick={() => {
-              parseLiveQrzData();
-              fetchLiveTacticalFeeds();
-              fetchSolarData();
-            }}
-            style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}
-          >
+          <button onClick={() => { parseLiveQrzData(); fetchLiveTacticalFeeds(); fetchSolarData(); }} style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}>
             <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
           </button>
           <span className="status-bracket">[<span className="status-text" style={{ color: "#ffaa00" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
@@ -782,22 +712,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{
-        background: "rgba(0, 255, 102, 0.02)",
-        border: "1px dashed rgba(0, 255, 102, 0.15)",
-        borderRadius: "4px",
-        padding: "0.5rem 0.75rem",
-        marginBottom: "1.5rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: "0.65rem",
-        fontWeight: 600,
-        letterSpacing: "0.08em",
-        color: "#4e6e58",
-        flexWrap: "wrap",
-        gap: "0.5rem"
-      }}>
+      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -809,23 +724,7 @@ export default function Page() {
           <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#00f2ff" }}>LINKED</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }}>|</span>
           
-          <button 
-            onClick={handleToggleAudioSystem}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: audioEnabled ? "#00ff66" : "#3c5243",
-              cursor: "pointer",
-              fontFamily: "monospace",
-              fontSize: "0.65rem",
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              padding: 0,
-              outline: "none"
-            }}
-          >
+          <button onClick={handleToggleAudioSystem} style={{ background: "transparent", border: "none", color: audioEnabled ? "#00ff66" : "#3c5243", cursor: "pointer", fontFamily: "monospace", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem", padding: 0, outline: "none" }}>
             {audioEnabled ? <Volume2 style={{ width: "12px", height: "12px" }} /> : <VolumeX style={{ width: "12px", height: "12px" }} />}
             {audioEnabled ? "[ AUDIO: ON ]" : "[ AUDIO: OFF ]"}
           </button>
@@ -834,30 +733,11 @@ export default function Page() {
 
       {/* Telemetry Strip */}
       <section className={`telemetry-strip ${showTelemetry ? "active" : ""}`}>
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>ACTIVE BAND</span>
-          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00f2ff", marginTop: "0.2rem" }}>{stats.currentBand}</div>
-        </div>
-
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>RIG MODE</span>
-          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#ffaa00", marginTop: "0.2rem" }}>{stats.currentMode}</div>
-        </div>
-
-        <div className="terminal-panel" style={{ padding: "0.65rem 1rem" }}>
-          <span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>TOTAL QSOs</span>
-          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00ff66", marginTop: "0.2rem" }}>{stats.totalQsos}</div>
-        </div>
-
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>CONFIRMED</span>
-          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a855f7", marginTop: "0.2rem" }}>{stats.confirmed}</div>
-        </div>
-
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}>
-          <span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>COUNTRIES DXCC</span>
-          <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a3e635", marginTop: "0.2rem" }}>{stats.dxcc}</div>
-        </div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>ACTIVE BAND</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00f2ff", marginTop: "0.2rem" }}>{stats.currentBand}</div></div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>RIG MODE</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#ffaa00", marginTop: "0.2rem" }}>{stats.currentMode}</div></div>
+        <div className="terminal-panel" style={{ padding: "0.65rem 1rem" }}><span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>TOTAL QSOs</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00ff66", marginTop: "0.2rem" }}>{stats.totalQsos}</div></div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>CONFIRMED</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a855f7", marginTop: "0.2rem" }}>{stats.confirmed}</div></div>
+        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>COUNTRIES DXCC</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a3e635", marginTop: "0.2rem" }}>{stats.dxcc}</div></div>
       </section>
 
       {/* Main Workspace Split Grid Layout */}
@@ -1079,7 +959,6 @@ export default function Page() {
                   atmosphereColor="#00ff66"
                   atmosphereAltitude={0.12}
 
-                  // CALLSIGN INDICATORS & PSK FLOATING DOTS
                   labelsData={[...globeLabels, ...globePoints]}
                   labelText={(d: any) => d.text || ""}
                   labelColor={(d: any) => d.type === "psk" ? "#00f2ff" : (d.color || "#00ff66")}
