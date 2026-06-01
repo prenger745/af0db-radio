@@ -79,7 +79,7 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
           setDisplayedText(text.substring(0, index + 1));
           index++;
         } else {
-          clearInterval(timer);
+          closeInterval(timer);
         }
       }, speed);
     }, delay);
@@ -739,8 +739,8 @@ export default function Page() {
           animation: blink 0.9s step-start infinite;
           margin-left: 2px;
         }
-        @keyframes blink {
-          50% { opacity: 0; }
+        @media (min-width: 1024px) {
+          .panel-header-weather { display: flex; align-items: center; justify-content: space-between; }
         }
         
         .hud-pulse {
@@ -830,9 +830,9 @@ export default function Page() {
 
           {/* Card 1.5: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
-            <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="panel-header panel-header-weather">
               <div className="panel-title" style={{ color: "#00ff66" }}>
-                <Compass style={{ width: "16px", height: "16px" }} /> AFØDB SHACK ENVIRONMENT
+                <Compass style={{ width: "16px", height: "16px" }} /> AFØDB SHACK WEATHER
               </div>
               <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ ENVIRONMENT_ARRAY ]</span>
             </div>
