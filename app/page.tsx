@@ -566,16 +566,17 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
+  // Optimized execution loops adjusted to match true network server refresh rules
   useEffect(() => {
     parseLiveQrzData();
     fetchLiveTacticalFeeds();
     fetchSolarData();
     fetchLocalTacticalWeather();
 
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);
-    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000); 
-    const solarInterval = setInterval(fetchSolarData, 3600000); 
-    const weatherInterval = setInterval(fetchLocalTacticalWeather, 900000);
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);       // 5 min (Live spots grid)
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   // 1 min (POTA/PSK grid) 
+    const solarInterval = setInterval(fetchSolarData, 1800000);       // 30 min (Matches N0NBH/NOAA sync cadence)
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); // 5 min (Matches PWS roof instrument array updates)
 
     return () => {
       clearInterval(qrzInterval);
@@ -1064,22 +1065,22 @@ export default function Page() {
                             <div>MONITOR: <b>${d.details.receiverCall}</b></div>
                             <div>LOCATOR: <b>${d.details.grid}</b></div>
                             <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
-                          </div>
-                        `;
-                      }
-                      return `
-                        <div class="scene-tooltip">
-                          <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
-                          <div>GRID SECTOR: <b>${d.gridKey}</b></div>
-                          <div>COUNTRY: <b>${d.country}</b></div>
-                          <div>OPERATORS: <b>${d.operators}</b></div>
                         </div>
                       `;
-                    }}
-                  />
-                )}
-              </div>
+                    }
+                    return `
+                      <div class="scene-tooltip">
+                        <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
+                        <div>GRID SECTOR: <b>${d.gridKey}</b></div>
+                        <div>COUNTRY: <b>${d.country}</b></div>
+                        <div>OPERATORS: <b>${d.operators}</b></div>
+                      </div>
+                    `;
+                  }}
+                />
+              )}
             </div>
+          </div>
 
             {/* Complete Live Log Ledger */}
             <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
