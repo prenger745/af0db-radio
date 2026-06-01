@@ -686,7 +686,6 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
-        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -731,7 +730,6 @@ export default function Page() {
           transition: opacity 0.15s ease, visibility 0.15s ease;
         }
 
-        /* Specialized subclass to force the center globe tooltip downward */
         .downward-tooltip::after {
           bottom: auto !important;
           top: 130% !important;
@@ -894,7 +892,7 @@ export default function Page() {
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
             <div className="panel-header panel-header-weather">
-              <button className="tactical-tooltip-trigger" data-blurb="Real-time environmental telemetry streamed directly from the local Ecowitt WS-90 rooftop ultrasonic sensor array via custom API proxy.">
+              <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                 <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
               </button>
               <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ Ecowitt WS-90 ]</span>
@@ -960,7 +958,7 @@ export default function Page() {
           {/* Card 2: Space weather info */}
           <div className="terminal-panel">
             <div className="panel-header">
-              <button className="tactical-tooltip-trigger" data-blurb="Real-time space weather data and HF propagation analysis parsed directly from the NOAA solar magnetometer sweeps via HamQSL." style={{ color: "#ffaa00" }}>
+              <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </button>
             </div>
@@ -1066,7 +1064,7 @@ export default function Page() {
               {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
               <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="3D interactive WebGL graphics canvas mapping active log coordinates, domestic/DX signal vectors, and real-time POTA park grids flat to the terrain surface." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
+                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data, signal vectors, and live POTA activations." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
                     <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
                     <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
                     <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
@@ -1165,7 +1163,7 @@ export default function Page() {
             {/* Complete Live Log Ledger */}
             <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div className="panel-header">
-                <button className="tactical-tooltip-trigger" data-blurb="Live secure database ledger streaming your most recent verified two-way radio contacts synced directly from the QRZ API logbook feed." style={{ color: "#00ff66" }}>
+                <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
                 </button>
               </div>
@@ -1232,7 +1230,7 @@ export default function Page() {
             {/* Card 3: Shack Gear */}
             <div className="terminal-panel">
               <div className="panel-header">
-                <button className="tactical-tooltip-trigger" data-blurb="Core station hardware architecture configuration and operating system environment parameters for station AFØDB.">
+                <button className="tactical-tooltip-trigger" data-blurb="The core operating equipment configuration, computer system properties, and antenna array for station AFØDB.">
                   <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
                 </button>
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
@@ -1246,7 +1244,7 @@ export default function Page() {
             {/* Card 4: Live POTA spots scroller register */}
             <div className="terminal-panel">
               <div className="panel-header">
-                <button className="tactical-tooltip-trigger" data-blurb="Real-time global signal spotting register tracking active operators transmitting from State and National Parks via the Parks on the Air database.">
+                <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
                 </button>
               </div>
@@ -1274,7 +1272,7 @@ export default function Page() {
             {/* Card 5: PSK Reporter footprint register */}
             <div className="terminal-panel">
               <div className="panel-header">
-                <button className="tactical-tooltip-trigger" data-blurb="Automated digital monitoring feed displaying remote listening stations that have successfully decoded station AFØDB's FT8 signals within the last 2 hours." style={{ color: "#a855f7" }}>
+                <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
