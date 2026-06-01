@@ -686,6 +686,7 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
+        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -702,6 +703,7 @@ export default function Page() {
           outline: none;
           padding: 0;
           text-align: left;
+          width: 100%;
         }
         
         .tactical-tooltip-trigger::after {
@@ -730,6 +732,7 @@ export default function Page() {
           transition: opacity 0.15s ease, visibility 0.15s ease;
         }
 
+        /* Specialized subclass to force tooltips downward */
         .downward-tooltip::after {
           bottom: auto !important;
           top: 130% !important;
@@ -823,6 +826,7 @@ export default function Page() {
           padding: 0.5rem 0.75rem;
           margin-bottom: 0.75rem;
           box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.03);
+          position: relative;
         }
         .aligned-metric-label {
           font-size: 0.6rem;
@@ -1030,17 +1034,17 @@ export default function Page() {
           {/* Sub-Column 1: Center Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
-            {/* Aligned Telemetry Triple-Box Grid Header right above the Globe Engine */}
+            {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-              <div className="aligned-metric-box" style={{ margin: 0 }}>
+              <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
                 <div className="aligned-metric-label">Rig Mode</div>
                 <div className="aligned-metric-value" style={{ color: "#ffaa00" }}>{stats.currentMode}</div>
               </div>
-              <div className="aligned-metric-box" style={{ margin: 0 }}>
+              <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The combined historical count of every documented two-way radio contact saved in Dan's logbook.">
                 <div className="aligned-metric-label">Total QSOs</div>
                 <div className="aligned-metric-value" style={{ color: "#00ff66" }}>{stats.totalQsos}</div>
               </div>
-              <div className="aligned-metric-box" style={{ margin: 0 }}>
+              <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="Contacts that have been mutually verified by both operators electronically through Logbook of The World or QRZ.">
                 <div className="aligned-metric-label">Confirmed</div>
                 <div className="aligned-metric-value" style={{ color: "#a855f7" }}>{stats.confirmed}</div>
               </div>
@@ -1221,8 +1225,8 @@ export default function Page() {
           {/* Sub-Column 2: Far Right Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
-            {/* Aligned Box 5: Countries DXCC */}
-            <div className="aligned-metric-box">
+            {/* Aligned Box 5: Countries DXCC with injected CSS Tooltip wrapper style integration */}
+            <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
               <div className="aligned-metric-label">Countries DXCC</div>
               <div className="aligned-metric-value" style={{ color: "#a3e335" }}>{stats.dxcc}</div>
             </div>
