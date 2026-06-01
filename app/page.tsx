@@ -454,7 +454,7 @@ export default function Page() {
       }
     } catch (err) {
       console.warn(err);
-    } finally {
+    } fillly {
       setLoading(false);
     }
   }
@@ -686,6 +686,7 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
+        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -722,7 +723,7 @@ export default function Page() {
           line-height: 1.4;
           padding: 0.75rem 1rem;
           width: 260px;
-          white-space: pre-wrap; /* Forces the browser context to treat the template breaks literally */
+          white-space: pre-wrap; 
           box-shadow: 0 15px 30px rgba(0,0,0,0.9);
           opacity: 0;
           visibility: hidden;
@@ -843,7 +844,7 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -885,7 +886,7 @@ export default function Page() {
         {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Aligned Box 1: Active Band - Converted to Template Literal backticks to guarantee straight columns */}
+          {/* Aligned Box 1: Active Band with cleanly formatted vertical block lines */}
           <div 
             className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" 
             data-blurb={`The current HF band Dan is operating on.
@@ -1253,9 +1254,9 @@ US HF Band Limits:
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
               </div>
               <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
-              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
-              <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
-              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
+              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="value">YAESU BASE-RIG FT-991</span></div>
+              <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="value">ISOTRON 20M</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="value">XUBUNTU/HAM</span></div>
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
@@ -1270,7 +1271,7 @@ US HF Band Limits:
                   <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
                 ) : (
                   potaSpots.map((spot, i) => (
-                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifycontent: "space-between" }}>
+                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
                       <div>
                         <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
                         <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
@@ -1300,7 +1301,7 @@ US HF Band Limits:
                   </div>
                 ) : (
                   pskSpots.map((spot, i) => (
-                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifycontent: "space-between" }}>
+                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
                       <div>
                         RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
