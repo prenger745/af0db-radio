@@ -190,7 +190,7 @@ export default function Page() {
         
         setDimensions({
           width: containerRef.current.clientWidth,
-          height: mobileViewActive ? 340 : 520
+          height: mobileViewActive ? 340 : 460 // Slipped globe area format slightly down for layout optimization
         });
       }
     };
@@ -814,7 +814,7 @@ export default function Page() {
       {/* Main Workspace Split Grid Layout */}
       <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
-        {/* Left Column Stack */}
+        {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
           {/* Card 1: Tactical METAR Weather Terminal */}
@@ -938,252 +938,263 @@ export default function Page() {
             </div>
           </div>
 
-        </div> {/* CLOSES LEFT COLUMN ELEMENT CLEANLY */}
+        </div>
 
-        {/* Right Section Matrix Column Stack */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {/* Master Right Row Split-Grid Wrapper (Splits Map/Logs side-by-side with Shack Panels) */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 340px", gap: "1rem", width: "100%" }}>
           
-          {/* HARDWARE-ACCELERATED 3D WEBGL GLOBE CANVAS CONTAINER */}
-          <div 
-            ref={containerRef}
-            className="terminal-panel" 
-            style={{ 
-              padding: "0.5rem", 
-              background: "#020403", 
-              position: "relative", 
-              height: isMobileScreen ? "340px" : "520px", 
-              overflow: "hidden", 
-              display: "flex", 
-              flexDirection: "column",
-              border: "1px solid rgba(0, 255, 102, 0.25)"
-            }}
-          >
-            {/* Legend Overlay HUD */}
-            <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, pointerEvents: "none", width: "calc(100% - 2rem)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                  <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
-                  <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
-                  <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
+          {/* Sub-Column 1: Center Stack (Globe Engine + Complete Log Ledger) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            
+            {/* 3D WebGL Globe Canvas */}
+            <div 
+              ref={containerRef}
+              className="terminal-panel" 
+              style={{ 
+                padding: "0.5rem", 
+                background: "#020403", 
+                position: "relative", 
+                height: isMobileScreen ? "340px" : "460px", 
+                overflow: "hidden", 
+                display: "flex", 
+                flexDirection: "column",
+                border: "1px solid rgba(0, 255, 102, 0.25)"
+              }}
+            >
+              {/* Legend Overlay HUD */}
+              <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, pointerEvents: "none", width: "calc(100% - 2rem)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                  <div className="panel-title" style={{ color: "#ffffff", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
+                    <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
+                    <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
+                  </div>
+                </div>
+                <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#4e6e58", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span style={{ width: "5px", height: "5px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
+                    DOMESTIC
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span style={{ width: "5px", height: "5px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
+                    DX SECTOR
+                  </span>
                 </div>
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#4e6e58", marginTop: "0.25rem", display: "flex", gap: "0.75rem" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ width: "5px", height: "5px", backgroundColor: "#00f2ff", borderRadius: "50%", display: "inline-block" }}></span>
-                  DOMESTIC
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ width: "5px", height: "5px", backgroundColor: "#ff9100", borderRadius: "50%", display: "inline-block" }}></span>
-                  DX SECTOR
-                </span>
-              </div>
-            </div>
-            
-            <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
-              {showWorkspace && (
-                <GlobeEngine
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  backgroundColor="#020403"
-                  
-                  polygonsData={landmasses}
-                  polygonCapColor={() => "#07120a"} 
-                  polygonSideColor={() => "#020403"} 
-                  polygonStrokeColor={() => "#183620"} 
-                  polygonAltitude={0.01}
-                  
-                  arcsData={geoArcs}
-                  arcColor="color"
-                  arcDashLength={0.45}
-                  arcDashGap={0.1}
-                  arcDashAnimateTime={1400} 
-                  arcStroke={0.5}
-                  arcsTransitionDuration={0}
-                  arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
-                  arcStartAltitude={0.06}
-                  arcEndAltitude={0.06}
-                  
-                  ringsData={geoArcs}
-                  ringColor="color"
-                  ringMaxRadius={2.2}
-                  ringPropagationSpeed={1.0}
-                  ringRepeatPeriod={1600}
-                  ringAltitude={0.065}
-                  
-                  showAtmosphere={true}
-                  atmosphereColor="#00ff66"
-                  atmosphereAltitude={0.12}
+              
+              <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
+                {showWorkspace && (
+                  <GlobeEngine
+                    width={dimensions.width}
+                    height={dimensions.height}
+                    backgroundColor="#020403"
+                    
+                    polygonsData={landmasses}
+                    polygonCapColor={() => "#07120a"} 
+                    polygonSideColor={() => "#020403"} 
+                    polygonStrokeColor={() => "#183620"} 
+                    polygonAltitude={0.01}
+                    
+                    arcsData={geoArcs}
+                    arcColor="color"
+                    arcDashLength={0.45}
+                    arcDashGap={0.1}
+                    arcDashAnimateTime={1400} 
+                    arcStroke={0.5}
+                    arcsTransitionDuration={0}
+                    arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
+                    arcStartAltitude={0.06}
+                    arcEndAltitude={0.06}
+                    
+                    ringsData={geoArcs}
+                    ringColor="color"
+                    ringMaxRadius={2.2}
+                    ringPropagationSpeed={1.0}
+                    ringRepeatPeriod={1600}
+                    ringAltitude={0.065}
+                    
+                    showAtmosphere={true}
+                    atmosphereColor="#00ff66"
+                    atmosphereAltitude={0.12}
 
-                  labelsData={[...globeLabels, ...globePoints]}
-                  labelText={(d: any) => d.text || ""}
-                  labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
-                  labelSize={0.45}
-                  labelDotRadius={0.35} 
-                  labelAltitude={0.065}
-                  labelResolution={3}
-                  labelsTransitionDuration={0}
-                  
-                  labelLabel={(d: any) => {
-                    if (d.type === "pota") {
+                    labelsData={[...globeLabels, ...globePoints]}
+                    labelText={(d: any) => d.text || ""}
+                    labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
+                    labelSize={0.45}
+                    labelDotRadius={0.35} 
+                    labelAltitude={0.065}
+                    labelResolution={3}
+                    labelsTransitionDuration={0}
+                    
+                    labelLabel={(d: any) => {
+                      if (d.type === "pota") {
+                        return `
+                          <div class="scene-tooltip">
+                            <div style="font-weight:700; color:#00ff66; margin-bottom:0.25rem;">POTA ACTIVATION</div>
+                            <div>CALLSIGN: <b>${d.operators}</b></div>
+                            <div>PARK ID: <b>${d.gridKey}</b></div>
+                          </div>
+                        `;
+                      }
+                      if (d.type === "psk") {
+                        return `
+                          <div class="scene-tooltip">
+                            <div style="font-weight:700; color:#a855f7; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
+                            <div>MONITOR: <b>${d.details.receiverCall}</b></div>
+                            <div>LOCATOR: <b>${d.details.grid}</b></div>
+                            <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
+                          </div>
+                        `;
+                      }
                       return `
                         <div class="scene-tooltip">
-                          <div style="font-weight:700; color:#00ff66; margin-bottom:0.25rem;">POTA ACTIVATION</div>
-                          <div>CALLSIGN: <b>${d.operators}</b></div>
-                          <div>PARK ID: <b>${d.gridKey}</b></div>
+                          <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
+                          <div>GRID SECTOR: <b>${d.gridKey}</b></div>
+                          <div>COUNTRY: <b>${d.country}</b></div>
+                          <div>OPERATORS: <b>${d.operators}</b></div>
                         </div>
                       `;
-                    }
-                    if (d.type === "psk") {
-                      return `
-                        <div class="scene-tooltip">
-                          <div style="font-weight:700; color:#a855f7; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
-                          <div>MONITOR: <b>${d.details.receiverCall}</b></div>
-                          <div>LOCATOR: <b>${d.details.grid}</b></div>
-                          <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
-                        </div>
-                      `;
-                    }
-                    return `
-                      <div class="scene-tooltip">
-                        <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
-                        <div>GRID SECTOR: <b>${d.gridKey}</b></div>
-                        <div>COUNTRY: <b>${d.country}</b></div>
-                        <div>OPERATORS: <b>${d.operators}</b></div>
-                      </div>
-                    `;
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Card 3: Shack Gear - NOW POSITIONED ON RIGHT MAIN LAYER ARRAY */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
-              </div>
-              <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
-            </div>
-            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
-            <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
-            <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
-            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
-          </div>
-
-          {/* Card 4: Live POTA spots scroller register */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title" style={{ color: "#00ff66" }}>
-                <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
+                    }}
+                  />
+                )}
               </div>
             </div>
-            <div className="ticker-scroller-box">
-              {potaSpots.length === 0 ? (
-                <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
-              ) : (
-                potaSpots.map((spot, i) => (
-                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
-                    <div>
-                      <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
-                      <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
-                      <span style={{ color: "#ffffff" }}>{spot.reference}</span>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
-                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
 
-          {/* Card 5: PSK Reporter footprint register */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title" style={{ color: "#a855f7" }}>
-                <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
-              </div>
-            </div>
-            <div className="ticker-scroller-box">
-              {pskSpots.length === 0 ? (
-                <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
-                  &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
+            {/* Complete Live Log Ledger */}
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+              <div className="panel-header">
+                <div className="matrix-table title" style={{ color: "#00ff66", fontSize: "0.8rem", fontWeight: "700" }}>
+                  <History style={{ width: "16px", height: "16px", color: "#00ff66", display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} /> LIVE LOOK AT MOST RECENT QSOs
                 </div>
-              ) : (
-                pskSpots.map((spot, i) => (
-                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
-                    <div>
-                      RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
-                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
-                    </div>
-                    <div>
-                      SIG: <span style={{ color: "#a855f7" }}>{spot.snr}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Complete Live Log Ledger */}
-          <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <div className="panel-header">
-              <div className="panel-title">
-                <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
               </div>
-            </div>
-            
-            <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
-              <table className="matrix-table">
-                <thead>
-                  <tr>
-                    <th>CALLSIGN</th>
-                    <th className="hide-on-mobile-cell">DATE (UTC)</th>
-                    <th className="hide-on-mobile-cell">TIME</th>
-                    <th>BAND</th>
-                    <th>MODE</th>
-                    <th style={{ textAlign: "center" }}>RST (S/R)</th>
-                    <th>GRID LOC</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.length === 0 ? (
+              
+              <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
+                <table className="matrix-table">
+                  <thead>
                     <tr>
-                      <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ffaa00", fontStyle: "italic" }}>
-                        &gt;&gt; Live log stream parsing pending... Standby for secure server handshake.
-                      </td>
+                      <th>CALLSIGN</th>
+                      <th className="hide-on-mobile-cell">DATE (UTC)</th>
+                      <th className="hide-on-mobile-cell">TIME</th>
+                      <th>BAND</th>
+                      <th>MODE</th>
+                      <th style={{ textAlign: "center" }}>RST (S/R)</th>
+                      <th>GRID LOC</th>
                     </tr>
-                  ) : (
-                    logs.map((qso, index) => (
-                      <tr key={index}>
-                        <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
-                          {qso.callsign}
-                        </td>
-                        <td style={{ color: "#688a73" }} className="hide-on-mobile-cell">{qso.date}</td>
-                        <td style={{ fontWeight: "500" }} className="hide-on-mobile-cell">{qso.time}</td>
-                        <td style={{ fontWeight: "500" }}>{qso.band}</td>
-                        <td>
-                          <span className="badge-mode-tactical">{qso.mode}</span>
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <span className="rst-s-box">{qso.rstS}</span>
-                          <span style={{ color: "rgba(0, 255, 102, 0.2)", margin: "0 0.3rem" }}>|</span>
-                          <span className="rst-r-box">{qso.rstR}</span>
-                        </td>
-                        <td style={{ color: "#688a73", fontWeight: "500" }} className="panel-mono-data">
-                          {qso.grid || "—"}
+                  </thead>
+                  <tbody>
+                    {logs.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ padding: "4rem", textAlign: "center", color: "#ffaa00", fontStyle: "italic" }}>
+                          &gt;&gt; Live log stream parsing pending... Standby for secure server handshake.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      logs.map((qso, index) => (
+                        <tr key={index}>
+                          <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
+                            {qso.callsign}
+                          </td>
+                          <td style={{ color: "#688a73" }} className="hide-on-mobile-cell">{qso.date}</td>
+                          <td style={{ fontWeight: "500" }} className="hide-on-mobile-cell">{qso.time}</td>
+                          <td style={{ fontWeight: "500" }}>{qso.band}</td>
+                          <td>
+                            <span className="badge-mode-tactical">{qso.mode}</span>
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <span className="rst-s-box">{qso.rstS}</span>
+                            <span style={{ color: "rgba(0, 255, 102, 0.2)", margin: "0 0.3rem" }}>|</span>
+                            <span className="rst-r-box">{qso.rstR}</span>
+                          </td>
+                          <td style={{ color: "#688a73", fontWeight: "500" }} className="panel-mono-data">
+                            {qso.grid || "—"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
+
+          </div>
+
+          {/* Sub-Column 2: Far Right Stack (Gear, POTA, and PSK Panels side-by-side with Map and Logs) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            
+            {/* Card 3: Shack Gear */}
+            <div className="terminal-panel">
+              <div className="panel-header">
+                <div className="panel-title">
+                  <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
+                </div>
+                <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
+              </div>
+              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
+              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
+              <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
+            </div>
+
+            {/* Card 4: Live POTA spots scroller register */}
+            <div className="terminal-panel">
+              <div className="panel-header">
+                <div className="panel-title" style={{ color: "#00ff66" }}>
+                  <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
+                </div>
+              </div>
+              <div className="ticker-scroller-box" style={{ height: "140px" }}>
+                {potaSpots.length === 0 ? (
+                  <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
+                ) : (
+                  potaSpots.map((spot, i) => (
+                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                      <div>
+                        <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
+                        <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
+                        <span style={{ color: "#ffffff" }}>{spot.reference}</span>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
+                        <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Card 5: PSK Reporter footprint register */}
+            <div className="terminal-panel">
+              <div className="panel-header">
+                <div className="panel-title" style={{ color: "#a855f7" }}>
+                  <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
+                </div>
+              </div>
+              <div className="ticker-scroller-box" style={{ height: "140px" }}>
+                {pskSpots.length === 0 ? (
+                  <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
+                    &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
+                  </div>
+                ) : (
+                  pskSpots.map((spot, i) => (
+                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                      <div>
+                        RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
+                        <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
+                      </div>
+                      <div>
+                        SIG: <span style={{ color: "#a855f7" }}>{spot.snr}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
           </div>
 
         </div>
+
       </main>
     </div>
   );
