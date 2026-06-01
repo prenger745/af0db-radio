@@ -62,6 +62,9 @@ interface OperationalWeather {
   humidity: string;
   windSpeed: string;
   windDir: string;
+  baro: string;      // New field interface integration
+  solRad: string;    // New field interface integration
+  uvi: string;       // New field interface integration
   condition: string;
   iconCode: number;
 }
@@ -114,6 +117,9 @@ export default function Page() {
     humidity: "——",
     windSpeed: "——",
     windDir: "——",
+    baro: "——",
+    solRad: "——",
+    uvi: "0",
     condition: "INITIALIZING",
     iconCode: 0
   });
@@ -473,6 +479,10 @@ export default function Page() {
           humidity: data.humidity !== undefined ? Math.round(parseFloat(data.humidity)).toString() : "——",
           windSpeed: data.windSpeed !== undefined ? Math.round(windSpeedVal).toString() : "——",
           windDir: data.windDir !== undefined ? Math.round(parseFloat(data.windDir)).toString() : "——",
+          // Hydrated mapping tokens fed clean from your new route values
+          baro: data.baro !== undefined ? (parseFloat(data.baro) * 0.02953).toFixed(2) : "——", // Auto-converts to standard inHg string format
+          solRad: data.solRad !== undefined ? Math.round(parseFloat(data.solRad)).toString() : "——",
+          uvi: data.uvi !== undefined ? Math.round(parseFloat(data.uvi)).toString() : "0",
           condition: summary,
           iconCode: rainRateVal > 0 ? 60 : 0
         });
@@ -566,17 +576,17 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
-  // Optimized execution loops adjusted to match true network server refresh rules
+  // Tactical Refresh Intervals synced up perfectly to match true source network cadence
   useEffect(() => {
     parseLiveQrzData();
     fetchLiveTacticalFeeds();
     fetchSolarData();
     fetchLocalTacticalWeather();
 
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);       // 5 min (Live spots grid)
-    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   // 1 min (POTA/PSK grid) 
-    const solarInterval = setInterval(fetchSolarData, 1800000);       // 30 min (Matches N0NBH/NOAA sync cadence)
-    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); // 5 min (Matches PWS roof instrument array updates)
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);       // 5 min
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   // 1 min
+    const solarInterval = setInterval(fetchSolarData, 1800000);       // 30 min (Matches NOAA space telemetry shifts)
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); // 5 min (Matches Ecowitt instrument refresh)
 
     return () => {
       clearInterval(qrzInterval);
@@ -871,9 +881,22 @@ export default function Page() {
               <span className="data-label">WIND VELOCITY</span>
               <span className="data-value">{weather.windSpeed} MPH</span>
             </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
+            <div className="data-row">
               <span className="data-label">WIND VECTOR BEARING</span>
               <span className="data-value txt-neon-green">{weather.windDir}° AZIMUTH</span>
+            </div>
+            {/* Expanded secondary rows dynamically streaming your full array data */}
+            <div className="data-row">
+              <span className="data-label">BAROMETRIC PRESSURE</span>
+              <span className="data-value txt-aviation-blue">{weather.baro} inHg</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">SOLAR IRRADIANCE</span>
+              <span className="data-value txt-solar-amber">{weather.solRad} W/m²</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">ULTRAVIOLET INDEX</span>
+              <span className="data-value" style={{ color: "#a855f7" }}>UV {weather.uvi}</span>
             </div>
           </div>
 
@@ -1065,22 +1088,22 @@ export default function Page() {
                             <div>MONITOR: <b>${d.details.receiverCall}</b></div>
                             <div>LOCATOR: <b>${d.details.grid}</b></div>
                             <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
+                          </div>
+                        `;
+                      }
+                      return `
+                        <div class="scene-tooltip">
+                          <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
+                          <div>GRID SECTOR: <b>${d.gridKey}</b></div>
+                          <div>COUNTRY: <b>${d.country}</b></div>
+                          <div>OPERATORS: <b>${d.operators}</b></div>
                         </div>
                       `;
-                    }
-                    return `
-                      <div class="scene-tooltip">
-                        <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
-                        <div>GRID SECTOR: <b>${d.gridKey}</b></div>
-                        <div>COUNTRY: <b>${d.country}</b></div>
-                        <div>OPERATORS: <b>${d.operators}</b></div>
-                      </div>
-                    `;
-                  }}
-                />
-              )}
+                    }}
+                  />
+                )}
+              </div>
             </div>
-          </div>
 
             {/* Complete Live Log Ledger */}
             <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
