@@ -9,8 +9,8 @@ export async function GET() {
     const API_KEY = 'a2e4381b-6c53-47c7-bbb7-4d62831a440a';
     const MAC = '08:3A:8D:FA:47:A9';
 
-    // Grok's corrected endpoint verification structure using real_time syntax paths
-    const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APP_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=outdoor,wind,rainfall`;
+    // Upgraded call_back=all to unlock solar_and_uvi, pressure, and gust data structures
+    const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APP_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all`;
 
     const res = await fetch(url, {
       cache: 'no-store',
@@ -18,39 +18,33 @@ export async function GET() {
     });
 
     if (!res.ok) {
-      return NextResponse.json(
-        { error: `Ecowitt API server responded with error: ${res.status}` },
-        { status: res.status }
-      );
+      return NextResponse.json({ error: `Ecowitt Connection Error: ${res.status}` }, { status: res.status });
     }
 
     const json = await res.json();
 
     if (json.code !== 0) {
-      return NextResponse.json(
-        { error: json.msg || 'Ecowitt server dropped authentication routing guidelines' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: json.msg || 'Ecowitt rejected handshake specifications' }, { status: 400 });
     }
 
     const outdoor = json.data?.outdoor || {};
     const wind = json.data?.wind || {};
-    const rainfall = json.data?.rainfall || {};
+    const pressure = json.data?.pressure || {};
+    const solar = json.data?.solar_and_uvi || {};
 
-    // Standard fallback strings explicitly matched to look up your page.tsx layout tags
     return NextResponse.json({
       temp: outdoor.temperature?.value?.toString() ?? "——",
       humidity: outdoor.humidity?.value?.toString() ?? "——",
       windSpeed: wind.wind_speed?.value?.toString() ?? "0",
       windDir: wind.wind_direction?.value?.toString() ?? "0",
-      rainRate: parseFloat(rainfall.rain_rate?.value ?? "0"),
+      // New diagnostic extractions scaled cleanly for your dashboard text rows
+      baro: pressure.relative?.value?.toString() ?? "——",
+      solRad: solar.solar_radiation?.value?.toString() ?? "——",
+      uvi: solar.uvi?.value?.toString() ?? "0"
     });
 
   } catch (error: any) {
-    console.error("Ecowitt Proxy Error Trace:", error);
-    return NextResponse.json(
-      { error: "Internal socket configuration failure track" },
-      { status: 500 }
-    );
+    console.error("Ecowitt Advanced Proxy Error:", error);
+    return NextResponse.json({ error: "Failed to compile complete instrument string payload" }, { status: 500 });
   }
 }
