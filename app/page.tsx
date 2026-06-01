@@ -190,7 +190,7 @@ export default function Page() {
         
         setDimensions({
           width: containerRef.current.clientWidth,
-          height: mobileViewActive ? 340 : 460 // Slipped globe area format slightly down for layout optimization
+          height: mobileViewActive ? 340 : 460
         });
       }
     };
@@ -646,19 +646,6 @@ export default function Page() {
           pointer-events: none;
         }
 
-        .telemetry-strip { 
-          display: grid; 
-          grid-template-columns: repeat(1, 1fr); 
-          gap: 0.75rem; 
-          margin-bottom: 1rem; 
-          opacity: 0;
-          transform: translateY(5px);
-          transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .telemetry-strip.active { opacity: 1; transform: translateY(0); }
-        @media (min-width: 640px) { .telemetry-strip { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
-        @media (min-width: 1024px) { .telemetry-strip { grid-template-columns: repeat(5, 1fr); } }
-
         .deck-workspace { 
           display: grid; 
           grid-template-columns: 1fr; 
@@ -761,6 +748,27 @@ export default function Page() {
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 255, 102, 0.2) transparent;
         }
+
+        .aligned-metric-box {
+          border: 1px solid rgba(0, 255, 102, 0.2);
+          border-radius: 4px;
+          background: #060907;
+          padding: 0.5rem 0.75rem;
+          margin-bottom: 0.75rem;
+          box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.03);
+        }
+        .aligned-metric-label {
+          font-size: 0.6rem;
+          color: #688a73;
+          text-transform: uppercase;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+        }
+        .aligned-metric-value {
+          font-size: 1.15rem;
+          font-weight: 800;
+          margin-top: 0.1rem;
+        }
       `}} />
 
       {/* Header */}
@@ -802,21 +810,18 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Telemetry Strip */}
-      <section className={`telemetry-strip ${showTelemetry ? "active" : ""}`}>
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>ACTIVE BAND</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00f2ff", marginTop: "0.2rem" }}>{stats.currentBand}</div></div>
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>RIG MODE</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#ffaa00", marginTop: "0.2rem" }}>{stats.currentMode}</div></div>
-        <div className="terminal-panel" style={{ padding: "0.65rem 1rem" }}><span style={{ fontSize: "0.65rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>TOTAL QSOs</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#00ff66", marginTop: "0.2rem" }}>{stats.totalQsos}</div></div>
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>CONFIRMED</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a855f7", marginTop: "0.2rem" }}>{stats.confirmed}</div></div>
-        <div className="terminal-panel" style={{ padding: "0.85rem 1rem" }}><span style={{ fontSize: "0.7rem", color: "#688a73", textTransform: "uppercase", display: "block", fontWeight: 700, letterSpacing: "0.05em" }}>COUNTRIES DXCC</span><div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#a3e635", marginTop: "0.2rem" }}>{stats.dxcc}</div></div>
-      </section>
-
       {/* Main Workspace Split Grid Layout */}
       <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
         {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
+          {/* Aligned Box 1: Active Band */}
+          <div className="aligned-metric-box">
+            <div className="aligned-metric-label">Active Band</div>
+            <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
+          </div>
+
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
             <div className="panel-header panel-header-weather">
@@ -940,12 +945,28 @@ export default function Page() {
 
         </div>
 
-        {/* Master Right Row Split-Grid Wrapper (Splits Map/Logs side-by-side with Shack Panels) */}
+        {/* Master Right Row Split-Grid Wrapper */}
         <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 340px", gap: "1rem", width: "100%" }}>
           
-          {/* Sub-Column 1: Center Stack (Globe Engine + Complete Log Ledger) */}
+          {/* Sub-Column 1: Center Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
+            {/* Aligned Telemetry Triple-Box Grid Header right above the Globe Engine */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+              <div className="aligned-metric-box" style={{ margin: 0 }}>
+                <div className="aligned-metric-label">Rig Mode</div>
+                <div className="aligned-metric-value" style={{ color: "#ffaa00" }}>{stats.currentMode}</div>
+              </div>
+              <div className="aligned-metric-box" style={{ margin: 0 }}>
+                <div className="aligned-metric-label">Total QSOs</div>
+                <div className="aligned-metric-value" style={{ color: "#00ff66" }}>{stats.totalQsos}</div>
+              </div>
+              <div className="aligned-metric-box" style={{ margin: 0 }}>
+                <div className="aligned-metric-label">Confirmed</div>
+                <div className="aligned-metric-value" style={{ color: "#a855f7" }}>{stats.confirmed}</div>
+              </div>
+            </div>
+
             {/* 3D WebGL Globe Canvas */}
             <div 
               ref={containerRef}
@@ -1118,9 +1139,15 @@ export default function Page() {
 
           </div>
 
-          {/* Sub-Column 2: Far Right Stack (Gear, POTA, and PSK Panels side-by-side with Map and Logs) */}
+          {/* Sub-Column 2: Far Right Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
+            {/* Aligned Box 5: Countries DXCC */}
+            <div className="aligned-metric-box">
+              <div className="aligned-metric-label">Countries DXCC</div>
+              <div className="aligned-metric-value" style={{ color: "#a3e335" }}>{stats.dxcc}</div>
+            </div>
+
             {/* Card 3: Shack Gear */}
             <div className="terminal-panel">
               <div className="panel-header">
@@ -1130,8 +1157,8 @@ export default function Page() {
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
               </div>
               <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
-              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
-              <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
+              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
+              <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
               <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
             </div>
 
