@@ -594,6 +594,7 @@ export default function Page() {
     };
   }, []);
 
+  // MASTER LAYER HOOK
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -673,6 +674,7 @@ export default function Page() {
           width: 100%;
           max-width: 100%;
           position: relative;
+          z-index: 10;
         }
         @media (min-width: 640px) { .terminal-panel { padding: 1.25rem; } }
 
@@ -1036,6 +1038,7 @@ export default function Page() {
                     polygonStrokeColor={() => "#183620"} 
                     polygonAltitude={0.01}
                     
+                    // Fixed altitude depths to lock lines completely flat against land arrays
                     arcsData={geoArcs}
                     arcColor="color"
                     arcDashLength={0.45}
@@ -1044,26 +1047,27 @@ export default function Page() {
                     arcStroke={0.5}
                     arcsTransitionDuration={0}
                     arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
-                    arcStartAltitude={0.06}
-                    arcEndAltitude={0.06}
+                    arcStartAltitude={0.012}
+                    arcEndAltitude={0.012}
                     
                     ringsData={geoArcs}
                     ringColor="color"
                     ringMaxRadius={2.2}
                     ringPropagationSpeed={1.0}
                     ringRepeatPeriod={1600}
-                    ringAltitude={0.065}
+                    ringAltitude={0.014}
                     
                     showAtmosphere={true}
                     atmosphereColor="#00ff66"
                     atmosphereAltitude={0.12}
 
+                    // Lowered tracking markers down flush onto the map sphere grid
                     labelsData={[...globeLabels, ...globePoints]}
                     labelText={(d: any) => d.text || ""}
                     labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
                     labelSize={0.45}
                     labelDotRadius={0.35} 
-                    labelAltitude={0.065}
+                    labelAltitude={0.014}
                     labelResolution={3}
                     labelsTransitionDuration={0}
                     
