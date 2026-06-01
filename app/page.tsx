@@ -57,6 +57,15 @@ interface AppPskSpot {
   time: string;
 }
 
+interface OperationalWeather {
+  temp: string;
+  humidity: string;
+  windSpeed: string;
+  windDir: string;
+  condition: string;
+  iconCode: number;
+}
+
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -98,6 +107,15 @@ export default function Page() {
     dxcc: HARD_FLOOR_DXCC.toString(),
     currentBand: "20 Meters",
     currentMode: "FT8"
+  });
+
+  const [weather, setWeather] = useState<OperationalWeather>({
+    temp: "——",
+    humidity: "——",
+    windSpeed: "——",
+    windDir: "——",
+    condition: "INITIALIZING",
+    iconCode: 0
   });
 
   const [sfi, setSfi] = useState<number>(145);
@@ -435,6 +453,38 @@ export default function Page() {
     }
   }
 
+  async function fetchLocalTacticalWeather() {
+    try {
+      const res = await fetch("/api/weather-station"); 
+      if (!res.ok) throw new Error("PWS link failed");
+      const data = await res.json();
+      
+      if (data && !data.error) {
+        let summary = "CLEAR_SKIES";
+        const isRaining = data.rainRate > 0;
+        const currentWind = parseFloat(data.windSpeed) || 0;
+
+        if (isRaining) summary = "RAIN_PRECIP";
+        else if (currentWind > 15) summary = "HIGH_WINDS";
+        else summary = "SYS_NORMAL";
+
+        setWeather({
+          temp: Math.round(parseFloat(data.temp)).toString(),
+          humidity: data.humidity,
+          windSpeed: Math.round(parseFloat(data.windSpeed)).toString(),
+          windDir: data.windDir,
+          condition: summary,
+          iconCode: isRaining ? 60 : 0
+        });
+      } else {
+        setWeather(prev => ({ ...prev, condition: "OFFLINE_LINK" }));
+      }
+    } catch (e) {
+      console.warn("Shack PWS Connection Interrupted:", e);
+      setWeather(prev => ({ ...prev, condition: "LINK_ERROR" }));
+    }
+  }
+
   async function fetchLiveTacticalFeeds() {
     try {
       const potaRes = await fetch("/api/pota?_=" + Date.now(), { cache: "no-store" });
@@ -520,15 +570,18 @@ export default function Page() {
     parseLiveQrzData();
     fetchLiveTacticalFeeds();
     fetchSolarData();
+    fetchLocalTacticalWeather();
 
     const qrzInterval = setInterval(parseLiveQrzData, 300000);
     const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000); 
     const solarInterval = setInterval(fetchSolarData, 3600000); 
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 900000);
 
     return () => {
       clearInterval(qrzInterval);
       clearInterval(feedInterval);
       clearInterval(solarInterval);
+      clearInterval(weatherInterval);
     };
   }, []);
 
@@ -719,7 +772,7 @@ export default function Page() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
-          <button onClick={() => { parseLiveQrzData(); fetchLiveTacticalFeeds(); fetchSolarData(); }} style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}>
+          <button onClick={() => { parseLiveQrzData(); fetchLiveTacticalFeeds(); fetchSolarData(); fetchLocalTacticalWeather(); }} style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}>
             <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
           </button>
           <span className="status-bracket">[<span className="status-text" style={{ color: "#ffaa00" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
@@ -775,6 +828,60 @@ export default function Page() {
             <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
           </div>
 
+          {/* Card 1.5: Tactical METAR Weather Terminal */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title" style={{ color: "#00ff66" }}>
+                <Compass style={{ width: "16px", height: "16px" }} /> AT-SITE METAR STREAM
+              </div>
+              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)" }}>[ ENVIRONMENT_ARRAY ]</span>
+            </div>
+            
+            {/* Real-time Dynamic ASCII Sky Graph Segment */}
+            <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "3px", padding: "0.5rem", marginBottom: "0.75rem", fontFamily: "monospace", fontSize: "10px", color: "#00ff66", display: "flex", gap: "1rem", alignItems: "center", justifyItems: "center" }}>
+              <pre style={{ margin: 0, fontSize: "9px", lineHeight: "1.1", color: "#00ff66" }}>
+                {weather.iconCode >= 60 ? `
+     \\  |  /
+    --  Oo  --
+     /  |  \\
+   .---.---.
+  (         )
+   '-------'
+    ʻ ʻ ʻ ʻ  
+                ` : `
+   .---.---.
+  (         )
+   '-------'
+  (         )
+   '-------'
+                `}
+              </pre>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ffffff" }}>{weather.temp || "——"}°F</div>
+                <div style={{ fontSize: "9px", color: "#00ff66", fontWeight: "700", marginTop: "2px" }}>
+                  STATUS // <span className="hud-pulse">[ {weather.condition} ]</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="data-row">
+              <span className="data-label">THERMAL GRADIENT</span>
+              <span className="data-value">{weather.temp || "——"}°F</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">RELATIVE HUMIDITY</span>
+              <span className="data-value txt-neon-green">{weather.humidity || "——"}% RH</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">WIND VELOCITY</span>
+              <span className="data-value">{weather.windSpeed || "——"} MPH</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">WIND VECTOR BEARING</span>
+              <span className="data-value txt-neon-green">{weather.windDir || "——"}° AZIMUTH</span>
+            </div>
+          </div>
+
           {/* Card 2: Live POTA spots scroller register */}
           <div className="terminal-panel">
             <div className="panel-header">
@@ -810,7 +917,7 @@ export default function Page() {
                 <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
               </div>
             </div>
-            <div className="ticker-scroller-box" style={{ height: "110px" }}>
+            <div className="ticker-scroller-box">
               {pskSpots.length === 0 ? (
                 <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
                   &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
