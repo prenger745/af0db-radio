@@ -739,6 +739,9 @@ export default function Page() {
           animation: blink 0.9s step-start infinite;
           margin-left: 2px;
         }
+        @keyframes blink {
+          50% { opacity: 0; }
+        }
         @media (min-width: 1024px) {
           .panel-header-weather { display: flex; align-items: center; justify-content: space-between; }
         }
@@ -814,21 +817,7 @@ export default function Page() {
         {/* Left Column Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Card 1: Shack Gear */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title">
-                <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
-              </div>
-              <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
-            </div>
-            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
-            <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
-            <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
-            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
-          </div>
-
-          {/* Card 1.5: Tactical METAR Weather Terminal */}
+          {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
             <div className="panel-header panel-header-weather">
               <div className="panel-title" style={{ color: "#00ff66" }}>
@@ -882,63 +871,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 2: Live POTA spots scroller register */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title" style={{ color: "#00ff66" }}>
-                <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
-              </div>
-            </div>
-            <div className="ticker-scroller-box">
-              {potaSpots.length === 0 ? (
-                <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
-              ) : (
-                potaSpots.map((spot, i) => (
-                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
-                    <div>
-                      <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
-                      <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
-                      <span style={{ color: "#ffffff" }}>{spot.reference}</span>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
-                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Card 3: PSK Reporter footprint register */}
-          <div className="terminal-panel">
-            <div className="panel-header">
-              <div className="panel-title" style={{ color: "#a855f7" }}>
-                <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
-              </div>
-            </div>
-            <div className="ticker-scroller-box">
-              {pskSpots.length === 0 ? (
-                <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
-                  &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
-                </div>
-              ) : (
-                pskSpots.map((spot, i) => (
-                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
-                    <div>
-                      RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
-                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
-                    </div>
-                    <div>
-                      SIG: <span style={{ color: "#a855f7" }}>{spot.snr}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Card 4: Space weather info */}
+          {/* Card 2: Space weather info */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
@@ -1120,6 +1053,76 @@ export default function Page() {
                     `;
                   }}
                 />
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: Shack Gear */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
+              </div>
+              <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
+            </div>
+            <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
+            <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU FT-991</span></div>
+            <div className="data-row"><span className="data-label">ANTENNA</span><span className="data-value">ISOTRON 20M</span></div>
+            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
+          </div>
+
+          {/* Card 4: Live POTA spots scroller register */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title" style={{ color: "#00ff66" }}>
+                <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
+              </div>
+            </div>
+            <div className="ticker-scroller-box">
+              {potaSpots.length === 0 ? (
+                <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
+              ) : (
+                potaSpots.map((spot, i) => (
+                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                    <div>
+                      <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
+                      <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
+                      <span style={{ color: "#ffffff" }}>{spot.reference}</span>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
+                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Card 5: PSK Reporter footprint register */}
+          <div className="terminal-panel">
+            <div className="panel-header">
+              <div className="panel-title" style={{ color: "#a855f7" }}>
+                <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
+              </div>
+            </div>
+            <div className="ticker-scroller-box">
+              {pskSpots.length === 0 ? (
+                <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
+                  &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
+                </div>
+              ) : (
+                pskSpots.map((spot, i) => (
+                  <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                    <div>
+                      RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
+                      <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
+                    </div>
+                    <div>
+                      SIG: <span style={{ color: "#a855f7" }}>{spot.snr}</span>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>
