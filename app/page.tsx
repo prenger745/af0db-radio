@@ -731,6 +731,13 @@ export default function Page() {
           transition: opacity 0.15s ease, visibility 0.15s ease;
         }
 
+        /* Specialized subclass to force the center globe tooltip downward */
+        .downward-tooltip::after {
+          bottom: auto !important;
+          top: 130% !important;
+          box-shadow: 0 15px 30px rgba(0,0,0,0.95);
+        }
+
         .tactical-tooltip-trigger:hover::after,
         .tactical-tooltip-trigger:focus::after,
         .tactical-tooltip-trigger:active::after {
@@ -1056,10 +1063,10 @@ export default function Page() {
                 border: "1px solid rgba(0, 255, 102, 0.25)"
               }}
             >
-              {/* Legend Overlay HUD wrapping the tooltip trigger natively */}
+              {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
               <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                  <button className="tactical-tooltip-trigger" data-blurb="3D interactive WebGL graphics canvas mapping active log coordinates, domestic/DX signal vectors, and real-time POTA park grids flat to the terrain surface." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
+                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="3D interactive WebGL graphics canvas mapping active log coordinates, domestic/DX signal vectors, and real-time POTA park grids flat to the terrain surface." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
                     <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
                     <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
                     <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
