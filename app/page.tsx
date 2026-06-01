@@ -841,7 +841,7 @@ export default function Page() {
         }
       `}} />
 
-      {/* Header with fixed camelCase parameter definition mapping rule */}
+      {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
           <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
@@ -1263,7 +1263,7 @@ export default function Page() {
                         <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <span style={{ color: "#00ff66", 21.450: "MHz" }}>{spot.frequency} kHz</span>
+                        <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
                       </div>
                     </div>
