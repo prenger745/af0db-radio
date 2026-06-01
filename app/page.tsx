@@ -686,7 +686,6 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
-        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -723,7 +722,7 @@ export default function Page() {
           line-height: 1.4;
           padding: 0.75rem 1rem;
           width: 260px;
-          white-space: pre-wrap; /* Lock configuration to respect layout column line breaks */
+          white-space: pre-wrap; /* Forces the browser context to treat the template breaks literally */
           box-shadow: 0 15px 30px rgba(0,0,0,0.9);
           opacity: 0;
           visibility: hidden;
@@ -886,8 +885,23 @@ export default function Page() {
         {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Aligned Box 1: Active Band with cleanly formatted vertical block lines */}
-          <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current HF band Dan is operating on.&#10;&#10;US HF Band Limits:&#10;160M: 1.800 - 2.000 MHz&#10;80M:  3.500 - 4.000 MHz&#10;60M:  5.330 - 5.405 MHz&#10;40M:  7.000 - 7.300 MHz&#10;30M:  10.100 - 10.150 MHz&#10;20M:  14.000 - 14.350 MHz&#10;17M:  18.068 - 18.168 MHz&#10;15M:  21.000 - 21.450 MHz&#10;12M:  24.890 - 24.990 MHz&#10;10M:  28.000 - 29.700 MHz">
+          {/* Aligned Box 1: Active Band - Converted to Template Literal backticks to guarantee straight columns */}
+          <div 
+            className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" 
+            data-blurb={`The current HF band Dan is operating on.
+
+US HF Band Limits:
+160M: 1.800 - 2.000 MHz
+80M:  3.500 - 4.000 MHz
+60M:  5.330 - 5.405 MHz
+40M:  7.000 - 7.300 MHz
+30M:  10.100 - 10.150 MHz
+20M:  14.000 - 14.350 MHz
+17M:  18.068 - 18.168 MHz
+15M:  21.000 - 21.450 MHz
+12M:  24.890 - 24.990 MHz
+10M:  28.000 - 29.700 MHz`}
+          >
             <div className="aligned-metric-label">Active Band</div>
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
@@ -1256,7 +1270,7 @@ export default function Page() {
                   <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
                 ) : (
                   potaSpots.map((spot, i) => (
-                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifycontent: "space-between" }}>
                       <div>
                         <span style={{ color: "#00ff66", fontWeight: 700 }}>{spot.activator}</span>
                         <span style={{ color: "#688a73", margin: "0 0.3rem" }}>@</span>
@@ -1286,7 +1300,7 @@ export default function Page() {
                   </div>
                 ) : (
                   pskSpots.map((spot, i) => (
-                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                    <div key={i} style={{ borderBottom: "1px dashed rgba(0,255,102,0.1)", padding: "0.4rem 0", fontSize: "0.75rem", display: "flex", justifycontent: "space-between" }}>
                       <div>
                         RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
