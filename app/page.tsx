@@ -723,7 +723,7 @@ export default function Page() {
           line-height: 1.4;
           padding: 0.75rem 1rem;
           width: 260px;
-          white-space: normal;
+          white-space: pre-wrap; /* UPGRADED to support line breaks inside the boxes */
           box-shadow: 0 15px 30px rgba(0,0,0,0.9);
           opacity: 0;
           visibility: hidden;
@@ -743,7 +743,7 @@ export default function Page() {
         .tactical-tooltip-trigger:active::after {
           opacity: 1;
           visibility: visible;
-        }
+         }
 
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #ffaa00; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem; }
         
