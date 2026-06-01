@@ -594,7 +594,6 @@ export default function Page() {
     };
   }, []);
 
-  // MASTER LAYER HOOK
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -833,7 +832,7 @@ export default function Page() {
           </div>
 
           {/* Card 1: Tactical METAR Weather Terminal */}
-          <div className="terminal-panel">
+          <div className="terminal-panel" title="Real-time environmental telemetry streamed directly from the local Ecowitt WS-90 rooftop ultrasonic sensor array via custom API proxy.">
             <div className="panel-header panel-header-weather">
               <div className="panel-title" style={{ color: "#00ff66" }}>
                 <Compass style={{ width: "16px", height: "16px" }} /> TERRESTRIAL WX (AFØDB)
@@ -899,7 +898,7 @@ export default function Page() {
           </div>
 
           {/* Card 2: Space weather info */}
-          <div className="terminal-panel">
+          <div className="terminal-panel" title="Real-time space weather data and HF propagation analysis parsed directly from the NOAA solar magnetometer sweeps via HamQSL.">
             <div className="panel-header">
               <div className="panel-title" style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
@@ -993,6 +992,7 @@ export default function Page() {
             <div 
               ref={containerRef}
               className="terminal-panel" 
+              title="3D interactive WebGL graphics canvas mapping active log coordinates, domestic/DX signal vectors, and real-time POTA park grids flat to the terrain surface."
               style={{ 
                 padding: "0.5rem", 
                 background: "#020403", 
@@ -1038,7 +1038,6 @@ export default function Page() {
                     polygonStrokeColor={() => "#183620"} 
                     polygonAltitude={0.01}
                     
-                    // Fixed altitude depths to lock lines completely flat against land arrays
                     arcsData={geoArcs}
                     arcColor="color"
                     arcDashLength={0.45}
@@ -1061,7 +1060,6 @@ export default function Page() {
                     atmosphereColor="#00ff66"
                     atmosphereAltitude={0.12}
 
-                    // Lowered tracking markers down flush onto the map sphere grid
                     labelsData={[...globeLabels, ...globePoints]}
                     labelText={(d: any) => d.text || ""}
                     labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
@@ -1106,7 +1104,7 @@ export default function Page() {
             </div>
 
             {/* Complete Live Log Ledger */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            <div className="terminal-panel" title="Live secure database ledger streaming your most recent verified two-way radio contacts synced directly from the QRZ API logbook feed." style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div className="panel-header">
                 <div className="matrix-table title" style={{ color: "#00ff66", fontSize: "0.8rem", fontWeight: "700" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66", display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} /> LIVE LOOK AT MOST RECENT QSOs
@@ -1173,7 +1171,7 @@ export default function Page() {
             </div>
 
             {/* Card 3: Shack Gear */}
-            <div className="terminal-panel">
+            <div className="terminal-panel" title="Core station hardware architecture configuration and operating system environment parameters for station AFØDB.">
               <div className="panel-header">
                 <div className="panel-title">
                   <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
@@ -1187,7 +1185,7 @@ export default function Page() {
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel">
+            <div className="terminal-panel" title="Real-time global signal spotting register tracking active operators transmitting from State and National Parks via the Parks on the Air database.">
               <div className="panel-header">
                 <div className="panel-title" style={{ color: "#00ff66" }}>
                   <Signal style={{ width: "16px", height: "16px" }} /> LIVE POTA SPOTS NET
@@ -1215,7 +1213,7 @@ export default function Page() {
             </div>
 
             {/* Card 5: PSK Reporter footprint register */}
-            <div className="terminal-panel">
+            <div className="terminal-panel" title="Automated digital monitoring feed displaying remote listening stations that have successfully decoded station AFØDB's FT8 signals within the last 2 hours.">
               <div className="panel-header">
                 <div className="panel-title" style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
