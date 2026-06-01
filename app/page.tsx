@@ -390,7 +390,7 @@ export default function Page() {
         const finalCalculatedConfirmed = Math.max(HARD_FLOOR_CONFIRMED, parsedGlobalCqsl);
         const finalCalculatedDxcc = Math.max(HARD_FLOOR_DXCC, parsedGlobalDxcc);
 
-        stats({
+        setStats({
           totalQsos: finalCalculatedTotal.toString(),
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
