@@ -454,7 +454,7 @@ export default function Page() {
       }
     } catch (err) {
       console.warn(err);
-    } fillly {
+    } finally {
       setLoading(false);
     }
   }
@@ -886,7 +886,7 @@ export default function Page() {
         {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Aligned Box 1: Active Band with cleanly formatted vertical block lines */}
+          {/* Aligned Box 1: Active Band - Verified multi-line layout string formatting structure */}
           <div 
             className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" 
             data-blurb={`The current HF band Dan is operating on.
@@ -1254,9 +1254,9 @@ US HF Band Limits:
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
               </div>
               <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
-              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="value">YAESU BASE-RIG FT-991</span></div>
-              <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="value">ISOTRON 20M</span></div>
-              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="value">XUBUNTU/HAM</span></div>
+              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
+              <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
@@ -1291,7 +1291,7 @@ US HF Band Limits:
             <div className="terminal-panel">
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
-                  <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
+                  <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
               <div className="ticker-scroller-box" style={{ height: "140px" }}>
