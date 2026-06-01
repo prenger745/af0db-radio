@@ -938,7 +938,7 @@ export default function Page() {
             </div>
           </div>
 
-        </div>
+        </div> {/* CLOSES LEFT COLUMN ELEMENT CLEANLY */}
 
         {/* Right Section Matrix Column Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1057,7 +1057,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Card 3: Shack Gear */}
+          {/* Card 3: Shack Gear - NOW POSITIONED ON RIGHT MAIN LAYER ARRAY */}
           <div className="terminal-panel">
             <div className="panel-header">
               <div className="panel-title">
