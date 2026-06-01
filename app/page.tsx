@@ -136,7 +136,7 @@ export default function Page() {
   const [landmasses, setLandmasses] = useState<any[]>([]);
 
   const [potaSpots, setPotaSpots] = useState<PotaSpot[]>([]);
-  const [pskSpots, setPskSpots] = useState<AppPskSpot[]>([]);
+  const [pskSpots, setPSKSpots] = useState<AppPskSpot[]>([]);
   const [globeLabels, setGlobeLabels] = useState<any[]>([]);
   const [globePoints, setGlobePoints] = useState<any[]>([]);
   
@@ -461,20 +461,20 @@ export default function Page() {
       
       if (data && !data.error) {
         let summary = "CLEAR_SKIES";
-        const isRaining = data.rainRate > 0;
-        const currentWind = parseFloat(data.windSpeed) || 0;
+        const rainRateVal = parseFloat(data.rainRate) || 0;
+        const windSpeedVal = parseFloat(data.windSpeed) || 0;
 
-        if (isRaining) summary = "RAIN_PRECIP";
-        else if (currentWind > 15) summary = "HIGH_WINDS";
+        if (rainRateVal > 0) summary = "RAIN_PRECIP";
+        else if (windSpeedVal > 15) summary = "HIGH_WINDS";
         else summary = "SYS_NORMAL";
 
         setWeather({
-          temp: Math.round(parseFloat(data.temp)).toString(),
-          humidity: data.humidity,
-          windSpeed: Math.round(parseFloat(data.windSpeed)).toString(),
-          windDir: data.windDir,
+          temp: data.temp !== undefined ? Math.round(parseFloat(data.temp)).toString() : "——",
+          humidity: data.humidity !== undefined ? Math.round(parseFloat(data.humidity)).toString() : "——",
+          windSpeed: data.windSpeed !== undefined ? Math.round(windSpeedVal).toString() : "——",
+          windDir: data.windDir !== undefined ? Math.round(parseFloat(data.windDir)).toString() : "——",
           condition: summary,
-          iconCode: isRaining ? 60 : 0
+          iconCode: rainRateVal > 0 ? 60 : 0
         });
       } else {
         setWeather(prev => ({ ...prev, condition: "OFFLINE_LINK" }));
@@ -511,7 +511,7 @@ export default function Page() {
       if (pskRes.ok) {
         const pskData = await pskRes.json();
         if (pskData && Array.isArray(pskData.spots)) {
-          setPskSpots(pskData.spots);
+          setPSKSpots(pskData.spots);
           setGlobePoints(pskData.spots.map((spot: any) => ({
             lat: spot.lat,
             lng: spot.lng,
@@ -857,7 +857,7 @@ export default function Page() {
                 `}
               </pre>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ffffff" }}>{weather.temp || "——"}°F</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ffffff" }}>{weather.temp}°F</div>
                 <div style={{ fontSize: "9px", color: "#00ff66", fontWeight: "700", marginTop: "2px" }}>
                   STATUS // <span className="hud-pulse">[ {weather.condition} ]</span>
                 </div>
@@ -866,19 +866,19 @@ export default function Page() {
 
             <div className="data-row">
               <span className="data-label">THERMAL GRADIENT</span>
-              <span className="data-value">{weather.temp || "——"}°F</span>
+              <span className="data-value">{weather.temp}°F</span>
             </div>
             <div className="data-row">
               <span className="data-label">RELATIVE HUMIDITY</span>
-              <span className="data-value txt-neon-green">{weather.humidity || "——"}% RH</span>
+              <span className="data-value txt-neon-green">{weather.humidity}% RH</span>
             </div>
             <div className="data-row">
               <span className="data-label">WIND VELOCITY</span>
-              <span className="data-value">{weather.windSpeed || "——"} MPH</span>
+              <span className="data-value">{weather.windSpeed} MPH</span>
             </div>
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">WIND VECTOR BEARING</span>
-              <span className="data-value txt-neon-green">{weather.windDir || "——"}° AZIMUTH</span>
+              <span className="data-value txt-neon-green">{weather.windDir}° AZIMUTH</span>
             </div>
           </div>
 
