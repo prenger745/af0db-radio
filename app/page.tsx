@@ -390,7 +390,7 @@ export default function Page() {
         const finalCalculatedConfirmed = Math.max(HARD_FLOOR_CONFIRMED, parsedGlobalCqsl);
         const finalCalculatedDxcc = Math.max(HARD_FLOOR_DXCC, parsedGlobalDxcc);
 
-        setStats({
+        stats({
           totalQsos: finalCalculatedTotal.toString(),
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
@@ -529,7 +529,7 @@ export default function Page() {
           })));
         }
       }
-    } catch (e) { console.warn("PSK Link Down", e); }
+    } catch (e) {}
   }
 
   async function fetchSolarData() {
@@ -594,7 +594,6 @@ export default function Page() {
     };
   }, []);
 
-  // MASTER LAYER HOOK
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -837,7 +836,7 @@ export default function Page() {
               <div className="panel-title" style={{ color: "#00ff66" }}>
                 <Compass style={{ width: "16px", height: "16px" }} /> TERRESTRIAL WEATHER (AFØDB)
               </div>
-              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ ENVIRONMENT_ARRAY ]</span>
+              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ Ecowitt WS-90 ]</span>
             </div>
             
             {/* Real-time Dynamic ASCII Sky Graph Segment */}
