@@ -723,7 +723,7 @@ export default function Page() {
           line-height: 1.4;
           padding: 0.75rem 1rem;
           width: 260px;
-          white-space: pre-wrap; /* UPGRADED to support line breaks inside the boxes */
+          white-space: pre-wrap; /* Lock configuration to respect layout column line breaks */
           box-shadow: 0 15px 30px rgba(0,0,0,0.9);
           opacity: 0;
           visibility: hidden;
@@ -743,7 +743,7 @@ export default function Page() {
         .tactical-tooltip-trigger:active::after {
           opacity: 1;
           visibility: visible;
-         }
+        }
 
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #ffaa00; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem; }
         
@@ -886,8 +886,8 @@ export default function Page() {
         {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Aligned Box 1: Active Band with injected US band spectrum definitions blurb */}
-          <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current HF band Dan is operating on.&#10;&#10;US HF Band Limits:&#10;160M: 1.800 - 2.000 MHz&#10;80M: 3.500 - 4.000 MHz&#10;60M: 5.330 - 5.405 MHz&#10;40M: 7.000 - 7.300 MHz&#10;30M: 10.100 - 10.150 MHz&#10;20M: 14.000 - 14.350 MHz&#10;17M: 18.068 - 18.168 MHz&#10;15M: 21.000 - 21.450 MHz&#10;12M: 24.890 - 24.990 MHz&#10;10M: 28.000 - 29.700 MHz">
+          {/* Aligned Box 1: Active Band with cleanly formatted vertical block lines */}
+          <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current HF band Dan is operating on.&#10;&#10;US HF Band Limits:&#10;160M: 1.800 - 2.000 MHz&#10;80M:  3.500 - 4.000 MHz&#10;60M:  5.330 - 5.405 MHz&#10;40M:  7.000 - 7.300 MHz&#10;30M:  10.100 - 10.150 MHz&#10;20M:  14.000 - 14.350 MHz&#10;17M:  18.068 - 18.168 MHz&#10;15M:  21.000 - 21.450 MHz&#10;12M:  24.890 - 24.990 MHz&#10;10M:  28.000 - 29.700 MHz">
             <div className="aligned-metric-label">Active Band</div>
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
