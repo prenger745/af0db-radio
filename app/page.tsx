@@ -62,9 +62,9 @@ interface OperationalWeather {
   humidity: string;
   windSpeed: string;
   windDir: string;
-  baro: string;      // New field interface integration
-  solRad: string;    // New field interface integration
-  uvi: string;       // New field interface integration
+  baro: string;      
+  solRad: string;    
+  uvi: string;       
   condition: string;
   iconCode: number;
 }
@@ -479,8 +479,7 @@ export default function Page() {
           humidity: data.humidity !== undefined ? Math.round(parseFloat(data.humidity)).toString() : "——",
           windSpeed: data.windSpeed !== undefined ? Math.round(windSpeedVal).toString() : "——",
           windDir: data.windDir !== undefined ? Math.round(parseFloat(data.windDir)).toString() : "——",
-          // Hydrated mapping tokens fed clean from your new route values
-          baro: data.baro !== undefined ? (parseFloat(data.baro) * 0.02953).toFixed(2) : "——", // Auto-converts to standard inHg string format
+          baro: data.baro !== undefined ? (parseFloat(data.baro) * 0.02953).toFixed(2) : "——", 
           solRad: data.solRad !== undefined ? Math.round(parseFloat(data.solRad)).toString() : "——",
           uvi: data.uvi !== undefined ? Math.round(parseFloat(data.uvi)).toString() : "0",
           condition: summary,
@@ -576,17 +575,16 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
-  // Tactical Refresh Intervals synced up perfectly to match true source network cadence
   useEffect(() => {
     parseLiveQrzData();
     fetchLiveTacticalFeeds();
     fetchSolarData();
     fetchLocalTacticalWeather();
 
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);       // 5 min
-    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   // 1 min
-    const solarInterval = setInterval(fetchSolarData, 1800000);       // 30 min (Matches NOAA space telemetry shifts)
-    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); // 5 min (Matches Ecowitt instrument refresh)
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);       
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
+    const solarInterval = setInterval(fetchSolarData, 1800000);       
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
 
     return () => {
       clearInterval(qrzInterval);
@@ -612,8 +610,8 @@ export default function Page() {
     const potaLabels = potaSpots.map(spot => ({
       lat: spot.lat,
       lng: spot.lng,
-      text: "", // Kept empty to display a matching solid clean round visual point marker
-      color: "#00ff66", // Exact green matching the core theme lines
+      text: "", 
+      color: "#00ff66", 
       type: "pota",
       gridKey: spot.reference,
       country: "United States",
@@ -837,7 +835,7 @@ export default function Page() {
           <div className="terminal-panel">
             <div className="panel-header panel-header-weather">
               <div className="panel-title" style={{ color: "#00ff66" }}>
-                <Compass style={{ width: "16px", height: "16px" }} /> AFØDB SHACK WEATHER
+                <Compass style={{ width: "16px", height: "16px" }} /> TERRESTRIAL WEATHER (AFØDB)
               </div>
               <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ ENVIRONMENT_ARRAY ]</span>
             </div>
@@ -885,7 +883,6 @@ export default function Page() {
               <span className="data-label">WIND VECTOR BEARING</span>
               <span className="data-value txt-neon-green">{weather.windDir}° AZIMUTH</span>
             </div>
-            {/* Expanded secondary rows dynamically streaming your full array data */}
             <div className="data-row">
               <span className="data-label">BAROMETRIC PRESSURE</span>
               <span className="data-value txt-aviation-blue">{weather.baro} inHg</span>
