@@ -830,11 +830,11 @@ export default function Page() {
 
           {/* Card 1.5: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
-            <div className="panel-header">
+            <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div className="panel-title" style={{ color: "#00ff66" }}>
-                <Compass style={{ width: "16px", height: "16px" }} /> AT-SITE METAR STREAM
+                <Compass style={{ width: "16px", height: "16px" }} /> LIVE QTH ENVIRONMENT GATEWAY
               </div>
-              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)" }}>[ ENVIRONMENT_ARRAY ]</span>
+              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", display: "flex", alignItems: "center" }}>[ ENVIRONMENT_ARRAY ]</span>
             </div>
             
             {/* Real-time Dynamic ASCII Sky Graph Segment */}
