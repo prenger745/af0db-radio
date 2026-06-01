@@ -834,7 +834,7 @@ export default function Page() {
           <div className="terminal-panel">
             <div className="panel-header panel-header-weather">
               <div className="panel-title" style={{ color: "#00ff66" }}>
-                <Compass style={{ width: "16px", height: "16px" }} /> TERRESTRIAL WEATHER (AFØDB)
+                <Compass style={{ width: "16px", height: "16px" }} /> TERRESTRIAL WX (AFØDB)
               </div>
               <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ Ecowitt WS-90 ]</span>
             </div>
