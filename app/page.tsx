@@ -69,13 +69,6 @@ interface OperationalWeather {
   iconCode: number;
 }
 
-// Global scope style helper to guarantee complete visibility during compilation
-const getColorClass = (rating: string) => {
-  if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
-  if (rating === "FAIR") return "txt-solar-amber";
-  return "rst-r-box";
-};
-
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -89,14 +82,14 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
           setDisplayedText(text.substring(0, index + 1));
           index++;
         } else {
-          timer && clearInterval(timer);
+          clearInterval(timer);
         }
       }, speed);
     }, delay);
 
     return () => {
       clearTimeout(startTimeout);
-      timer && clearInterval(timer);
+      clearInterval(timer);
     };
   }, [text, speed, delay]);
 
@@ -161,7 +154,7 @@ export default function Page() {
   const audioEnabledRef = useRef(false);
 
   const [showTelemetry, setShowTelemetry] = useState(false);
-  const [showWorkspace, setShowWorkspace] = useState(true);
+  const [showWorkspace, setShowWorkspace] = useState(false);
 
   const initialBootDoneRef = useRef(false);
 
@@ -582,6 +575,69 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
+  useEffect(() => {
+    parseLiveQrzData();
+    fetchLiveTacticalFeeds();
+    fetchSolarData();
+    fetchLocalTacticalWeather();
+
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);       
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
+    const solarInterval = setInterval(fetchSolarData, 1800000);       
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
+
+    return () => {
+      clearInterval(qrzInterval);
+      clearInterval(feedInterval);
+      clearInterval(solarInterval);
+      clearInterval(weatherInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
+
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: "", 
+      color: "#00ff66", 
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
+
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
+  }, [geoArcs, potaSpots]);
+
+  const getPropRating = (band: string) => {
+    const timeKey = isNight ? "night" : "day";
+    switch (band) {
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
+    }
+  };
+
+  const getColorClass = (rating: string) => {
+    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+    if (rating === "FAIR") return "txt-solar-amber";
+    return "rst-r-box";
+  };
+
   // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
   const getCalculatedPropagationArray = () => {
     const parsedSunspots = parseInt(sunspots) || 0;
@@ -617,17 +673,6 @@ export default function Page() {
   };
 
   const propArray = getCalculatedPropagationArray();
-
-  const getPropRating = (band: string) => {
-    const timeKey = isNight ? "night" : "day";
-    switch (band) {
-      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
-      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
-      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
-      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-      default: return "FAIR";
-    }
-  };
 
   return (
     <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
@@ -835,7 +880,7 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -871,10 +916,10 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Main Workspace Split Grid Layout - SAFELY RESTORED TO ORIGINAL STABLE DESIGN CONTAINER */}
-      <main className="deck-workspace active">
+      {/* Main Workspace Split Grid Layout */}
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
-        {/* Left Column Stack (Weather + Solar Weather) */}
+        {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
           {/* Aligned Box 1: Active Band */}
@@ -1072,6 +1117,7 @@ US HF Band Limits:
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
+            {/* UPDATED VHF DISPLAY VECTOR: Constant monitor warning block layer */}
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">6M VHF Propagation</span>
               <span className="data-value txt-solar-amber">[MONITOR]</span>
@@ -1093,7 +1139,7 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Row Split-Grid Wrapper (Globe + Ledger Center Column and Accessories Track) */}
+        {/* Master Right Row Split-Grid Wrapper */}
         <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1rem", width: "100%" }}>
           
           {/* Sub-Column 1: Center Stack */}
