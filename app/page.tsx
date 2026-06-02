@@ -638,6 +638,45 @@ export default function Page() {
     return "rst-r-box";
   };
 
+  // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
+  const getCalculatedPropagationArray = () => {
+    // 1. Calculate Ionization Capacity
+    const parsedSunspots = parseInt(sunspots) || 0;
+    const baseIonization = Math.min(100, Math.max(0, (sfi - 65) * 1.1 + parsedSunspots * 0.15));
+    const finalIonization = Math.round(baseIonization);
+
+    // 2. Calculate Ray Path Attenuation
+    const windSpeedVal = parseFloat(solarWind) || 400;
+    const baseStormPenalty = kIndex * 12 + (windSpeedVal > 500 ? (windSpeedVal - 500) * 0.08 : 0);
+    const finalAttenuation = Math.min(100, Math.round(baseStormPenalty));
+
+    // 3. Compute Net DX Value Score
+    const noiseScaleInt = parseInt(sigNoise.replace(/[^0-9]/g, "")) || 1;
+    const calculatedNet = Math.round(finalIonization - finalAttenuation - noiseScaleInt * 3);
+    const finalNetScore = Math.min(100, Math.max(0, calculatedNet));
+
+    let displayString = "DX_PATH_OPTIMAL";
+    let textClass = "txt-neon-green";
+
+    if (finalNetScore < 40) {
+      displayString = "BAND_BLACKOUT";
+      textClass = "rst-r-box";
+    } else if (finalNetScore < 75) {
+      displayString = "PATH_DEGRADED";
+      textClass = "txt-solar-amber";
+    }
+
+    return {
+      ionization: finalIonization,
+      attenuation: finalAttenuation,
+      netValue: finalNetScore,
+      statusText: displayString,
+      colorClass: textClass
+    };
+  };
+
+  const propArray = getCalculatedPropagationArray();
+
   return (
     <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
       <style dangerouslySetInnerHTML={{__html: `
@@ -844,7 +883,7 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -973,12 +1012,28 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info with responsive row tooltips embedded directly */}
+          {/* Card 2: Space weather info with integrated real-time math engine blocks */}
           <div className="terminal-panel">
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </button>
+            </div>
+
+            {/* INTEGRATED IONOSPHERIC PROPAGATION ASSESSMENT SCORE HUD DISPLAY HEADER */}
+            <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.25)", borderRadius: "3px", padding: "0.6rem 0.75rem", marginBottom: "0.85rem", fontSize: "10px", fontFamily: "monospace" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                <span style={{ color: "#688a73", fontWeight: 700 }}>NET PROPAGATION MATRIX:</span>
+                <span className={`hud-pulse ${propArray.colorClass}`} style={{ fontWeight: 800 }}>{propArray.netValue}% // {propArray.statusText}</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", borderTop: "1px solid rgba(0,255,102,0.08)", paddingTop: "0.4rem" }}>
+                <div>
+                  <span style={{ color: "#4e6e58" }}>IONIZATION:</span> <span style={{ color: "#00ff66", fontWeight: 700 }}>{propArray.ionization}%</span>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ color: "#4e6e58" }}>ATTENUATION:</span> <span style={{ color: "#ff3333", fontWeight: 700 }}>{propArray.attenuation}%</span>
+                </div>
+              </div>
             </div>
             
             <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
@@ -1323,7 +1378,7 @@ US HF Band Limits:
             <div className="terminal-panel">
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
-                  <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
+                  <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
               <div className="ticker-scroller-box" style={{ height: "140px" }}>
