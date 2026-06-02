@@ -532,6 +532,44 @@ export default function Page() {
     } catch (e) {}
   }
 
+  async function fetchLiveTacticalFeeds() {
+    try {
+      const potaRes = await fetch("/api/pota?_=" + Date.now(), { cache: "no-store" });
+      if (potaRes.ok) {
+        const rawSpots = await potaRes.json();
+        if (Array.isArray(rawSpots)) {
+          const formattedPota = rawSpots.slice(0, 20).map((spot: any) => ({
+            activator: (spot.activator || "UNKNOWN").toUpperCase(),
+            reference: (spot.reference || "K-0000").toUpperCase(),
+            name: spot.name || "State/National Preserve Entity",
+            frequency: spot.frequency || "—",
+            mode: spot.mode || "SSB",
+            time: spot.spotTime ? spot.spotTime.substring(11, 16) : "—",
+            lat: parseFloat(spot.latitude) || 39.8283,
+            lng: parseFloat(spot.longitude) || -98.5795
+          }));
+          setPotaSpots(formattedPota);
+        }
+      }
+    } catch (e) { console.warn("POTA Link Down", e); }
+
+    try {
+      const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
+      if (pskRes.ok) {
+        const pskData = await pskRes.json();
+        if (pskData && Array.isArray(pskData.spots)) {
+          setPSKSpots(pskData.spots);
+          setGlobePoints(pskData.spots.map((spot: any) => ({
+            lat: spot.lat,
+            lng: spot.lng,
+            type: "psk",
+            details: spot
+          })));
+        }
+      }
+    } catch (e) {}
+  }
+
   async function fetchSolarData() {
     try {
       const res = await fetch("/api/solar?_=" + Date.now(), { cache: "no-store" });
@@ -869,6 +907,7 @@ export default function Page() {
           text-transform: uppercase;
           font-weight: 700;
           letter-spacing: 0.05em;
+          white-space: nowrap;
         }
         .aligned-metric-value {
           font-size: 1.15rem;
@@ -943,19 +982,20 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal */}
-          <div className="terminal-panel">
-            <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
-              <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
-                <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
-              </button>
-              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase", whiteSpace: "nowrap" }}>[ Ecowitt WS-90 ]</span>
-            </div>
-            
-            {/* Real-time Dynamic ASCII Sky Graph Segment */}
-            <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "3px", padding: "0.5rem", marginBottom: "0.75rem", fontFamily: "monospace", fontSize: "10px", color: "#00ff66", display: "flex", gap: "1rem", alignItems: "center", justifyItems: "center" }}>
-              <pre style={{ margin: 0, fontSize: "9px", lineHeight: "1.1", color: "#00ff66" }}>
-                {weather.iconCode >= 60 ? `
+          {/* Card 1: Tactical METAR Weather Terminal - Added non-destructive window calculations to seamlessly match the Map Engine bottom border */}
+          <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
+                <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
+                  <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
+                </button>
+                <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase", whiteSpace: "nowrap" }}>[ Ecowitt WS-90 ]</span>
+              </div>
+              
+              {/* Real-time Dynamic ASCII Sky Graph Segment */}
+              <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "3px", padding: "0.5rem", marginBottom: "0.75rem", fontFamily: "monospace", fontSize: "10px", color: "#00ff66", display: "flex", gap: "1rem", alignItems: "center", justifyItems: "center" }}>
+                <pre style={{ margin: 0, fontSize: "9px", lineHeight: "1.1", color: "#00ff66" }}>
+                  {weather.iconCode >= 60 ? `
      \\  |  /
     --  Oo  --
      /  |  \\
@@ -963,49 +1003,52 @@ US HF Band Limits:
   (         )
    '-------'
     ʻ ʻ ʻ ʻ  
-                ` : `
+                  ` : `
    .---.---.
   (         )
    '-------'
   (         )
    '-------'
-                `}
-              </pre>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ffffff" }}>{weather.temp}°F</div>
-                <div style={{ fontSize: "9px", color: "#00ff66", fontWeight: "700", marginTop: "2px" }}>
-                  STATUS // <span className="hud-pulse">[ {weather.condition} ]</span>
+                  `}
+                </pre>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ffffff" }}>{weather.temp}°F</div>
+                  <div style={{ fontSize: "9px", color: "#00ff66", fontWeight: "700", marginTop: "2px" }}>
+                    STATUS // <span className="hud-pulse">[ {weather.condition} ]</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="data-row">
-              <span className="data-label">THERMAL GRADIENT</span>
-              <span className="data-value">{weather.temp}°F</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">RELATIVE HUMIDITY</span>
-              <span className="data-value txt-neon-green">{weather.humidity}% RH</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">WIND VELOCITY</span>
-              <span className="data-value">{weather.windSpeed} MPH</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">WIND VECTOR BEARING</span>
-              <span className="data-value txt-neon-green">{weather.windDir}° AZIMUTH</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">BAROMETRIC PRESSURE</span>
-              <span className="data-value txt-aviation-blue">{weather.baro} inHg</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">SOLAR IRRADIANCE</span>
-              <span className="data-value txt-solar-amber">{weather.solRad} W/m²</span>
-            </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">ULTRAVIOLET INDEX</span>
-              <span className="data-value" style={{ color: "#a855f7" }}>UV {weather.uvi}</span>
+            <div>
+              <div className="data-row">
+                <span className="data-label">THERMAL GRADIENT</span>
+                <span className="data-value">{weather.temp}°F</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">RELATIVE HUMIDITY</span>
+                <span className="data-value txt-neon-green">{weather.humidity}% RH</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">WIND VELOCITY</span>
+                <span className="data-value">{weather.windSpeed} MPH</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">WIND VECTOR BEARING</span>
+                <span className="data-value txt-neon-green">{weather.windDir}° AZIMUTH</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">BAROMETRIC PRESSURE</span>
+                <span className="data-value txt-aviation-blue">{weather.baro} inHg</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">SOLAR IRRADIANCE</span>
+                <span className="data-value txt-solar-amber">{weather.solRad} W/m²</span>
+              </div>
+              <div className="data-row" style={{ borderBottom: "none" }}>
+                <span className="data-label">ULTRAVIOLET INDEX</span>
+                <span className="data-value" style={{ color: "#a855f7" }}>UV {weather.uvi}</span>
+              </div>
             </div>
           </div>
 
@@ -1275,8 +1318,8 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Complete Live Log Ledger */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            {/* Complete Live Log Ledger - Injected a non-destructive safety buffer offset to perfectly align its top edge with Solar Weather across monitors */}
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
