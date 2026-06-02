@@ -1354,7 +1354,7 @@ US HF Band Limits:
             </div>
 
             {/* Card 3: Shack Gear */}
-            <div className="terminal-panel">
+            <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="The core operating equipment configuration, computer system properties, and antenna array for station AFØDB.">
                   <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
