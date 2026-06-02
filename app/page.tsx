@@ -1397,7 +1397,6 @@ US HF Band Limits:
 
             {/* Card 5: PSK Reporter footprint register */}
             <div className="terminal-panel">
-              <div className="terminal-panel">
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
@@ -1422,7 +1421,6 @@ US HF Band Limits:
                   ))
                 )}
               </div>
-            </div>
             </div>
 
           </div>
