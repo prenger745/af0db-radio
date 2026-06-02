@@ -69,6 +69,13 @@ interface OperationalWeather {
   iconCode: number;
 }
 
+// Global scope style helper to guarantee complete visibility during compilation
+const getColorClass = (rating: string) => {
+  if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+  if (rating === "FAIR") return "txt-solar-amber";
+  return "rst-r-box";
+};
+
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -532,44 +539,6 @@ export default function Page() {
     } catch (e) {}
   }
 
-  async function fetchLiveTacticalFeeds() {
-    try {
-      const potaRes = await fetch("/api/pota?_=" + Date.now(), { cache: "no-store" });
-      if (potaRes.ok) {
-        const rawSpots = await potaRes.json();
-        if (Array.isArray(rawSpots)) {
-          const formattedPota = rawSpots.slice(0, 20).map((spot: any) => ({
-            activator: (spot.activator || "UNKNOWN").toUpperCase(),
-            reference: (spot.reference || "K-0000").toUpperCase(),
-            name: spot.name || "State/National Preserve Entity",
-            frequency: spot.frequency || "—",
-            mode: spot.mode || "SSB",
-            time: spot.spotTime ? spot.spotTime.substring(11, 16) : "—",
-            lat: parseFloat(spot.latitude) || 39.8283,
-            lng: parseFloat(spot.longitude) || -98.5795
-          }));
-          setPotaSpots(formattedPota);
-        }
-      }
-    } catch (e) { console.warn("POTA Link Down", e); }
-
-    try {
-      const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
-      if (pskRes.ok) {
-        const pskData = await pskRes.json();
-        if (pskData && Array.isArray(pskData.spots)) {
-          setPSKSpots(pskData.spots);
-          setGlobePoints(pskData.spots.map((spot: any) => ({
-            lat: spot.lat,
-            lng: spot.lng,
-            type: "psk",
-            details: spot
-          })));
-        }
-      }
-    } catch (e) {}
-  }
-
   async function fetchSolarData() {
     try {
       const res = await fetch("/api/solar?_=" + Date.now(), { cache: "no-store" });
@@ -919,7 +888,7 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -982,7 +951,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - Added non-destructive window calculations to seamlessly match the Map Engine bottom border */}
+          {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1160,7 +1129,6 @@ US HF Band Limits:
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
-            {/* UPDATED VHF DISPLAY VECTOR: Constant monitor warning block layer */}
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">6M VHF Propagation</span>
               <span className="data-value txt-solar-amber">[MONITOR]</span>
@@ -1183,7 +1151,7 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1rem", width: "100%" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1rem", width: "100%", alignItems: "start" }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1318,7 +1286,7 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Complete Live Log Ledger - Injected a non-destructive safety buffer offset to perfectly align its top edge with Solar Weather across monitors */}
+            {/* Complete Live Log Ledger */}
             <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
@@ -1429,6 +1397,7 @@ US HF Band Limits:
 
             {/* Card 5: PSK Reporter footprint register */}
             <div className="terminal-panel">
+              <div className="terminal-panel">
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
@@ -1453,6 +1422,7 @@ US HF Band Limits:
                   ))
                 )}
               </div>
+            </div>
             </div>
 
           </div>
