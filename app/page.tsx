@@ -747,7 +747,7 @@ export default function Page() {
 
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #ffaa00; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem; }
         
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; position: relative; }
         .data-label { color: #688a73 !important; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
         .data-value { font-weight: 600; text-align: right; color: #d0edd9; }
         
@@ -886,7 +886,7 @@ export default function Page() {
         {/* Left Column Stack (Weather Stations Only) */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Aligned Box 1: Active Band - Verified multi-line layout string formatting structure */}
+          {/* Aligned Box 1: Active Band */}
           <div 
             className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" 
             data-blurb={`The current HF band Dan is operating on.
@@ -973,21 +973,53 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
+          {/* Card 2: Space weather info with responsive row tooltips embedded directly */}
           <div className="terminal-panel">
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
               </button>
             </div>
-            <div className="data-row"><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
-            <div className="data-row"><span className="data-label">SUNSPOT NUMBER</span><span className="data-value panel-mono-data">{sunspots}</span></div>
-            <div className="data-row"><span className="data-label">A INDEX</span><span className="data-value panel-mono-data txt-neon-green">{aIndex}</span></div>
-            <div className="data-row"><span className="data-label">K INDEX</span><span className="data-value panel-mono-data txt-neon-green">{kIndex}</span></div>
-            <div className="data-row"><span className="data-label">X-RAY FLUX</span><span className="data-value txt-aviation-blue">{xray}</span></div>
-            <div className="data-row"><span className="data-label">SOLAR WIND</span><span className="data-value panel-mono-data">{solarWind} km/s</span></div>
-            <div className="data-row"><span className="data-label">NOISE FLOOR</span><span className="data-value txt-solar-amber">{sigNoise}</span></div>
-            <div className="data-row" style={{ borderBottom: "none", marginBottom: "0.5rem" }}><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
+              <span className="data-label">SOLAR FLUX (SFI)</span>
+              <span className="data-value txt-solar-amber">{sfi}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation.">
+              <span className="data-label">SUNSPOT NUMBER</span>
+              <span className="data-value panel-mono-data">{sunspots}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior.">
+              <span className="data-label">A INDEX</span>
+              <span className="data-value panel-mono-data txt-neon-green">{aIndex}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths.">
+              <span className="data-label">K INDEX</span>
+              <span className="data-value panel-mono-data txt-neon-green">{kIndex}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts.">
+              <span className="data-label">X-RAY FLUX</span>
+              <span className="data-value txt-aviation-blue">{xray}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths.">
+              <span className="data-label">SOLAR WIND</span>
+              <span className="data-value panel-mono-data">{solarWind} km/s</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations.">
+              <span className="data-label">NOISE FIELD</span>
+              <span className="data-value txt-solar-amber">{sigNoise}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade.">
+              <span className="data-label">GEOMAG FIELD</span>
+              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
+            </div>
             
             <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               HF Band Real-Time Profiles
