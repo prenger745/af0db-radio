@@ -640,17 +640,14 @@ export default function Page() {
 
   // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
   const getCalculatedPropagationArray = () => {
-    // 1. Calculate Ionization Capacity
     const parsedSunspots = parseInt(sunspots) || 0;
     const baseIonization = Math.min(100, Math.max(0, (sfi - 65) * 1.1 + parsedSunspots * 0.15));
     const finalIonization = Math.round(baseIonization);
 
-    // 2. Calculate Ray Path Attenuation
     const windSpeedVal = parseFloat(solarWind) || 400;
     const baseStormPenalty = kIndex * 12 + (windSpeedVal > 500 ? (windSpeedVal - 500) * 0.08 : 0);
     const finalAttenuation = Math.min(100, Math.round(baseStormPenalty));
 
-    // 3. Compute Net DX Value Score
     const noiseScaleInt = parseInt(sigNoise.replace(/[^0-9]/g, "")) || 1;
     const calculatedNet = Math.round(finalIonization - finalAttenuation - noiseScaleInt * 3);
     const finalNetScore = Math.min(100, Math.max(0, calculatedNet));
@@ -701,7 +698,9 @@ export default function Page() {
           transition: opacity 0.8s ease;
         }
         .deck-workspace.active { opacity: 1; }
-        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 340px 1fr; gap: 1.5rem; } }
+        
+        /* UPGRADED LAYOUT: Widen side tracks to 390px to lock horizontal text profiles */
+        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 390px 1fr; gap: 1.5rem; } }
 
         .terminal-panel {
           background: #060907;
@@ -1012,7 +1011,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info with integrated real-time math engine blocks */}
+          {/* Card 2: Space weather info */}
           <div className="terminal-panel">
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
@@ -1129,8 +1128,8 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Row Split-Grid Wrapper */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 340px", gap: "1rem", width: "100%" }}>
+        {/* Master Right Row Split-Grid Wrapper: Scaled to cleanly balance wide columns */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1rem", width: "100%" }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1323,7 +1322,7 @@ US HF Band Limits:
 
           </div>
 
-          {/* Sub-Column 2: Far Right Stack */}
+          {/* Sub-Column 2: Far Right Stack with upgraded 390px structural column balance */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
@@ -1378,7 +1377,7 @@ US HF Band Limits:
             <div className="terminal-panel">
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
-                  <Laptop style={{ width: "16px", height: "16px" }} /> PSK FOOTPRINT REGISTRY (FT8)
+                  <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
               <div className="ticker-scroller-box" style={{ height: "140px" }}>
@@ -1404,6 +1403,7 @@ US HF Band Limits:
 
           </div>
 
+          {/* End layout column container blocks split logic */}
         </div>
 
       </main>
