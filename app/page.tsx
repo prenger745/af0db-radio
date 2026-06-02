@@ -1151,7 +1151,7 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1rem", width: "100%", alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start" }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
