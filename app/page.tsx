@@ -674,14 +674,6 @@ export default function Page() {
 
   const propArray = getCalculatedPropagationArray();
 
-  // AUTOMATED VHF DYNAMIC CALCULATED PROJECTION LAYER FOR 6 METERS
-  const calculate6MeterPropagation = () => {
-    if (kIndex <= 3 && propArray.ionization > 50) {
-      return kIndex <= 1 ? "GREAT" : "GOOD";
-    }
-    return kIndex > 5 ? "POOR" : "FAIR";
-  };
-
   return (
     <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
       <style dangerouslySetInnerHTML={{__html: `
@@ -953,7 +945,6 @@ US HF Band Limits:
 
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
-            {/* FORCE BRACKET LAYOUT FLAT: Single horizontal row tracking on desktop monitors */}
             <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
               <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                 <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
@@ -1086,7 +1077,6 @@ US HF Band Limits:
               HF Band Real-Time Profiles
             </div>
 
-            {/* UPGRADED MATRIX PROFILE LISTING GRID INCORPORATING REQUESTED ALL AMATEUR HF BANDS */}
             <div className="data-row">
               <span className="data-label">160M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
@@ -1127,9 +1117,10 @@ US HF Band Limits:
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
+            {/* UPDATED VHF DISPLAY VECTOR: Constant monitor warning block layer */}
             <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">6M VHF Propagation</span>
-              <span className={`data-value ${getColorClass(calculate6MeterPropagation())}`}>[{calculate6MeterPropagation()}]</span>
+              <span className="data-value txt-solar-amber">[MONITOR]</span>
             </div>
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
@@ -1359,7 +1350,7 @@ US HF Band Limits:
                 </button>
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
               </div>
-              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTWA, KS</span></div>
+              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
               <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
               <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
               <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
