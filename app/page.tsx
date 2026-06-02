@@ -69,13 +69,6 @@ interface OperationalWeather {
   iconCode: number;
 }
 
-// Global scope style helper to guarantee complete visibility during compilation
-const getColorClass = (rating: string) => {
-  if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
-  if (rating === "FAIR") return "txt-solar-amber";
-  return "rst-r-box";
-};
-
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -523,9 +516,9 @@ export default function Page() {
     } catch (e) { console.warn("POTA Link Down", e); }
 
     try {
-      const pskRes = await fetch("/api/psk?callsign=AF0DB"); 
-      if (pskRes.ok) {
-        const pskData = await pskRes.json();
+      const res = await fetch("/api/psk?callsign=AF0DB"); 
+      if (res.ok) {
+        const pskData = await res.json();
         if (pskData && Array.isArray(pskData.spots)) {
           setPSKSpots(pskData.spots);
           setGlobePoints(pskData.spots.map((spot: any) => ({
@@ -814,6 +807,7 @@ export default function Page() {
         .status-bracket { font-size: 0.75rem; color: #334a3b; font-weight: 600; }
         .status-text { color: #00ff66; font-weight: 700; }
         .badge-mode-tactical { border: 1px solid rgba(0, 255, 102, 0.4); color: #00ff66; font-size: 10px; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(0,255,102,0.03); }
+        .badge-mode-tactical { border: 1px solid rgba(0, 255, 102, 0.4); color: #00ff66; font-size: 10px; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(0,255,102,0.03); }
         .rst-s-box { color: #00ff66; font-weight: 600; }
         .rst-r-box { color: #ff3333; font-weight: 600; }
         .panel-mono-data { font-weight: 600; }
@@ -888,7 +882,7 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -1023,7 +1017,6 @@ US HF Band Limits:
 
           {/* Card 2: Space weather info */}
           <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
-          <div className="terminal-panel">
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
@@ -1355,17 +1348,19 @@ US HF Band Limits:
             </div>
 
             {/* Card 3: Shack Gear */}
-            <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
-              <div className="panel-header">
-                <button className="tactical-tooltip-trigger" data-blurb="The core operating equipment configuration, computer system properties, and antenna array for station AFØDB.">
-                  <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
-                </button>
-                <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
+            <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                <div className="panel-header">
+                  <button className="tactical-tooltip-trigger" data-blurb="The core operating equipment configuration, computer system properties, and antenna array for station AFØDB.">
+                    <Cpu style={{ width: "16px", height: "16px", color: "#00ff66" }} /> HAMSHACK GEAR
+                  </button>
+                  <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
+                </div>
+                <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
+                <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
+                <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
+                <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
               </div>
-              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
-              <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
-              <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
-              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
