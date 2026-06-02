@@ -627,7 +627,7 @@ export default function Page() {
           pointer-events: none;
         }
 
-        /* NEW DOUBLE ROW WORKSPACE SPLIT BLOCK GRAPHICS LAYOUT MATRIX */
+        /* WORKSPACE SPLIT BLOCK GRAPHICS LAYOUT MATRIX */
         .workspace-row-track {
           display: grid;
           grid-template-columns: 1fr;
@@ -666,6 +666,7 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
+        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -823,7 +824,7 @@ export default function Page() {
       {/* Header */}
       <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -920,8 +921,8 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Center Map Engine Canvas Block */}
-          <div style={{ display: "flex", flexDirection: "column()", height: "100%" }}>
+          {/* Center Map Engine Canvas Block - CORRECTED COMPILER FLEX PARAMS */}
+          <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem", width: "100%" }}>
               <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
                 <div className="aligned-metric-label">Rig Mode</div>
@@ -1055,7 +1056,7 @@ export default function Page() {
               <div className="data-row"><span className="data-label">15M Propagation</span><span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span></div>
               <div className="data-row"><span className="data-label">12M Propagation</span><span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span></div>
               <div className="data-row"><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
-              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">6M VHF Propagation</span><span className="data-value txt-solar-amber">[MONITOR]</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">6M VHF Propagation</span><span className="value txt-solar-amber">[MONITOR]</span></div>
             </div>
 
             {/* Gear Information Matrix block */}
