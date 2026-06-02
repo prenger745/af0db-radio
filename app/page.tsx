@@ -698,8 +698,6 @@ export default function Page() {
           transition: opacity 0.8s ease;
         }
         .deck-workspace.active { opacity: 1; }
-        
-        /* UPGRADED LAYOUT: Widen side tracks to 390px to lock horizontal text profiles */
         @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 390px 1fr; gap: 1.5rem; } }
 
         .terminal-panel {
@@ -947,11 +945,12 @@ US HF Band Limits:
 
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel">
-            <div className="panel-header panel-header-weather">
+            {/* UPDATED WEATHER HEADER GRID: Force absolute single line tracking without flexing or wrapping breaks */}
+            <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
               <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                 <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
               </button>
-              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase" }}>[ Ecowitt WS-90 ]</span>
+              <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase", whiteSpace: "nowrap" }}>[ Ecowitt WS-90 ]</span>
             </div>
             
             {/* Real-time Dynamic ASCII Sky Graph Segment */}
@@ -1128,7 +1127,7 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Row Split-Grid Wrapper: Scaled to cleanly balance wide columns */}
+        {/* Master Right Row Split-Grid Wrapper */}
         <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1rem", width: "100%" }}>
           
           {/* Sub-Column 1: Center Stack */}
@@ -1322,7 +1321,7 @@ US HF Band Limits:
 
           </div>
 
-          {/* Sub-Column 2: Far Right Stack with upgraded 390px structural column balance */}
+          {/* Sub-Column 2: Far Right Stack */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
@@ -1403,7 +1402,6 @@ US HF Band Limits:
 
           </div>
 
-          {/* End layout column container blocks split logic */}
         </div>
 
       </main>
