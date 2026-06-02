@@ -69,6 +69,13 @@ interface OperationalWeather {
   iconCode: number;
 }
 
+// Global scope style helper to guarantee complete visibility during compilation
+const getColorClass = (rating: string) => {
+  if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+  if (rating === "FAIR") return "txt-solar-amber";
+  return "rst-r-box";
+};
+
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
   const [displayedText, setDisplayedText] = useState("");
 
@@ -611,6 +618,17 @@ export default function Page() {
 
   const propArray = getCalculatedPropagationArray();
 
+  const getPropRating = (band: string) => {
+    const timeKey = isNight ? "night" : "day";
+    switch (band) {
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
+    }
+  };
+
   return (
     <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
       <style dangerouslySetInnerHTML={{__html: `
@@ -921,7 +939,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Center Map Engine Canvas Block - CORRECTED COMPILER FLEX PARAMS */}
+          {/* Center Map Engine Canvas Block */}
           <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem", width: "100%" }}>
               <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
