@@ -1022,6 +1022,7 @@ US HF Band Limits:
           </div>
 
           {/* Card 2: Space weather info */}
+          <div style={{ marginTop: isMobileScreen ? "0px" : "4.35rem" }}></div>
           <div className="terminal-panel">
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
