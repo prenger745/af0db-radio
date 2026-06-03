@@ -374,7 +374,7 @@ export default function Page() {
 
       if (sortedLogs.length > 0) {
         // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
-        const newestEighteen = sortedLogs.slice(0, 17);
+        const newestEighteen = sortedLogs.slice(0, 18);
         setLogs(newestEighteen);
         setIsLiveStream(true);
 
@@ -1282,7 +1282,7 @@ US HF Band Limits:
             </div>
 
             {/* Complete Live Log Ledger */}
-            <div className="terminal-panel" style={isMobileScreen ? { display: "flex", flexDirection: "column", marginTop: "0.68rem" } : { display: "flex", flexDirection: "column", height: "661px", marginTop: "0.68rem" }}>
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
