@@ -1016,7 +1016,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info - PADDING COMPRESSED TO MATCH LOG AXIS TARGET */}
+          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
           <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
@@ -1040,96 +1040,96 @@ US HF Band Limits:
               </div>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
               <span className="data-label">SOLAR FLUX (SFI)</span>
               <span className="data-value txt-solar-amber">{sfi}</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation.">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation.">
               <span className="data-label">SUNSPOT NUMBER</span>
               <span className="data-value panel-mono-data">{sunspots}</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior.">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior.">
               <span className="data-label">A INDEX</span>
               <span className="data-value panel-mono-data txt-neon-green">{aIndex}</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths.">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths.">
               <span className="data-label">K INDEX</span>
               <span className="data-value panel-mono-data txt-neon-green">{kIndex}</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts.">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts.">
               <span className="data-label">X-RAY FLUX</span>
               <span className="data-value txt-aviation-blue">{xray}</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths.">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths.">
               <span className="data-label">SOLAR WIND</span>
               <span className="data-value panel-mono-data">{solarWind} km/s</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0" }} data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations.">
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations.">
               <span className="data-label">NOISE FIELD</span>
               <span className="data-value txt-solar-amber">{sigNoise}</span>
             </div>
             
-            <div className="data-row tactical-tooltip-trigger" style={{ padding: "0.3rem 0", borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade.">
+            <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade.">
               <span className="data-label">GEOMAG FIELD</span>
               <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
             </div>
             
-            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.5rem", paddingBottom: "0.15rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               HF Band Real-Time Profiles
             </div>
 
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">160M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">80M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">60M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">40M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">30M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
             </div>
-            <div className="data-row forced-row-reset" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row forced-row-reset">
               <span className="data-label forced-label-reset">20M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">17M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">15M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">12M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0" }}>
+            <div className="data-row">
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
-            <div className="data-row" style={{ padding: "0.3rem 0", borderBottom: "none" }}>
+            <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">6M VHF Propagation</span>
               <span className="data-value txt-solar-amber">[MONITOR]</span>
             </div>
 
-            <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
+            <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
               <a 
                 href="https://www.hamqsl.com/solar.html" 
                 target="_blank" 
@@ -1282,7 +1282,7 @@ US HF Band Limits:
             </div>
 
             {/* Complete Live Log Ledger */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem" }}>
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem", minHeight: isMobileScreen ? "auto" : "896px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
@@ -1310,7 +1310,7 @@ US HF Band Limits:
                         </td>
                       </tr>
                     ) : (
-                      logs.map((qso, index) => (
+                      logs.slice(0, 16).map((qso, index) => (
                         <tr key={index}>
                           <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
                             {qso.callsign}
@@ -1365,13 +1365,13 @@ US HF Band Limits:
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
+            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ height: "140px" }}>
+              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
                 {potaSpots.length === 0 ? (
                   <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
                 ) : (
@@ -1393,13 +1393,13 @@ US HF Band Limits:
             </div>
 
             {/* Card 5: PSK Reporter footprint register */}
-            <div className="terminal-panel">
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ height: "140px" }}>
+              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
                 {pskSpots.length === 0 ? (
                   <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
                     &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
