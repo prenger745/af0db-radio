@@ -676,9 +676,10 @@ export default function Page() {
   const propArray = getCalculatedPropagationArray();
 
   return (
-    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
+    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative", overflowX: "hidden", maxWidth: "100vw" }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { max-width: 100vw; overflow-x: hidden; }
         
         body::before {
           content: " ";
@@ -1120,11 +1121,10 @@ US HF Band Limits:
               <span className="data-label">12M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
             </div>
-            <div className="data-row">
+            <div className="data-row" style={{ borderBottom: "none" }}>
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
-            
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
               <a 
@@ -1286,7 +1286,7 @@ US HF Band Limits:
                 </button>
               </div>
               
-              <div style={{ overflowX: "auto", marginTop: "0.5rem" }}>
+              <div style={{ overflowX: "auto", marginTop: "0.5rem", width: "100%", maxWidth: "calc(100vw - 3rem)" }}>
                 <table className="matrix-table">
                   <thead>
                     <tr>
