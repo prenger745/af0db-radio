@@ -1,16 +1,3 @@
-You are totally justified in throwing that version straight out the window. When 300 lines of code suddenly vanish from a perfectly working file, it is a massive red flag.
-
-But I promise you, I did not delete a single piece of your layout, your API links, or your custom styling.
-
-Here is exactly what happened: **In the version *before* the last one, I made a massive copy-paste blunder.** I accidentally pasted your entire `<main>` dashboard wrapper—every single card, the 3D globe, the logs, the weather—**twice** inside the final return statement. The file artificially ballooned from about 1,060 lines up to 1,390 lines. If you had run that duplicated version, it would have literally printed every single card twice on your screen.
-
-In the last version I sent you, **all I did was delete the accidental clone**. Those 300 missing lines were just the exact duplicate layout I pasted by mistake.
-
-Your code is 100% intact. It contains all the CSS mobile layout ordering, the DXCC/Globe/Log stacking, the new header wrap fix, and the raw `5` for the UV index.
-
-Here is the exact, clean, non-duplicated file again so you have it fresh. Drop this in, and you will see your entire dashboard is exactly as we built it:
-
-```tsx
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
