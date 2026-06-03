@@ -676,7 +676,7 @@ export default function Page() {
   const propArray = getCalculatedPropagationArray();
 
   return (
-    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
+    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative", overflowX: "hidden", maxWidth: "100vw" }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { max-width: 100vw; overflow-x: hidden; }
@@ -715,10 +715,10 @@ export default function Page() {
           .panel-active-band { order: 1; margin-bottom: 0 !important; }
           .panel-triple { order: 2; margin-bottom: 0 !important; }
           .panel-dxcc { order: 3; margin-bottom: 0 !important; }
-          .panel-globe { order: 4; }
-          .panel-logs { order: 5; }
-          .panel-wx { order: 6; }
-          .panel-solar { order: 7; }
+          .panel-wx { order: 4; }
+          .panel-solar { order: 5; }
+          .panel-globe { order: 6; }
+          .panel-logs { order: 7; }
           .panel-gear { order: 8; }
           .panel-pota { order: 9; }
           .panel-psk { order: 10; }
@@ -943,10 +943,10 @@ export default function Page() {
       </section>
 
       {/* Main Workspace Split Grid Layout */}
-      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
         
         {/* Left Column Stack (Weather Stations Only) */}
-        <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
           
           {/* Aligned Box 1: Active Band */}
           <div 
@@ -1165,13 +1165,13 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div className="mobile-contents" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start" }}>
+        <div className="mobile-contents" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
-          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
             {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
-            <div className="triple-box-grid panel-triple" style={{ display: "grid", gap: "0.75rem" }}>
+            <div className="triple-box-grid panel-triple" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "repeat(3, 1fr)", gap: "0.75rem" }}>
               <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
                 <div className="aligned-metric-label">Rig Mode</div>
                 <div className="aligned-metric-value" style={{ color: "#ffaa00" }}>{stats.currentMode}</div>
@@ -1308,7 +1308,7 @@ US HF Band Limits:
                 </button>
               </div>
               
-              <div className="log-table-wrapper" style={{ overflowX: "auto", marginTop: "0.5rem" }}>
+              <div className="log-table-wrapper" style={{ overflowX: "auto", marginTop: "0.5rem", width: "100%", maxWidth: "calc(100vw - 3rem)" }}>
                 <table className="matrix-table">
                   <thead>
                     <tr>
@@ -1359,7 +1359,7 @@ US HF Band Limits:
           </div>
 
           {/* Sub-Column 2: Far Right Stack */}
-          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
             <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-dxcc" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
