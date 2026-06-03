@@ -373,12 +373,12 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // EXACT TRACK FOOTPRINT SPECIFIED AT 17 ROWS
-        const newestSeventeen = sortedLogs.slice(0, 17);
-        setLogs(newestSeventeen);
+        // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
+        const newestEighteen = sortedLogs.slice(0, 18);
+        setLogs(newestEighteen);
         setIsLiveStream(true);
 
-        const rawBand = newestSeventeen[0].band ? newestSeventeen[0].band : "20M";
+        const rawBand = newestEighteen[0].band ? newestEighteen[0].band : "20M";
         const displayBand = rawBand.toUpperCase().endsWith("M") 
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
@@ -396,10 +396,10 @@ export default function Page() {
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
           currentBand: displayBand,
-          currentMode: newestSeventeen[0].mode || "FT8"
+          currentMode: newestEighteen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestSeventeen.map(q => q.callsign.replace(/Ø/g, "0"));
+        const recentCallsigns = newestEighteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
 
         rawGeoCoordinates.forEach((coord: any) => {
@@ -576,6 +576,52 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
+  useEffect(() => {
+    parseLiveQrzData();
+    fetchLiveTacticalFeeds();
+    fetchSolarData();
+    fetchLocalTacticalWeather();
+
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);       
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
+    const solarInterval = setInterval(fetchSolarData, 1800000);       
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
+
+    return () => {
+      clearInterval(qrzInterval);
+      clearInterval(feedInterval);
+      clearInterval(solarInterval);
+      clearInterval(weatherInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
+
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: "", 
+      color: "#00ff66", 
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
+
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
+  }, [geoArcs, potaSpots]);
+
   const getPropRating = (band: string) => {
     const timeKey = isNight ? "night" : "day";
     switch (band) {
@@ -627,7 +673,6 @@ export default function Page() {
     };
   };
 
-  // DEFINED IN DIRECT ACTIVE SCOPE TO PREVENT TYPE CHECK ERROS BEFORE JSX DECK OPENING
   const propArray = getCalculatedPropagationArray();
 
   return (
@@ -855,7 +900,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -904,7 +949,7 @@ US HF Band Limits:
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyItems: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
+              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                   <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
                 </button>
@@ -971,7 +1016,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
+          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
           <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
