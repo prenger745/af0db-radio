@@ -373,12 +373,12 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
-        const newestEighteen = sortedLogs.slice(0, 18);
-        setLogs(newestEighteen);
+        // UPDATED ARRAY SLICE AND RAY TRACING TRACK TO EXACTLY 17 ITEMS
+        const newestSeventeen = sortedLogs.slice(0, 17);
+        setLogs(newestSeventeen);
         setIsLiveStream(true);
 
-        const rawBand = newestEighteen[0].band ? newestEighteen[0].band : "20M";
+        const rawBand = newestSeventeen[0].band ? newestSeventeen[0].band : "20M";
         const displayBand = rawBand.toUpperCase().endsWith("M") 
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
@@ -396,10 +396,10 @@ export default function Page() {
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
           currentBand: displayBand,
-          currentMode: newestEighteen[0].mode || "FT8"
+          currentMode: newestSeventeen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestEighteen.map(q => q.callsign.replace(/Ø/g, "0"));
+        const recentCallsigns = newestSeventeen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
 
         rawGeoCoordinates.forEach((coord: any) => {
@@ -575,105 +575,6 @@ export default function Page() {
 
     } catch (err) { console.warn(err); }
   }
-
-  useEffect(() => {
-    parseLiveQrzData();
-    fetchLiveTacticalFeeds();
-    fetchSolarData();
-    fetchLocalTacticalWeather();
-
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);       
-    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
-    const solarInterval = setInterval(fetchSolarData, 1800000);       
-    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
-
-    return () => {
-      clearInterval(qrzInterval);
-      clearInterval(feedInterval);
-      clearInterval(solarInterval);
-      clearInterval(weatherInterval);
-    };
-  }, []);
-
-  useEffect(() => {
-    const qrzLabels = geoArcs.map(arc => ({
-      lat: arc.lat,
-      lng: arc.lng,
-      text: arc.text,
-      color: arc.color,
-      type: "qrz",
-      gridKey: arc.gridKey,
-      country: arc.country,
-      operators: arc.operators
-    }));
-
-    const potaLabels = potaSpots.map(spot => ({
-      lat: spot.lat,
-      lng: spot.lng,
-      text: "", 
-      color: "#00ff66", 
-      type: "pota",
-      gridKey: spot.reference,
-      country: "United States",
-      operators: spot.activator,
-      details: spot
-    }));
-
-    setGlobeLabels([...qrzLabels, ...potaLabels]);
-  }, [geoArcs, potaSpots]);
-
-  const getPropRating = (band: string) => {
-    const timeKey = isNight ? "night" : "day";
-    switch (band) {
-      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
-      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
-      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
-      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-      default: return "FAIR";
-    }
-  };
-
-  const getColorClass = (rating: string) => {
-    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
-    if (rating === "FAIR") return "txt-solar-amber";
-    return "rst-r-box";
-  };
-
-  // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
-  const getCalculatedPropagationArray = () => {
-    const parsedSunspots = parseInt(sunspots) || 0;
-    const baseIonization = Math.min(100, Math.max(0, (sfi - 65) * 1.1 + parsedSunspots * 0.15));
-    const finalIonization = Math.round(baseIonization);
-
-    const windSpeedVal = parseFloat(solarWind) || 400;
-    const baseStormPenalty = kIndex * 12 + (windSpeedVal > 500 ? (windSpeedVal - 500) * 0.08 : 0);
-    const finalAttenuation = Math.min(100, Math.round(baseStormPenalty));
-
-    const noiseScaleInt = parseInt(sigNoise.replace(/[^0-9]/g, "")) || 1;
-    const calculatedNet = Math.round(finalIonization - finalAttenuation - noiseScaleInt * 3);
-    const finalNetScore = Math.min(100, Math.max(0, calculatedNet));
-
-    let displayString = "DX_PATH_OPTIMAL";
-    let textClass = "txt-neon-green";
-
-    if (finalNetScore < 40) {
-      displayString = "BAND_BLACKOUT";
-      textClass = "rst-r-box";
-    } else if (finalNetScore < 75) {
-      displayString = "PATH_DEGRADED";
-      textClass = "txt-solar-amber";
-    }
-
-    return {
-      ionization: finalIonization,
-      attenuation: finalAttenuation,
-      netValue: finalNetScore,
-      statusText: displayString,
-      colorClass: textClass
-    };
-  };
-
-  const propArray = getCalculatedPropagationArray();
 
   return (
     <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
@@ -900,7 +801,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -1016,7 +917,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
+          {/* Card 2: Space weather info */}
           <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
