@@ -485,8 +485,6 @@ export default function Page() {
               if ((k === "uv" || k.includes("uvi")) && rawUvi === undefined) rawUvi = data[key];
            });
         }
-        
-        console.log("RAW WEATHER API PAYLOAD:", data);
 
         setWeather({
           temp: data.temp != null && !isNaN(parseFloat(data.temp)) ? Math.round(parseFloat(data.temp)).toString() : "——",
@@ -1052,7 +1050,7 @@ US HF Band Limits:
               </div>
               <div className="data-row" style={{ borderBottom: "none" }}>
                 <span className="data-label">ULTRAVIOLET INDEX</span>
-                <span className="data-value" style={{ color: "#a855f7" }}>UV {weather.uvi}</span>
+                <span className="data-value" style={{ color: "#a855f7" }}>{weather.uvi}</span>
               </div>
             </div>
           </div>
