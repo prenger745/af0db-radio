@@ -1296,7 +1296,7 @@ US HF Band Limits:
                 </div>
               </div>
               
-              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: "scale(0.72", transformOrigin: "center center" }}>
+              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: "scale(0.72)", transformOrigin: "center center" }}>
                 {showWorkspace && (
                   <GlobeEngine
                     width={dimensions.width}
