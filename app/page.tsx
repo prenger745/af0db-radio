@@ -373,6 +373,7 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
+        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
         const newestSixteen = sortedLogs.slice(0, 16);
         setLogs(newestSixteen);
         setIsLiveStream(true);
@@ -675,7 +676,7 @@ export default function Page() {
   const propArray = getCalculatedPropagationArray();
 
   return (
-    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative", overflowX: "hidden", maxWidth: "100vw" }}>
+    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { max-width: 100vw; overflow-x: hidden; }
@@ -699,7 +700,29 @@ export default function Page() {
           transition: opacity 0.8s ease;
         }
         .deck-workspace.active { opacity: 1; }
-        @media (min-width: 1024px) { .deck-workspace { grid-template-columns: 390px 1fr; gap: 1.5rem; } }
+        
+        @media (min-width: 1024px) { 
+          .deck-workspace { grid-template-columns: 390px 1fr; gap: 1.5rem; } 
+          .triple-box-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* PURE CSS MOBILE REORDERING (DESKTOP IS COMPLETELY UNAFFECTED) */
+        @media (max-width: 1023px) {
+          .mobile-contents { display: contents !important; }
+          .triple-box-grid { grid-template-columns: 1fr !important; }
+          .log-table-wrapper { width: 100%; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
+          
+          .panel-active-band { order: 1; margin-bottom: 0 !important; }
+          .panel-triple { order: 2; margin-bottom: 0 !important; }
+          .panel-dxcc { order: 3; margin-bottom: 0 !important; }
+          .panel-globe { order: 4; }
+          .panel-logs { order: 5; }
+          .panel-wx { order: 6; }
+          .panel-solar { order: 7; }
+          .panel-gear { order: 8; }
+          .panel-pota { order: 9; }
+          .panel-psk { order: 10; }
+        }
 
         .terminal-panel {
           background: #060907;
@@ -920,15 +943,14 @@ export default function Page() {
       </section>
 
       {/* Main Workspace Split Grid Layout */}
-      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
         {/* Left Column Stack (Weather Stations Only) */}
-        <div style={{ display: isMobileScreen ? "contents" : "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+        <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
           {/* Aligned Box 1: Active Band */}
           <div 
-            className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" 
-            style={{ order: isMobileScreen ? 1 : 0 }}
+            className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-active-band" 
             data-blurb={`The current HF band Dan is operating on.
 
 US HF Band Limits:
@@ -948,7 +970,7 @@ US HF Band Limits:
           </div>
 
           {/* Card 1: Tactical METAR Weather Terminal */}
-          <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between", order: isMobileScreen ? 6 : 0 }}>
+          <div className="terminal-panel panel-wx" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
@@ -1017,8 +1039,8 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
-          <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px", height: isMobileScreen ? "auto" : "680px", display: "flex", flexDirection: "column", order: isMobileScreen ? 7 : 0 }}>
+          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
+          <div className="terminal-panel panel-solar" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
                 <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
@@ -1041,70 +1063,89 @@ US HF Band Limits:
               </div>
             </div>
             
-            <div style={{ flex: 1, overflowY: "auto", paddingRight: "0.25rem" }}>
-              <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
-                <span className="data-label">SOLAR FLUX (SFI)</span>
-                <span className="data-value txt-solar-amber">{sfi}</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation.">
-                <span className="data-label">SUNSPOT NUMBER</span>
-                <span className="data-value panel-mono-data">{sunspots}</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior.">
-                <span className="data-label">A INDEX</span>
-                <span className="data-value panel-mono-data txt-neon-green">{aIndex}</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths.">
-                <span className="data-label">K INDEX</span>
-                <span className="data-value panel-mono-data txt-neon-green">{kIndex}</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts.">
-                <span className="data-label">X-RAY FLUX</span>
-                <span className="data-value txt-aviation-blue">{xray}</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths.">
-                <span className="data-label">SOLAR WIND</span>
-                <span className="data-value panel-mono-data">{solarWind} km/s</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations.">
-                <span className="data-label">NOISE FIELD</span>
-                <span className="data-value txt-solar-amber">{sigNoise}</span>
-              </div>
-              
-              <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade.">
-                <span className="data-label">GEOMAG FIELD</span>
-                <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
-              </div>
-              
-              <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                HF Band Real-Time Profiles
-              </div>
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
+              <span className="data-label">SOLAR FLUX (SFI)</span>
+              <span className="data-value txt-solar-amber">{sfi}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation.">
+              <span className="data-label">SUNSPOT NUMBER</span>
+              <span className="data-value panel-mono-data">{sunspots}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior.">
+              <span className="data-label">A INDEX</span>
+              <span className="data-value panel-mono-data txt-neon-green">{aIndex}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths.">
+              <span className="data-label">K INDEX</span>
+              <span className="data-value panel-mono-data txt-neon-green">{kIndex}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts.">
+              <span className="data-label">X-RAY FLUX</span>
+              <span className="data-value txt-aviation-blue">{xray}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths.">
+              <span className="data-label">SOLAR WIND</span>
+              <span className="data-value panel-mono-data">{solarWind} km/s</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations.">
+              <span className="data-label">NOISE FIELD</span>
+              <span className="data-value txt-solar-amber">{sigNoise}</span>
+            </div>
+            
+            <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade.">
+              <span className="data-label">GEOMAG FIELD</span>
+              <span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span>
+            </div>
+            
+            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              HF Band Real-Time Profiles
+            </div>
 
-              <div style={{ fontSize: "0.75rem", lineHeight: "1.35" }}>
-                {[
-                  {band: "160M", rating: getPropRating("80M")},
-                  {band: "80M", rating: getPropRating("80M")},
-                  {band: "60M", rating: getPropRating("80M")},
-                  {band: "40M", rating: getPropRating("80M")},
-                  {band: "30M", rating: getPropRating("30M")},
-                  {band: "20M", rating: getPropRating("20M"), reset: true},
-                  {band: "17M", rating: getPropRating("17M")},
-                  {band: "15M", rating: getPropRating("15M")},
-                  {band: "12M", rating: getPropRating("12M")},
-                  {band: "10M", rating: getPropRating("10M")},
-                ].map(item => (
-                  <div key={item.band} className={`data-row ${item.reset ? "forced-row-reset" : ""}`} style={{ padding: "0.35rem 0", borderBottom: "1px solid rgba(0, 255, 102, 0.05)" }}>
-                    <span className={`data-label ${item.reset ? "forced-label-reset" : ""}`}>{item.band} Propagation</span>
-                    <span className={`data-value ${getColorClass(item.rating)}`}>[{item.rating}]</span>
-                  </div>
-                ))}
-              </div>
+            <div className="data-row">
+              <span className="data-label">160M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">80M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">60M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">40M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">30M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
+            </div>
+            <div className="data-row forced-row-reset">
+              <span className="data-label forced-label-reset">20M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">17M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">15M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
+            </div>
+            <div className="data-row">
+              <span className="data-label">12M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
+            </div>
+            <div className="data-row" style={{ borderBottom: "none" }}>
+              <span className="data-label">10M Propagation</span>
+              <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
@@ -1124,13 +1165,13 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div style={{ display: isMobileScreen ? "contents" : "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        <div className="mobile-contents" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start" }}>
           
           {/* Sub-Column 1: Center Stack */}
-          <div style={{ display: isMobileScreen ? "contents" : "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
             {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
-            <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "repeat(3, 1fr)", gap: "0.75rem", order: isMobileScreen ? 2 : 0 }}>
+            <div className="triple-box-grid panel-triple" style={{ display: "grid", gap: "0.75rem" }}>
               <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
                 <div className="aligned-metric-label">Rig Mode</div>
                 <div className="aligned-metric-value" style={{ color: "#ffaa00" }}>{stats.currentMode}</div>
@@ -1148,7 +1189,7 @@ US HF Band Limits:
             {/* 3D WebGL Globe Canvas */}
             <div 
               ref={containerRef}
-              className="terminal-panel" 
+              className="terminal-panel panel-globe" 
               style={{ 
                 padding: "0.5rem", 
                 background: "#020403", 
@@ -1157,8 +1198,7 @@ US HF Band Limits:
                 overflow: "hidden", 
                 display: "flex", 
                 flexDirection: "column",
-                border: "1px solid rgba(0, 255, 102, 0.25)",
-                order: isMobileScreen ? 4 : 0
+                border: "1px solid rgba(0, 255, 102, 0.25)"
               }}
             >
               {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
@@ -1261,14 +1301,14 @@ US HF Band Limits:
             </div>
 
             {/* Complete Live Log Ledger */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: isMobileScreen ? "0px" : "0.68rem", minHeight: isMobileScreen ? "auto" : "896px", order: isMobileScreen ? 5 : 0 }}>
+            <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem", minHeight: isMobileScreen ? "auto" : "896px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
                 </button>
               </div>
               
-              <div style={{ overflowX: "auto", marginTop: "0.5rem", width: "100%", maxWidth: "calc(100vw - 3rem)" }}>
+              <div className="log-table-wrapper" style={{ overflowX: "auto", marginTop: "0.5rem" }}>
                 <table className="matrix-table">
                   <thead>
                     <tr>
@@ -1319,16 +1359,16 @@ US HF Band Limits:
           </div>
 
           {/* Sub-Column 2: Far Right Stack */}
-          <div style={{ display: isMobileScreen ? "contents" : "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
-            <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" style={{ order: isMobileScreen ? 3 : 0 }} data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
+            <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-dxcc" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
               <div className="aligned-metric-label">Countries DXCC</div>
               <div className="aligned-metric-value" style={{ color: "#a3e335" }}>{stats.dxcc}</div>
             </div>
 
             {/* Card 3: Shack Gear */}
-            <div className="terminal-panel" style={{ minHeight: isMobileScreen ? "auto" : "460px", display: "flex", flexDirection: "column", justifyContent: "flex-start", order: isMobileScreen ? 8 : 0 }}>
+            <div className="terminal-panel panel-gear" style={isMobileScreen ? {} : { minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
               <div>
                 <div className="panel-header">
                   <button className="tactical-tooltip-trigger" data-blurb="The core operating equipment configuration, computer system properties, and antenna array for station AFØDB.">
@@ -1344,7 +1384,7 @@ US HF Band Limits:
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px", order: isMobileScreen ? 9 : 0 }}>
+            <div className="terminal-panel panel-pota" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
@@ -1372,7 +1412,7 @@ US HF Band Limits:
             </div>
 
             {/* Card 5: PSK Reporter footprint register */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px", order: isMobileScreen ? 10 : 0 }}>
+            <div className="terminal-panel panel-psk" style={{ display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
