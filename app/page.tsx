@@ -373,7 +373,6 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
         const newestSixteen = sortedLogs.slice(0, 16);
         setLogs(newestSixteen);
         setIsLiveStream(true);
@@ -475,8 +474,19 @@ export default function Page() {
         else if (windSpeedVal > 15) summary = "HIGH_WINDS";
         else summary = "SYS_NORMAL";
 
-        const rawSolar = data.solRad ?? data.solarradiation ?? data.solarRadiation;
-        const rawUvi = data.uvi ?? data.uv;
+        // AGGRESSIVE DATA HUNTER: Scans the JSON object for any variant of solar or uv
+        let rawSolar = data.solRad ?? data.solarradiation ?? data.solarRadiation ?? data.solar_radiation;
+        let rawUvi = data.uvi ?? data.uv ?? data.uvindex ?? data.uv_index;
+
+        if (rawSolar === undefined || rawUvi === undefined) {
+           Object.keys(data).forEach(key => {
+              const k = key.toLowerCase();
+              if (k.includes("solar") && rawSolar === undefined) rawSolar = data[key];
+              if ((k === "uv" || k.includes("uvi")) && rawUvi === undefined) rawUvi = data[key];
+           });
+        }
+        
+        console.log("RAW WEATHER API PAYLOAD:", data);
 
         setWeather({
           temp: data.temp != null && !isNaN(parseFloat(data.temp)) ? Math.round(parseFloat(data.temp)).toString() : "——",
