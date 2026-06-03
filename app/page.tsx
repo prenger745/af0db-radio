@@ -196,7 +196,7 @@ export default function Page() {
         
         setDimensions({
           width: containerRef.current.clientWidth,
-          height: mobileViewActive ? 340 : 460
+          height: mobileViewActive ? 260 : 360
         });
       }
     };
