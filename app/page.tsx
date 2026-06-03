@@ -761,14 +761,22 @@ export default function Page() {
         /* PURE CSS MOBILE REORDERING (DESKTOP IS COMPLETELY UNAFFECTED) */
         @media (max-width: 1023px) {
           .app-container { padding: 0.75rem; }
+          
+          /* HEADER MOBILE FIXES */
           .tactical-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.75rem;
+            gap: 0.5rem;
           }
-          .header-h1 { font-size: 1.1rem; }
-          .header-status-box { align-self: flex-end; }
+          .header-h1 { 
+            font-size: 0.9rem; 
+            letter-spacing: -0.05em; 
+          }
+          .header-status-box { 
+            align-self: flex-start; 
+          }
 
+          /* WORKSPACE MOBILE FIXES */
           .deck-workspace { display: flex !important; flex-direction: column !important; gap: 0 !important; }
           .mobile-unwrap { display: contents !important; }
           
@@ -1231,7 +1239,7 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
