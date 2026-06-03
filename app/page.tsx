@@ -373,7 +373,7 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // UPDATED ARRAY SLICE AND RAY TRACING TRACK TO EXACTLY 17 ITEMS
+        // EXACT TRACK FOOTPRINT SPECIFIED AT 17 ROWS
         const newestSeventeen = sortedLogs.slice(0, 17);
         setLogs(newestSeventeen);
         setIsLiveStream(true);
@@ -575,6 +575,60 @@ export default function Page() {
 
     } catch (err) { console.warn(err); }
   }
+
+  const getPropRating = (band: string) => {
+    const timeKey = isNight ? "night" : "day";
+    switch (band) {
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
+    }
+  };
+
+  const getColorClass = (rating: string) => {
+    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+    if (rating === "FAIR") return "txt-solar-amber";
+    return "rst-r-box";
+  };
+
+  // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
+  const getCalculatedPropagationArray = () => {
+    const parsedSunspots = parseInt(sunspots) || 0;
+    const baseIonization = Math.min(100, Math.max(0, (sfi - 65) * 1.1 + parsedSunspots * 0.15));
+    const finalIonization = Math.round(baseIonization);
+
+    const windSpeedVal = parseFloat(solarWind) || 400;
+    const baseStormPenalty = kIndex * 12 + (windSpeedVal > 500 ? (windSpeedVal - 500) * 0.08 : 0);
+    const finalAttenuation = Math.min(100, Math.round(baseStormPenalty));
+
+    const noiseScaleInt = parseInt(sigNoise.replace(/[^0-9]/g, "")) || 1;
+    const calculatedNet = Math.round(finalIonization - finalAttenuation - noiseScaleInt * 3);
+    const finalNetScore = Math.min(100, Math.max(0, calculatedNet));
+
+    let displayString = "DX_PATH_OPTIMAL";
+    let textClass = "txt-neon-green";
+
+    if (finalNetScore < 40) {
+      displayString = "BAND_BLACKOUT";
+      textClass = "rst-r-box";
+    } else if (finalNetScore < 75) {
+      displayString = "PATH_DEGRADED";
+      textClass = "txt-solar-amber";
+    }
+
+    return {
+      ionization: finalIonization,
+      attenuation: finalAttenuation,
+      netValue: finalNetScore,
+      statusText: displayString,
+      colorClass: textClass
+    };
+  };
+
+  // DEFINED IN DIRECT ACTIVE SCOPE TO PREVENT TYPE CHECK ERROS BEFORE JSX DECK OPENING
+  const propArray = getCalculatedPropagationArray();
 
   return (
     <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative" }}>
@@ -850,7 +904,7 @@ US HF Band Limits:
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
+              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyItems: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                   <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
                 </button>
@@ -929,16 +983,16 @@ US HF Band Limits:
             <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.25)", borderRadius: "3px", padding: "0.6rem 0.75rem", marginBottom: "0.85rem", fontSize: "10px", fontFamily: "monospace" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <span style={{ color: "#688a73", fontWeight: 700 }}>NET PROPAGATION MATRIX:</span>
-                <span className={`hud-pulse ${getCalculatedPropagationArray().colorClass}`} style={{ fontWeight: 800 }}>{getCalculatedPropagationArray().netValue}% // {getCalculatedPropagationArray().statusText}</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", borderTop: "1px solid rgba(0,255,102,0.08)", paddingTop: "0.4rem" }}>
-              <div>
-                <span style={{ color: "#4e6e58" }}>IONIZATION:</span> <span style={{ color: "#00ff66", fontWeight: 700 }}>{getCalculatedPropagationArray().ionization}%</span>
+                <span className={`hud-pulse ${propArray.colorClass}`} style={{ fontWeight: 800 }}>{propArray.netValue}% // {propArray.statusText}</span>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <span style={{ color: "#4e6e58" }}>ATTENUATION:</span> <span style={{ color: "#ff3333", fontWeight: 700 }}>{getCalculatedPropagationArray().attenuation}%</span>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", borderTop: "1px solid rgba(0,255,102,0.08)", paddingTop: "0.4rem" }}>
+                <div>
+                  <span style={{ color: "#4e6e58" }}>IONIZATION:</span> <span style={{ color: "#00ff66", fontWeight: 700 }}>{propArray.ionization}%</span>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ color: "#4e6e58" }}>ATTENUATION:</span> <span style={{ color: "#ff3333", fontWeight: 700 }}>{propArray.attenuation}%</span>
+                </div>
               </div>
-            </div>
             </div>
             
             <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M).">
