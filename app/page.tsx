@@ -703,25 +703,30 @@ export default function Page() {
         
         @media (min-width: 1024px) { 
           .deck-workspace { grid-template-columns: 390px 1fr; gap: 1.5rem; } 
-          .triple-box-grid { grid-template-columns: repeat(3, 1fr); }
+          .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
         /* PURE CSS MOBILE REORDERING (DESKTOP IS COMPLETELY UNAFFECTED) */
         @media (max-width: 1023px) {
-          .mobile-contents { display: contents !important; }
-          .triple-box-grid { grid-template-columns: 1fr !important; }
+          .deck-workspace { display: flex !important; flex-direction: column !important; gap: 0 !important; }
+          .mobile-unwrap { display: contents !important; }
+          
+          /* Reset margins so Flex order dictates exact spacing */
+          .terminal-panel, .aligned-metric-box { margin-top: 0 !important; margin-bottom: 1rem !important; }
           .log-table-wrapper { width: 100%; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
           
-          .panel-active-band { order: 1; margin-bottom: 0 !important; }
-          .panel-triple { order: 2; margin-bottom: 0 !important; }
-          .panel-dxcc { order: 3; margin-bottom: 0 !important; }
-          .panel-wx { order: 4; }
-          .panel-solar { order: 5; }
-          .panel-globe { order: 6; }
-          .panel-logs { order: 7; }
-          .panel-gear { order: 8; }
-          .panel-pota { order: 9; }
-          .panel-psk { order: 10; }
+          .panel-active-band { order: 1 !important; margin-bottom: 0.75rem !important; }
+          .panel-triple { order: 2 !important; margin-bottom: 0.75rem !important; display: flex !important; flex-direction: column !important; gap: 0.75rem !important; }
+          .panel-triple .aligned-metric-box { margin-bottom: 0 !important; }
+          
+          .panel-dxcc { order: 3 !important; }
+          .panel-globe { order: 4 !important; }
+          .panel-logs { order: 5 !important; }
+          .panel-wx { order: 6 !important; }
+          .panel-solar { order: 7 !important; }
+          .panel-gear { order: 8 !important; }
+          .panel-pota { order: 9 !important; }
+          .panel-psk { order: 10 !important; margin-bottom: 2rem !important; }
         }
 
         .terminal-panel {
@@ -923,7 +928,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -943,10 +948,10 @@ export default function Page() {
       </section>
 
       {/* Main Workspace Split Grid Layout */}
-      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
         
         {/* Left Column Stack (Weather Stations Only) */}
-        <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+        <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
           
           {/* Aligned Box 1: Active Band */}
           <div 
@@ -1039,7 +1044,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
+          {/* Card 2: Space weather info */}
           <div className="terminal-panel panel-solar" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
@@ -1165,13 +1170,13 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div className="mobile-contents" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
-          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
             {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
-            <div className="triple-box-grid panel-triple" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "repeat(3, 1fr)", gap: "0.75rem" }}>
+            <div className="triple-box-grid panel-triple">
               <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
                 <div className="aligned-metric-label">Rig Mode</div>
                 <div className="aligned-metric-value" style={{ color: "#ffaa00" }}>{stats.currentMode}</div>
@@ -1308,7 +1313,7 @@ US HF Band Limits:
                 </button>
               </div>
               
-              <div className="log-table-wrapper" style={{ overflowX: "auto", marginTop: "0.5rem", width: "100%", maxWidth: "calc(100vw - 3rem)" }}>
+              <div className="log-table-wrapper" style={{ overflowX: "auto", marginTop: "0.5rem" }}>
                 <table className="matrix-table">
                   <thead>
                     <tr>
@@ -1359,7 +1364,7 @@ US HF Band Limits:
           </div>
 
           {/* Sub-Column 2: Far Right Stack */}
-          <div className="mobile-contents" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
             <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-dxcc" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
