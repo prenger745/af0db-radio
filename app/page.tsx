@@ -1302,7 +1302,10 @@ US HF Band Limits:
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
-                    defaultAltitude={2.5} // ADD THIS LINE: Pulls the camera back to shrink the sphere safely
+                    // REMOVED defaultAltitude, ADDED standard options block:
+                    options={{
+                      zoomTo: 2.5
+                    }}
                     
                     polygonsData={landmasses}
                     polygonCapColor={() => "#07120a"} 
