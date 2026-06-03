@@ -373,11 +373,12 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        const newestFifteen = sortedLogs.slice(0, 15);
-        setLogs(newestFifteen);
+        // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
+        const newestEighteen = sortedLogs.slice(0, 18);
+        setLogs(newestEighteen);
         setIsLiveStream(true);
 
-        const rawBand = newestFifteen[0].band ? newestFifteen[0].band : "20M";
+        const rawBand = newestEighteen[0].band ? newestEighteen[0].band : "20M";
         const displayBand = rawBand.toUpperCase().endsWith("M") 
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
@@ -395,10 +396,10 @@ export default function Page() {
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
           currentBand: displayBand,
-          currentMode: newestFifteen[0].mode || "FT8"
+          currentMode: newestEighteen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestFifteen.map(q => q.callsign.replace(/Ø/g, "0"));
+        const recentCallsigns = newestEighteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
 
         rawGeoCoordinates.forEach((coord: any) => {
@@ -899,7 +900,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -945,8 +946,8 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - Added check to turn off flex-stretch logic entirely on mobile */}
-          <div className="terminal-panel" style={isMobileScreen ? {} : { minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* Card 1: Tactical METAR Weather Terminal */}
+          <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
@@ -1015,7 +1016,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
+          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
           <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
@@ -1347,7 +1348,7 @@ US HF Band Limits:
               <div className="aligned-metric-value" style={{ color: "#a3e335" }}>{stats.dxcc}</div>
             </div>
 
-            {/* Card 3: Shack Gear - Added check to turn off flex-stretch logic entirely on mobile */}
+            {/* Card 3: Shack Gear */}
             <div className="terminal-panel" style={isMobileScreen ? {} : { minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
               <div>
                 <div className="panel-header">
