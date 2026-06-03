@@ -475,14 +475,17 @@ export default function Page() {
         else if (windSpeedVal > 15) summary = "HIGH_WINDS";
         else summary = "SYS_NORMAL";
 
+        const rawSolar = data.solRad ?? data.solarradiation ?? data.solarRadiation;
+        const rawUvi = data.uvi ?? data.uv;
+
         setWeather({
           temp: data.temp != null && !isNaN(parseFloat(data.temp)) ? Math.round(parseFloat(data.temp)).toString() : "——",
           humidity: data.humidity != null && !isNaN(parseFloat(data.humidity)) ? Math.round(parseFloat(data.humidity)).toString() : "——",
           windSpeed: data.windSpeed != null && !isNaN(parseFloat(data.windSpeed)) ? Math.round(windSpeedVal).toString() : "——",
           windDir: data.windDir != null && !isNaN(parseFloat(data.windDir)) ? Math.round(parseFloat(data.windDir)).toString() : "——",
           baro: data.baro != null && !isNaN(parseFloat(data.baro)) ? parseFloat(data.baro).toFixed(2) : "——", 
-          solRad: data.solRad != null && !isNaN(parseFloat(data.solRad)) ? parseFloat(data.solRad).toString() : "——",
-          uvi: data.uvi != null && !isNaN(parseFloat(data.uvi)) ? parseFloat(data.uvi).toString() : "0",
+          solRad: rawSolar != null && !isNaN(parseFloat(rawSolar)) ? parseFloat(rawSolar).toString() : "——",
+          uvi: rawUvi != null && !isNaN(parseFloat(rawUvi)) ? parseFloat(rawUvi).toString() : "0",
           condition: summary,
           iconCode: rainRateVal > 0 ? 60 : 0
         });
