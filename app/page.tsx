@@ -196,7 +196,7 @@ export default function Page() {
         
         setDimensions({
           width: containerRef.current.clientWidth,
-          height: mobileViewActive ? 260 : 360
+          height: mobileViewActive ? 340 : 460
         });
       }
     };
@@ -1302,6 +1302,7 @@ US HF Band Limits:
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
+                    defaultAltitude={2.5} // ADD THIS LINE: Pulls the camera back to shrink the sphere safely
                     
                     polygonsData={landmasses}
                     polygonCapColor={() => "#07120a"} 
