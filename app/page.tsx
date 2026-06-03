@@ -1121,7 +1121,7 @@ US HF Band Limits:
               </button>
             </div>
 
-            {/* INTEGRATED IONOSPHEROP PROPAGATION ASSESSMENT SCORE HUD DISPLAY HEADER */}
+            {/* INTEGRATED IONOSPHERIC PROPAGATION ASSESSMENT SCORE HUD DISPLAY HEADER */}
             <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.25)", borderRadius: "3px", padding: "0.6rem 0.75rem", marginBottom: "0.85rem", fontSize: "10px", fontFamily: "monospace" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <span style={{ color: "#688a73", fontWeight: 700 }}>NET PROPAGATION MATRIX:</span>
@@ -1296,7 +1296,14 @@ US HF Band Limits:
                 </div>
               </div>
               
-              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: "scale(0.72)", transformOrigin: "center center" }}>
+              {/* TARGETED MOBILE VERTICAL AND SCALE CORRECTION LAYER */}
+              <div style={{ 
+                width: "100%", 
+                height: "100%", 
+                cursor: "grab", 
+                transform: isMobileScreen ? "scale(0.72) translateY(35px)" : "scale(0.72)", 
+                transformOrigin: "center center" 
+              }}>
                 {showWorkspace && (
                   <GlobeEngine
                     width={dimensions.width}
