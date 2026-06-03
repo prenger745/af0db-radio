@@ -374,7 +374,7 @@ export default function Page() {
 
       if (sortedLogs.length > 0) {
         // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
-        const newestEighteen = sortedLogs.slice(0, 18);
+        const newestEighteen = sortedLogs.slice(0, 17);
         setLogs(newestEighteen);
         setIsLiveStream(true);
 
