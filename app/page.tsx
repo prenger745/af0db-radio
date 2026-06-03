@@ -474,7 +474,6 @@ export default function Page() {
         else if (windSpeedVal > 15) summary = "HIGH_WINDS";
         else summary = "SYS_NORMAL";
 
-        // AGGRESSIVE DATA HUNTER: Scans the JSON object for any variant of solar or uv
         let rawSolar = data.solRad ?? data.solarradiation ?? data.solarRadiation ?? data.solar_radiation;
         let rawUvi = data.uvi ?? data.uv ?? data.uvindex ?? data.uv_index;
 
@@ -1024,31 +1023,31 @@ US HF Band Limits:
             </div>
 
             <div>
-              <div className="data-row">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Current ambient outdoor air temperature.">
                 <span className="data-label">THERMAL GRADIENT</span>
                 <span className="data-value">{weather.temp}°F</span>
               </div>
-              <div className="data-row">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Percentage of airborne moisture relative to its maximum capacity.">
                 <span className="data-label">RELATIVE HUMIDITY</span>
                 <span className="data-value txt-neon-green">{weather.humidity}% RH</span>
               </div>
-              <div className="data-row">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Current wind speed measured in miles per hour (MPH).">
                 <span className="data-label">WIND VELOCITY</span>
                 <span className="data-value">{weather.windSpeed} MPH</span>
               </div>
-              <div className="data-row">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Compass direction the wind is blowing from (360° scale).">
                 <span className="data-label">WIND VECTOR BEARING</span>
                 <span className="data-value txt-neon-green">{weather.windDir}° AZIMUTH</span>
               </div>
-              <div className="data-row">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Atmospheric weight. Falling pressure indicates storms; rising means clear skies.">
                 <span className="data-label">BAROMETRIC PRESSURE</span>
                 <span className="data-value txt-aviation-blue">{weather.baro} inHg</span>
               </div>
-              <div className="data-row">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Raw solar energy hitting the station, measured in Watts per square meter.">
                 <span className="data-label">SOLAR IRRADIANCE</span>
                 <span className="data-value txt-solar-amber">{weather.solRad} W/m²</span>
               </div>
-              <div className="data-row" style={{ borderBottom: "none" }}>
+              <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none" }} data-blurb="Standardized scale measuring the intensity of sunburn-causing UV radiation.">
                 <span className="data-label">ULTRAVIOLET INDEX</span>
                 <span className="data-value" style={{ color: "#a855f7" }}>{weather.uvi}</span>
               </div>
