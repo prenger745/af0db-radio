@@ -715,16 +715,16 @@ export default function Page() {
           .terminal-panel, .aligned-metric-box { margin-top: 0 !important; margin-bottom: 1rem !important; }
           .log-table-wrapper { width: 100%; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
           
-          .panel-active-band { order: 1 !important; margin-bottom: 0.75rem !important; }
-          .panel-triple { order: 2 !important; margin-bottom: 0.75rem !important; display: flex !important; flex-direction: column !important; gap: 0.75rem !important; }
+          .panel-gear { order: 1 !important; }
+          .panel-active-band { order: 2 !important; margin-bottom: 0.75rem !important; }
+          .panel-triple { order: 3 !important; margin-bottom: 0.75rem !important; display: flex !important; flex-direction: column !important; gap: 0.75rem !important; }
           .panel-triple .aligned-metric-box { margin-bottom: 0 !important; }
           
-          .panel-dxcc { order: 3 !important; }
-          .panel-globe { order: 4 !important; }
-          .panel-logs { order: 5 !important; }
-          .panel-wx { order: 6 !important; }
-          .panel-solar { order: 7 !important; }
-          .panel-gear { order: 8 !important; }
+          .panel-dxcc { order: 4 !important; }
+          .panel-globe { order: 5 !important; }
+          .panel-logs { order: 6 !important; }
+          .panel-wx { order: 7 !important; }
+          .panel-solar { order: 8 !important; }
           .panel-pota { order: 9 !important; }
           .panel-psk { order: 10 !important; margin-bottom: 2rem !important; }
         }
@@ -928,7 +928,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -948,7 +948,7 @@ export default function Page() {
       </section>
 
       {/* Main Workspace Split Grid Layout */}
-      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
         
         {/* Left Column Stack (Weather Stations Only) */}
         <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
@@ -1044,7 +1044,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
+          {/* Card 2: Space weather info - SHIFTED TO MATCH LOG AXIS TARGET */}
           <div className="terminal-panel panel-solar" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
             <div className="panel-header">
               <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
