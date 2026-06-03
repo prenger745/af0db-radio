@@ -1124,10 +1124,7 @@ US HF Band Limits:
               <span className="data-label">10M Propagation</span>
               <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
             </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">6M VHF Propagation</span>
-              <span className="data-value txt-solar-amber">[MONITOR]</span>
-            </div>
+            
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
               <a 
