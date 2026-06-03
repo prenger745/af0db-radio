@@ -901,7 +901,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -921,10 +921,10 @@ export default function Page() {
       </section>
 
       {/* Main Workspace Split Grid Layout */}
-      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`}>
+      <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
         
         {/* Left Column Stack (Weather Stations Only) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
           
           {/* Aligned Box 1: Active Band */}
           <div 
@@ -1143,10 +1143,10 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
             {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
             <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "repeat(3, 1fr)", gap: "0.75rem" }}>
@@ -1337,7 +1337,7 @@ US HF Band Limits:
           </div>
 
           {/* Sub-Column 2: Far Right Stack */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
             <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
