@@ -1084,49 +1084,51 @@ US HF Band Limits:
               HF Band Real-Time Profiles
             </div>
 
-            <div className="data-row">
-              <span className="data-label">160M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">80M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">60M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">40M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">30M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
-            </div>
-            <div className="data-row forced-row-reset">
-              <span className="data-label forced-label-reset">20M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">17M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">15M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">12M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
-            </div>
-            <div className="data-row">
-              <span className="data-label">10M Propagation</span>
-              <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
-            </div>
-            <div className="data-row" style={{ borderBottom: "none" }}>
-              <span className="data-label">6M VHF Propagation</span>
-              <span className="data-value txt-solar-amber">[MONITOR]</span>
+            <div className="ticker-scroller-box" style={{ height: "200px", paddingRight: "0.25rem" }}>
+              <div className="data-row">
+                <span className="data-label">160M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">80M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">60M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">40M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">30M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span>
+              </div>
+              <div className="data-row forced-row-reset">
+                <span className="data-label forced-label-reset">20M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">17M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">15M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">12M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span>
+              </div>
+              <div className="data-row">
+                <span className="data-label">10M Propagation</span>
+                <span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span>
+              </div>
+              <div className="data-row" style={{ borderBottom: "none" }}>
+                <span className="data-label">6M VHF Propagation</span>
+                <span className="data-value txt-solar-amber">[MONITOR]</span>
+              </div>
             </div>
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
@@ -1282,7 +1284,7 @@ US HF Band Limits:
             </div>
 
             {/* Complete Live Log Ledger */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem", minHeight: isMobileScreen ? "auto" : "896px" }}>
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
@@ -1365,13 +1367,13 @@ US HF Band Limits:
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
+            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
+              <div className="ticker-scroller-box" style={{ height: "140px" }}>
                 {potaSpots.length === 0 ? (
                   <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
                 ) : (
@@ -1393,13 +1395,13 @@ US HF Band Limits:
             </div>
 
             {/* Card 5: PSK Reporter footprint register */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
+            <div className="terminal-panel">
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
+              <div className="ticker-scroller-box" style={{ height: "140px" }}>
                 {pskSpots.length === 0 ? (
                   <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
                     &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
