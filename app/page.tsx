@@ -992,12 +992,12 @@ export default function Page() {
           <button onClick={() => { parseLiveQrzData(); fetchLiveTacticalFeeds(); fetchSolarData(); fetchLocalTacticalWeather(); }} style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}>
             <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
           </button>
-          <span className="status-bracket">[<span className="status-text" style={{ color: "#ffaa00" }}>{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
+          <span className="status-bracket">[<span style={{ color: "#ffaa00" }} className="status-text">{isLiveStream ? "LIVE_FEED" : "STANDBY"}</span>]</span>
         </div>
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifycontent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
@@ -1046,7 +1046,7 @@ US HF Band Limits:
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel panel-wx" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
+              <div className="panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                   <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
                 </button>
@@ -1296,16 +1296,12 @@ US HF Band Limits:
                 </div>
               </div>
               
-              <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
+              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: "scale(0.82)", transformOrigin: "center center" }}>
                 {showWorkspace && (
                   <GlobeEngine
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
-                    // REMOVED defaultAltitude, ADDED standard options block:
-                    options={{
-                      zoomTo: 2.5
-                    }}
                     
                     polygonsData={landmasses}
                     polygonCapColor={() => "#07120a"} 
