@@ -147,7 +147,7 @@ export default function Page() {
   const [globePoints, setGlobePoints] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
+  const [dimensions, setDimensions] = useState({ width: 600, height: 360 });
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
@@ -196,7 +196,7 @@ export default function Page() {
         
         setDimensions({
           width: containerRef.current.clientWidth,
-          height: mobileViewActive ? 340 : 460
+          height: mobileViewActive ? 260 : 360
         });
       }
     };
@@ -1046,7 +1046,7 @@ US HF Band Limits:
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel panel-wx" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
+              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyitems: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                   <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
                 </button>
@@ -1268,7 +1268,7 @@ US HF Band Limits:
                 padding: "0.5rem", 
                 background: "#020403", 
                 position: "relative", 
-                height: isMobileScreen ? "340px" : "460px", 
+                height: isMobileScreen ? "260px" : "360px", 
                 overflow: "hidden", 
                 display: "flex", 
                 flexDirection: "column",
@@ -1339,6 +1339,10 @@ US HF Band Limits:
                     labelAltitude={0.014}
                     labelResolution={3}
                     labelsTransitionDuration={0}
+                    
+                    // Native Zoom Scaling Constraints
+                    zoomTo={2.5}
+                    pointAltitude={0.1}
                     
                     labelLabel={(d: any) => {
                       if (d.type === "pota") {
