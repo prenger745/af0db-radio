@@ -373,7 +373,6 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
         const newestSixteen = sortedLogs.slice(0, 16);
         setLogs(newestSixteen);
         setIsLiveStream(true);
@@ -480,7 +479,7 @@ export default function Page() {
           humidity: data.humidity !== undefined ? Math.round(parseFloat(data.humidity)).toString() : "——",
           windSpeed: data.windSpeed !== undefined ? Math.round(windSpeedVal).toString() : "——",
           windDir: data.windDir !== undefined ? Math.round(parseFloat(data.windDir)).toString() : "——",
-          baro: data.baro !== undefined ? (parseFloat(data.baro) * 0.02953).toFixed(2) : "——", 
+          baro: data.baro !== undefined ? parseFloat(data.baro).toFixed(2) : "——", 
           solRad: data.solRad !== undefined ? Math.round(parseFloat(data.solRad)).toString() : "——",
           uvi: data.uvi !== undefined ? Math.round(parseFloat(data.uvi)).toString() : "0",
           condition: summary,
@@ -1170,7 +1169,7 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
