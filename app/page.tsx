@@ -373,6 +373,7 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
+        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
         const newestSixteen = sortedLogs.slice(0, 16);
         setLogs(newestSixteen);
         setIsLiveStream(true);
@@ -475,13 +476,13 @@ export default function Page() {
         else summary = "SYS_NORMAL";
 
         setWeather({
-          temp: data.temp !== undefined ? Math.round(parseFloat(data.temp)).toString() : "——",
-          humidity: data.humidity !== undefined ? Math.round(parseFloat(data.humidity)).toString() : "——",
-          windSpeed: data.windSpeed !== undefined ? Math.round(windSpeedVal).toString() : "——",
-          windDir: data.windDir !== undefined ? Math.round(parseFloat(data.windDir)).toString() : "——",
-          baro: data.baro !== undefined ? parseFloat(data.baro).toFixed(2) : "——", 
-          solRad: data.solRad !== undefined ? Math.round(parseFloat(data.solRad)).toString() : "——",
-          uvi: data.uvi !== undefined ? Math.round(parseFloat(data.uvi)).toString() : "0",
+          temp: data.temp != null && !isNaN(parseFloat(data.temp)) ? Math.round(parseFloat(data.temp)).toString() : "——",
+          humidity: data.humidity != null && !isNaN(parseFloat(data.humidity)) ? Math.round(parseFloat(data.humidity)).toString() : "——",
+          windSpeed: data.windSpeed != null && !isNaN(parseFloat(data.windSpeed)) ? Math.round(windSpeedVal).toString() : "——",
+          windDir: data.windDir != null && !isNaN(parseFloat(data.windDir)) ? Math.round(parseFloat(data.windDir)).toString() : "——",
+          baro: data.baro != null && !isNaN(parseFloat(data.baro)) ? parseFloat(data.baro).toFixed(2) : "——", 
+          solRad: data.solRad != null && !isNaN(parseFloat(data.solRad)) ? parseFloat(data.solRad).toString() : "——",
+          uvi: data.uvi != null && !isNaN(parseFloat(data.uvi)) ? parseFloat(data.uvi).toString() : "0",
           condition: summary,
           iconCode: rainRateVal > 0 ? 60 : 0
         });
@@ -927,7 +928,7 @@ export default function Page() {
       </header>
 
       {/* Vibe Coded Tactical Core Status Banner */}
-      <section style={{ background: "rgba(0, 25xl, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
+      <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#00ff66", display: "inline-block" }}></span>
