@@ -147,6 +147,7 @@ export default function Page() {
   const [globePoints, setGlobePoints] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const globeRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 360 });
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
@@ -211,6 +212,22 @@ export default function Page() {
       clearTimeout(t);
     };
   }, [logs]);
+
+  // Handle precise, error-free camera initialization for a beautifully scaled sphere
+  useEffect(() => {
+    if (globeRef.current) {
+      setTimeout(() => {
+        try {
+          const currentCtrl = globeRef.current.controls();
+          if (currentCtrl) {
+            currentCtrl.maxDistance = 450;
+            currentCtrl.minDistance = 120;
+          }
+          globeRef.current.pointOfView({ lat: 38.6, lng: -95.2, altitude: 2.35 }, 400);
+        } catch (e) {}
+      }, 600);
+    }
+  }, [showWorkspace]);
 
   const playTerminalBeep = (type: "boot" | "sync") => {
     if (!audioEnabledRef.current) return;
@@ -1299,6 +1316,7 @@ US HF Band Limits:
               <div style={{ width: "100%", height: "100%", cursor: "grab" }}>
                 {showWorkspace && (
                   <GlobeEngine
+                    ref={globeRef}
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
@@ -1340,8 +1358,6 @@ US HF Band Limits:
                     labelResolution={3}
                     labelsTransitionDuration={0}
                     
-                    // Native Zoom Scaling Constraints
-                    zoomTo={2.5}
                     pointAltitude={0.1}
                     
                     labelLabel={(d: any) => {
