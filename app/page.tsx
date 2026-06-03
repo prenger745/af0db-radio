@@ -374,7 +374,7 @@ export default function Page() {
 
       if (sortedLogs.length > 0) {
         // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
-        const newestEighteen = sortedLogs.slice(0, 18);
+        const newestEighteen = sortedLogs.slice(0, 16);
         setLogs(newestEighteen);
         setIsLiveStream(true);
 
@@ -1310,7 +1310,7 @@ US HF Band Limits:
                         </td>
                       </tr>
                     ) : (
-                      logs.map((qso, index) => (
+                      logs.slice(0, 16).map((qso, index) => (
                         <tr key={index}>
                           <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
                             {qso.callsign}
