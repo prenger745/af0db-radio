@@ -880,9 +880,9 @@ export default function Page() {
       `}} />
 
       {/* Header */}
-      <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
+      <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyItems: "space-between", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0, 255, 102, 0.3)" }}>
+          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
             <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
@@ -945,8 +945,8 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal */}
-          <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* Card 1: Tactical METAR Weather Terminal - Added check to turn off flex-stretch logic entirely on mobile */}
+          <div className="terminal-panel" style={isMobileScreen ? {} : { minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
@@ -1347,8 +1347,8 @@ US HF Band Limits:
               <div className="aligned-metric-value" style={{ color: "#a3e335" }}>{stats.dxcc}</div>
             </div>
 
-            {/* Card 3: Shack Gear */}
-            <div className="terminal-panel" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            {/* Card 3: Shack Gear - Added check to turn off flex-stretch logic entirely on mobile */}
+            <div className="terminal-panel" style={isMobileScreen ? {} : { minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
               <div>
                 <div className="panel-header">
                   <button className="tactical-tooltip-trigger" data-blurb="The core operating equipment configuration, computer system properties, and antenna array for station AFØDB.">
@@ -1363,7 +1363,7 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Card 4: Live POTA spots scroller register - Injected matching 11px margin tracker layout */}
+            {/* Card 4: Live POTA spots scroller register */}
             <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
@@ -1421,6 +1421,7 @@ US HF Band Limits:
 
           </div>
 
+          {/* Sub-Column 2 Ends Here */}
         </div>
 
       </main>
