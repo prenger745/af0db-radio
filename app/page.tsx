@@ -373,12 +373,12 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // UPDATED METRIC TO 18 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
-        const newestEighteen = sortedLogs.slice(0, 16);
-        setLogs(newestEighteen);
+        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
+        const newestSixteen = sortedLogs.slice(0, 16);
+        setLogs(newestSixteen);
         setIsLiveStream(true);
 
-        const rawBand = newestEighteen[0].band ? newestEighteen[0].band : "20M";
+        const rawBand = newestSixteen[0].band ? newestSixteen[0].band : "20M";
         const displayBand = rawBand.toUpperCase().endsWith("M") 
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
@@ -396,10 +396,10 @@ export default function Page() {
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
           currentBand: displayBand,
-          currentMode: newestEighteen[0].mode || "FT8"
+          currentMode: newestSixteen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestEighteen.map(q => q.callsign.replace(/Ø/g, "0"));
+        const recentCallsigns = newestSixteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
 
         rawGeoCoordinates.forEach((coord: any) => {
@@ -582,9 +582,9 @@ export default function Page() {
     fetchSolarData();
     fetchLocalTacticalWeather();
 
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);       
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);        
     const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
-    const solarInterval = setInterval(fetchSolarData, 1800000);       
+    const solarInterval = setInterval(fetchSolarData, 1800000);        
     const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
 
     return () => {
@@ -1146,10 +1146,10 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start" }}>
           
-        {/* Sub-Column 1: Center Stack */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", height: "100%" }}>
+          {/* Sub-Column 1: Center Stack */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             
             {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
@@ -1365,7 +1365,7 @@ US HF Band Limits:
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", flex: isMobileScreen ? "none" : 1 }}>
+            <div className="terminal-panel" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
@@ -1393,7 +1393,7 @@ US HF Band Limits:
             </div>
 
             {/* Card 5: PSK Reporter footprint register */}
-            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", flex: isMobileScreen ? "none" : 1 }}>
+            <div className="terminal-panel" style={{ display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
