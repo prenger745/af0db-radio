@@ -373,6 +373,7 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
+        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
         const newestSixteen = sortedLogs.slice(0, 16);
         setLogs(newestSixteen);
         setIsLiveStream(true);
@@ -1219,7 +1220,7 @@ US HF Band Limits:
               {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
               <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data, signal vectors, and live POTA activations." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
+                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors from his most recent contacts, alongside a live feed of POTA activations worldwide." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
                     <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
                     <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
                     <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
