@@ -373,7 +373,6 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // UPDATED METRIC TO 16 ENTRIES TO MATCH SOLAR WEATHER AXIS FOOTPRINT
         const newestSixteen = sortedLogs.slice(0, 16);
         setLogs(newestSixteen);
         setIsLiveStream(true);
@@ -687,7 +686,7 @@ export default function Page() {
   const propArray = getCalculatedPropagationArray();
 
   return (
-    <div style={{ backgroundColor: "#030403", color: "#a3c2ae", minHeight: "100vh", padding: isMobileScreen ? "0.75rem" : "1.5rem", fontFamily: "monospace", boxSizing: "border-box", letterSpacing: "0.05em", position: "relative", overflowX: "hidden", maxWidth: "100vw" }}>
+    <div className="app-container">
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { max-width: 100vw; overflow-x: hidden; }
@@ -701,6 +700,48 @@ export default function Page() {
           z-index: 9999;
           background-size: 100% 4px;
           pointer-events: none;
+        }
+
+        .app-container {
+          background-color: #030403;
+          color: #a3c2ae;
+          min-height: 100vh;
+          font-family: monospace;
+          box-sizing: border-box;
+          letter-spacing: 0.05em;
+          position: relative;
+          overflow-x: hidden;
+          max-width: 100vw;
+          padding: 1.5rem;
+        }
+
+        /* HEADER RESPONSIVE CSS */
+        .tactical-header {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          border-bottom: 1px solid rgba(0, 255, 102, 0.2);
+          padding-bottom: 1rem;
+          margin-bottom: 1rem;
+          gap: 0;
+        }
+        .header-h1 {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #00ff66;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          letter-spacing: -0.01em;
+          text-shadow: 0 0 6px rgba(0,255,102,0.3);
+          line-height: 1.3;
+        }
+        .header-status-box {
+          display: flex;
+          gap: 0.5rem;
+          align-self: center;
         }
 
         .deck-workspace { 
@@ -719,6 +760,15 @@ export default function Page() {
 
         /* PURE CSS MOBILE REORDERING (DESKTOP IS COMPLETELY UNAFFECTED) */
         @media (max-width: 1023px) {
+          .app-container { padding: 0.75rem; }
+          .tactical-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+          }
+          .header-h1 { font-size: 1.1rem; }
+          .header-status-box { align-self: flex-end; }
+
           .deck-workspace { display: flex !important; flex-direction: column !important; gap: 0 !important; }
           .mobile-unwrap { display: contents !important; }
           
@@ -920,17 +970,17 @@ export default function Page() {
       `}} />
 
       {/* Header */}
-      <header style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "flex-start" : "center", justifyContent: "space-between", width: "100%", borderBottom: "1px solid rgba(0, 255, 102, 0.2)", paddingBottom: "1rem", marginBottom: "1rem", gap: isMobileScreen ? "0.75rem" : "0px" }}>
+      <header className="tactical-header">
         <div>
-          <h1 style={{ fontSize: isMobileScreen ? "1.1rem" : "1.35rem", fontWeight: 700, color: "#00ff66", display: "flex", alignItems: "center", gap: "0.6rem", letterSpacing: "-0.01em", textShadow: "0 0 6px rgba(0,255,102,0.3)" }}>
-            <Radio style={{ width: "20px", height: "20px", color: "#ffaa00" }} /> 
+          <h1 className="header-h1">
+            <Radio style={{ minWidth: "20px", width: "20px", height: "20px", color: "#ffaa00", flexShrink: 0 }} /> 
             <span className={mainTitleText.length < targetTitle.length ? "terminal-cursor" : ""}>{mainTitleText}</span>
           </h1>
-          <p style={{ fontSize: "0.65rem", color: "#425e4c", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, minHeight: "12px" }}>
+          <p style={{ fontSize: "0.65rem", color: "#425e4c", marginTop: "0.4rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, minHeight: "12px", lineHeight: "1.4" }}>
             <span className={mainTitleText.length >= targetTitle.length && subTitleText.length < targetSubtitle.length ? "terminal-cursor" : ""}>{subTitleText}</span>
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", alignSelf: isMobileScreen ? "flex-end" : "center" }}>
+        <div className="header-status-box">
           <button onClick={() => { parseLiveQrzData(); fetchLiveTacticalFeeds(); fetchSolarData(); fetchLocalTacticalWeather(); }} style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer" }}>
             <span className="status-bracket">[<span className="status-text">{loading ? "SYNCING" : "SYS_OK"}</span>]</span>
           </button>
@@ -1181,7 +1231,7 @@ US HF Band Limits:
         </div>
 
         {/* Master Right Row Split-Grid Wrapper */}
-        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
@@ -1220,7 +1270,7 @@ US HF Band Limits:
               {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
               <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors from his most recent contacts, alongside a live feed of POTA activations worldwide." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
+                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors, alongside a live global feed of other POTA operators." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
                     <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
                     <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
                     <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
