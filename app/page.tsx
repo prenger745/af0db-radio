@@ -147,7 +147,7 @@ export default function Page() {
   const [globePoints, setGlobePoints] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
+  const [dimensions, setDimensions] = useState({ width: 600, height: 460 });
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
@@ -586,6 +586,69 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
+  useEffect(() => {
+    parseLiveQrzData();
+    fetchLiveTacticalFeeds();
+    fetchSolarData();
+    fetchLocalTacticalWeather();
+
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);        
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
+    const solarInterval = setInterval(fetchSolarData, 1800000);        
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
+
+    return () => {
+      clearInterval(qrzInterval);
+      clearInterval(feedInterval);
+      clearInterval(solarInterval);
+      clearInterval(weatherInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
+
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: "", 
+      color: "#00ff66", 
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
+
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
+  }, [geoArcs, potaSpots]);
+
+  const getPropRating = (band: string) => {
+    const timeKey = isNight ? "night" : "day";
+    switch (band) {
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
+    }
+  };
+
+  const getColorClass = (rating: string) => {
+    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+    if (rating === "FAIR") return "txt-solar-amber";
+    return "rst-r-box";
+  };
+
   // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
   const getCalculatedPropagationArray = () => {
     const parsedSunspots = parseInt(sunspots) || 0;
@@ -620,24 +683,6 @@ export default function Page() {
     };
   };
 
-  const getColorClass = (rating: string) => {
-    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
-    if (rating === "FAIR") return "txt-solar-amber";
-    return "rst-r-box";
-  };
-
-  const getPropRating = (band: string) => {
-    const timeKey = isNight ? "night" : "day";
-    switch (band) {
-      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
-      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
-      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
-      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-      default: return "FAIR";
-    }
-  };
-
-  // GLOBAL MATRIX RESOLUTION RUNNER - Lifted securely above execution block parameters
   const propArray = getCalculatedPropagationArray();
 
   return (
@@ -699,7 +744,7 @@ export default function Page() {
           align-self: center;
         }
 
-        /* PRODUCTION RESPONSIVE PROPORTIONAL COLUMN HUD MATRIX */
+        /* PRODUCTION RESPONSIVE HUD PROPORTIONAL BOUNDS ENGINE */
         .deck-workspace { 
           display: grid; 
           grid-template-columns: 1fr; 
@@ -709,22 +754,13 @@ export default function Page() {
         }
         .deck-workspace.active { opacity: 1; }
         
-        .right-side-subgrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1.5rem;
-          width: 100%;
-          align-items: start;
-        }
-
         @media (min-width: 1024px) { 
-          /* Safe fractional tracking layout guarantees proportional alignment on both laptops and desktop ultra-wides */
-          .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; } 
-          .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 33%); }
+          /* Safe fluid fractional layout tracks accurately across ultra-wides and mobile laptop panels alike */
+          .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; gap: 1.5rem; } 
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
-        /* PURE CSS MOBILE REORDERING (DESKTOP AND LAPTOPS ARE FULLY SECURED BY THE HUD FR TRACKS) */
+        /* PURE CSS MOBILE REORDERING ARCHITECTURE */
         @media (max-width: 1023px) {
           .app-container { padding: 0.75rem; }
           
@@ -783,6 +819,7 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
+        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -981,8 +1018,8 @@ export default function Page() {
       {/* Main Workspace Split Grid Layout */}
       <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
         
-        {/* Left Stack Column Profile */}
-        <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+        {/* Left Column Stack (Weather Stations Only) - Added structural Flex tracking to absorb leftover vertical canvas rows */}
+        <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0, height: "100%" }}>
           
           {/* Aligned Box 1: Active Band */}
           <div 
@@ -1008,7 +1045,7 @@ US HF Band Limits:
           {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel panel-wx" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <div className="panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
+              <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
                   <Compass style={{ width: "16px", height: "16px", color: "#00ff66" }} /> TERRESTRIAL WX (AFØDB)
                 </button>
@@ -1075,51 +1112,67 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
-          <div className="terminal-panel panel-solar">
-            <div className="panel-header">
-              <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
-                <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
-              </button>
+          {/* Card 2: Space weather info - Injected flexGrow utility parameter to mirror log boundaries perfectly */}
+          <div className="terminal-panel panel-solar" style={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <div className="panel-header">
+                <button className="tactical-tooltip-trigger" data-blurb="Real-time solar metrics and HF radio band propagation updates directly from NOAA solar sweeps." style={{ color: "#ffaa00" }}>
+                  <Sun style={{ width: "16px", height: "16px" }} /> SOLAR WEATHER (N0NBH)
+                </button>
+              </div>
+
+              {/* INTEGRATED IONOSPHERIC PROPAGATION ASSESSMENT SCORE HUD DISPLAY HEADER */}
+              <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.25)", borderRadius: "3px", padding: "0.6rem 0.75rem", marginBottom: "0.85rem", fontSize: "10px", fontFamily: "monospace" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                  <span style={{ color: "#688a73", fontWeight: 700 }}>NET PROPAGATION MATRIX:</span>
+                  <span className={`hud-pulse ${propArray.colorClass}`} style={{ fontWeight: 800 }}>{propArray.netValue}% // {propArray.statusText}</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", borderTop: "1px solid rgba(0,255,102,0.08)", paddingTop: "0.4rem" }}>
+                  <div><span style={{ color: "#4e6e58" }}>IONIZATION:</span> <span style={{ color: "#00ff66", fontWeight: 700 }}>{propArray.ionization}%</span></div>
+                  <div style={{ textAlign: "right" }}>  <span style={{ color: "#4e6e58" }}>ATTENUATION:</span> <span style={{ color: "#ff3333", fontWeight: 700 }}>{propArray.attenuation}%</span></div>
+                </div>
+              </div>
+              
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M)."><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
+              <div className="data-row tactical-tooltip-trigger" data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation."><span className="data-label">SUNSPOT NUMBER</span><span className="data-value panel-mono-data">{sunspots}</span></div>
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior."><span className="data-label">A INDEX</span><span className="data-value panel-mono-data txt-neon-green">{aIndex}</span></div>
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths."><span className="data-label">K INDEX</span><span className="data-value panel-mono-data txt-neon-green">{kIndex}</span></div>
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts."><span className="data-label">X-RAY FLUX</span><span className="data-value txt-aviation-blue">{xray}</span></div>
+              <div className="data-row tactical-tooltip-trigger" data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths."><span className="data-label">SOLAR WIND</span><span className="data-value panel-mono-data">{solarWind} km/s</span></div>
+              <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations."><span className="data-label">NOISE FIELD</span><span className="data-value txt-solar-amber">{sigNoise}</span></div>
+              <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade."><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
+              
+              <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>HF Band Real-Time Profiles</div>
+              <div className="data-row"><span className="data-label">160M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">80M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">60M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">40M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">30M Propagation</span><span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span></div>
+              <div className="data-row forced-row-reset"><span className="data-label forced-label-reset">20M Propagation</span><span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span></div>
+              <div className="data-row"><span className="data-label">17M Propagation</span><span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span></div>
+              <div className="data-row"><span className="data-label">15M Propagation</span><span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span></div>
+              <div className="data-row"><span className="data-label">12M Propagation</span><span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
             </div>
 
-            {/* INTEGRATED IONOSPHERIC PROPAGATION ASSESSMENT SCORE HUD DISPLAY HEADER */}
-            <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.25)", borderRadius: "3px", padding: "0.6rem 0.75rem", marginBottom: "0.85rem", fontSize: "10px", fontFamily: "monospace" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                <span style={{ color: "#688a73", fontWeight: 700 }}>NET PROPAGATION MATRIX:</span>
-                <span className={`hud-pulse ${propArray.colorClass}`} style={{ fontWeight: 800 }}>{propArray.netValue}% // {propArray.statusText}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", borderTop: "1px solid rgba(0,255,102,0.08)", paddingTop: "0.4rem" }}>
-                <div><span style={{ color: "#4e6e58" }}>IONIZATION:</span> <span style={{ color: "#00ff66", fontWeight: 700 }}>{propArray.ionization}%</span></div>
-                <div style={{ textAlign: "right" }}>  <span style={{ color: "#4e6e58" }}>ATTENUATION:</span> <span style={{ color: "#ff3333", fontWeight: 700 }}>{propArray.attenuation}%</span></div>
-              </div>
+            <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
+              <a 
+                href="https://www.hamqsl.com/solar.html" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ color: "#4e6e58", textDecoration: "none", fontWeight: "700", letterSpacing: "0.05em" }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "#00ff66"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "#4e6e58"}
+              >
+                TELEMETRY FEED VIA NØNBH // HAMQSL.COM ↗
+              </a>
             </div>
-            
-            <div className="data-row tactical-tooltip-trigger" data-blurb="Measures solar ionizing radiation intensity. Values above 150 mean the sun is actively ionizing the F-layer, opening up the higher bands (15M, 12M, 10M)."><span className="data-label">SOLAR FLUX (SFI)</span><span className="data-value txt-solar-amber">{sfi}</span></div>
-            <div className="data-row tactical-tooltip-trigger" data-blurb="The absolute count of active magnetic storms on the sun's surface. More sunspots equal higher solar flux, stronger ionization, and vastly improved long-distance DX propagation."><span className="data-label">SUNSPOT NUMBER</span><span className="data-value panel-mono-data">{sunspots}</span></div>
-            <div className="data-row tactical-tooltip-trigger" data-blurb="Tracks geometric stability over the last 24 hours (scale 0-400). Lower numbers (under 15) mean stable, quiet ionospheric conditions with reliable, predictable band behavior."><span className="data-label">A INDEX</span><span className="data-value panel-mono-data txt-neon-green">{aIndex}</span></div>
-            <div className="data-row tactical-tooltip-trigger" data-blurb="Real-time planetary magnetic disturbance tracker (scale 0-9). Quiet values (0-2) mean clean, noise-free signals; high values (above 4) signify geomag storms that absorb radio paths."><span className="data-label">K INDEX</span><span className="data-value panel-mono-data txt-neon-green">{kIndex}</span></div>
-            <div className="data-row tactical-tooltip-trigger" data-blurb="Solar flare radiation energy tracker. Spikes up to M-class or X-class signal sudden solar flares that cause high noise floors or immediate total HF daylight radio blackouts."><span className="data-label">X-RAY FLUX</span><span className="data-value txt-aviation-blue">{xray}</span></div>
-            <div className="data-row tactical-tooltip-trigger" data-blurb="The velocity of charged particles streaming from coronal holes. Speeds over 500 km/s compress the magnetosphere, dumping noise into the paths and destabilizing paths."><span className="data-label">SOLAR WIND</span><span className="data-value panel-mono-data">{solarWind} km/s</span></div>
-            <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations."><span className="data-label">NOISE FIELD</span><span className="data-value txt-solar-amber">{sigNoise}</span></div>
-            <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade."><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
-            
-            <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>HF Band Real-Time Profiles</div>
-            <div className="data-row"><span className="data-label">160M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
-            <div className="data-row"><span className="data-label">80M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
-            <div className="data-row"><span className="data-label">60M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
-            <div className="data-row"><span className="data-label">40M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
-            <div className="data-row"><span className="data-label">30M Propagation</span><span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span></div>
-            <div className="data-row forced-row-reset"><span className="data-label forced-label-reset">20M Propagation</span><span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span></div>
-            <div className="data-row"><span className="data-label">17M Propagation</span><span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span></div>
-            <div className="data-row"><span className="data-label">15M Propagation</span><span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span></div>
-            <div className="data-row"><span className="data-label">12M Propagation</span><span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span></div>
-            <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
           </div>
+
         </div>
 
-        {/* Master Right Nested Fluid Sub-Grid Layout */}
-        <div className="mobile-unwrap right-side-subgrid">
+        {/* Master Right Split-Grid Column Layout Verbatim from Prompt 3 */}
+        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr minmax(300px, 32%)", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
@@ -1176,24 +1229,19 @@ US HF Band Limits:
                 </div>
               </div>
               
-              {/* TARGETED MOBILE VERTICAL AND SCALE CORRECTION LAYER */}
-              <div style={{ 
-                width: "100%", 
-                height: "100%", 
-                cursor: "grab", 
-                transform: isMobileScreen ? "scale(0.72) translateY(35px)" : "scale(0.72)", 
-                transformOrigin: "center center" 
-              }}>
+              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: isMobileScreen ? "scale(0.72) translateY(35px)" : "scale(0.72)", transformOrigin: "center center" }}>
                 {showWorkspace && (
                   <GlobeEngine
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
+                    
                     polygonsData={landmasses}
                     polygonCapColor={() => "#07120a"} 
                     polygonSideColor={() => "#020403"} 
                     polygonStrokeColor={() => "#183620"} 
                     polygonAltitude={0.01}
+                    
                     arcsData={geoArcs}
                     arcColor="color"
                     arcDashLength={0.45}
@@ -1204,15 +1252,18 @@ US HF Band Limits:
                     arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
                     arcStartAltitude={0.012}
                     arcEndAltitude={0.012}
+                    
                     ringsData={geoArcs}
                     ringColor="color"
                     ringMaxRadius={2.2}
                     ringPropagationSpeed={1.0}
                     ringRepeatPeriod={1600}
                     ringAltitude={0.014}
+                    
                     showAtmosphere={true}
                     atmosphereColor="#00ff66"
                     atmosphereAltitude={0.12}
+
                     labelsData={[...globeLabels, ...globePoints]}
                     labelText={(d: any) => d.text || ""}
                     labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
@@ -1221,14 +1272,35 @@ US HF Band Limits:
                     labelAltitude={0.014}
                     labelResolution={3}
                     labelsTransitionDuration={0}
+                    
                     labelLabel={(d: any) => {
                       if (d.type === "pota") {
-                        return `<div class="scene-tooltip"><div style="font-weight:700; color:#00ff66; margin-bottom:0.25rem;">POTA ACTIVATION</div><div>CALLSIGN: <b>${d.operators}</b></div><div>PARK ID: <b>${d.gridKey}</b></div></div>`;
+                        return `
+                          <div class="scene-tooltip">
+                            <div style="font-weight:700; color:#00ff66; margin-bottom:0.25rem;">POTA ACTIVATION</div>
+                            <div>CALLSIGN: <b>${d.operators}</b></div>
+                            <div>PARK ID: <b>${d.gridKey}</b></div>
+                          </div>
+                        `;
                       }
                       if (d.type === "psk") {
-                        return `<div class="scene-tooltip"><div style="font-weight:700; color:#a855f7; margin-bottom:0.25rem;">PSK RECEPTION NODE</div><div>MONITOR: <b>${d.details.receiverCall}</b></div><div>LOCATOR: <b>${d.details.grid}</b></div><div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div></div>`;
+                        return `
+                          <div class="scene-tooltip">
+                            <div style="font-weight:700; color:#a855f7; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
+                            <div>MONITOR: <b>${d.details.receiverCall}</b></div>
+                            <div>LOCATOR: <b>${d.details.grid}</b></div>
+                            <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
+                          </div>
+                        `;
                       }
-                      return `<div class="scene-tooltip"><div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div><div>GRID SECTOR: <b>${d.gridKey}</b></div><div>COUNTRY: <b>${d.country}</b></div><div>OPERATORS: <b>${d.operators}</b></div></div>`;
+                      return `
+                        <div class="scene-tooltip">
+                          <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
+                          <div>GRID SECTOR: <b>${d.gridKey}</b></div>
+                          <div>COUNTRY: <b>${d.country}</b></div>
+                          <div>OPERATORS: <b>${d.operators}</b></div>
+                        </div>
+                      `;
                     }}
                   />
                 )}
@@ -1236,12 +1308,13 @@ US HF Band Limits:
             </div>
 
             {/* Complete Live Log Ledger */}
-            <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: isMobileScreen ? "auto" : "896px" }}>
+            <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem", minHeight: isMobileScreen ? "auto" : "896px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
                 </button>
               </div>
+              
               <div className="log-table-wrapper" style={{ overflowX: "auto", marginTop: "0.5rem" }}>
                 <table className="matrix-table">
                   <thead>
@@ -1265,17 +1338,23 @@ US HF Band Limits:
                     ) : (
                       logs.slice(0, 16).map((qso, index) => (
                         <tr key={index}>
-                          <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">{qso.callsign}</td>
+                          <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
+                            {qso.callsign}
+                          </td>
                           <td style={{ color: "#688a73" }} className="hide-on-mobile-cell">{qso.date}</td>
                           <td style={{ fontWeight: "500" }} className="hide-on-mobile-cell">{qso.time}</td>
                           <td style={{ fontWeight: "500" }}>{qso.band}</td>
-                          <td><span className="badge-mode-tactical">{qso.mode}</span></td>
+                          <td>
+                            <span className="badge-mode-tactical">{qso.mode}</span>
+                          </td>
                           <td style={{ textAlign: "center" }}>
                             <span className="rst-s-box">{qso.rstS}</span>
                             <span style={{ color: "rgba(0, 255, 102, 0.2)", margin: "0 0.3rem" }}>|</span>
                             <span className="rst-r-box">{qso.rstR}</span>
                           </td>
-                          <td style={{ color: "#688a73", fontWeight: "500" }} className="panel-mono-data">{qso.grid || "—"}</td>
+                          <td style={{ color: "#688a73", fontWeight: "500" }} className="panel-mono-data">
+                            {qso.grid || "—"}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -1283,6 +1362,7 @@ US HF Band Limits:
                 </table>
               </div>
             </div>
+
           </div>
 
           {/* Sub-Column 2: Far Right Stack */}
@@ -1311,13 +1391,13 @@ US HF Band Limits:
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel panel-pota" style={{ display: "flex", flexDirection: "column", height: "440px" }}>
+            <div className="terminal-panel panel-pota" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ flex: 1 }}>
+              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
                 {potaSpots.length === 0 ? (
                   <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
                 ) : (
@@ -1345,7 +1425,7 @@ US HF Band Limits:
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ flex: 1 }}>
+              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
                 {pskSpots.length === 0 ? (
                   <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
                     &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
@@ -1365,8 +1445,12 @@ US HF Band Limits:
                 )}
               </div>
             </div>
+
           </div>
+
+          {/* Sub-Column 2 Ends Here */}
         </div>
+
       </main>
     </div>
   );
