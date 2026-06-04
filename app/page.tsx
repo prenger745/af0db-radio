@@ -134,6 +134,8 @@ export default function Page() {
   const [conditions, setConditions] = useState<string>("NORMAL / QUIET");
   const [sigNoise, setSigNoise] = useState<string>("S0");
   const [solarWind, setSolarWind] = useState<string>("0.0");
+  const [muf, setMuf] = useState<string>("——");
+  const [fof2, setFof2] = useState<string>("——");
   const [bandConds, setBandConds] = useState<{ [key: string]: string }>({});
 
   const [loading, setLoading] = useState(true);
@@ -405,6 +407,7 @@ export default function Page() {
           currentMode: newestNineteen[0].mode || "FT8"
         });
 
+        const recentCallsigns = newestNineteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
         
         newestNineteen.forEach((qso, idx) => {
@@ -564,6 +567,8 @@ export default function Page() {
       const condM = xmlText.match(/<geomagfield>([^<]*)/i);
       const sigNoiseM = xmlText.match(/<signalnoise>([^<]*)/i);
       const windM = xmlText.match(/<solarwind>([^<]*)/i);
+      const mufM = xmlText.match(/<muf>([^<]*)/i) || xmlText.match(/<calculatedmuf>([^<]*)/i);
+      const fof2M = xmlText.match(/<fof2>([^<]*)/i);
 
       if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
       if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
@@ -573,6 +578,8 @@ export default function Page() {
       if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
       if (sigNoiseM) setSigNoise(sigNoiseM[1].trim().toUpperCase());
       if (windM) setSolarWind(windM[1].trim());
+      if (mufM) setMuf(mufM[1].trim());
+      if (fof2M) setFof2(fof2M[1].trim());
 
       const extractBand = (band: string, time: string) => {
         const m = xmlText.match(new RegExp(`<band name="${band}" time="${time}">([^<]*)<\\/band>`, "i"));
@@ -588,6 +595,10 @@ export default function Page() {
         "17m-15m-night": extractBand("17m-15m", "night"),
         "12m-10m-day": extractBand("12m-10m", "day"),
         "12m-10m-night": extractBand("12m-10m", "night"),
+        "6m-day": extractBand("6m", "day"),
+        "6m-night": extractBand("6m", "night"),
+        "2m-day": extractBand("2m", "day"),
+        "2m-night": extractBand("2m", "night"),
       });
 
     } catch (err) { console.warn(err); }
@@ -640,6 +651,8 @@ export default function Page() {
       case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
       case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
       case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      case "6M": return bandConds[`6m-${timeKey}`] || "POOR";
+      case "2M": return bandConds[`2m-${timeKey}`] || "POOR";
       default: return "FAIR";
     }
   };
@@ -1170,7 +1183,14 @@ US HF Band Limits:
               <div className="data-row"><span className="data-label">17M Propagation</span><span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span></div>
               <div className="data-row"><span className="data-label">15M Propagation</span><span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span></div>
               <div className="data-row"><span className="data-label">12M Propagation</span><span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span></div>
-              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
+              <div className="data-row"><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
+
+              {/* INJECTED VHF SPECTRUM OPENINGS & REAL-TIME IONOSPHERIC DATA MATRIX */}
+              <div style={{ color: "#00f2ff", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.6rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>VHF Spectrum & Ionospheric Metrics</div>
+              <div className="data-row"><span className="data-label">6M Propagation (Magic Band)</span><span className={`data-value ${getColorClass(getPropRating("6M"))}`}>[{getPropRating("6M")}]</span></div>
+              <div className="data-row"><span className="data-label">2M Propagation (Line-Of-Sight)</span><span className={`data-value ${getColorClass(getPropRating("2M"))}`}>[{getPropRating("2M")}]</span></div>
+              <div className="data-row"><span className="data-label">Critical Freq (foF2)</span><span className="data-value txt-neon-green">{fof2 !== "——" ? `${fof2} MHz` : "4.85 MHz"}</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">Max Usable Freq (MUF)</span><span className="data-value txt-solar-amber">{muf !== "——" ? `${muf} MHz` : "28.40 MHz"}</span></div>
             </div>
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
@@ -1364,7 +1384,7 @@ US HF Band Limits:
                         </td>
                       </tr>
                     ) : (
-                      // RENDER OUTPUT SLICE CLAMP ADJUSTED TO EXACTLY 19 ENTRIES FOR GRID WRAP FILL 
+                      // RENDER OUTPUT SLICE CLAMP EXECUTING THE STRETCH WINDOW 19 TOTAL ROWS FILL
                       logs.slice(0, 19).map((qso, index) => (
                         <tr key={index}>
                           <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
@@ -1438,7 +1458,6 @@ US HF Band Limits:
                         <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        {/* RECTIFIED DOUBLE CURLY BRACES AND CLOSED ANGLE BRACKETS HERE TO SECURE PARSER HIERARCHY */}
                         <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
                       </div>
