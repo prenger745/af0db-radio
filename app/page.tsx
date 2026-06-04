@@ -258,30 +258,6 @@ export default function Page() {
     } catch (e) {}
   };
 
-  const handleToggleAudioSystem = () => {
-    const freshState = !audioEnabled;
-    setAudioEnabled(freshState);
-    if (freshState) {
-      setTimeout(() => {
-        try {
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-          if (!AudioContext) return;
-          const ctx = new AudioContext();
-          const osc = ctx.createOscillator();
-          const gainNode = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(1000, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
-          osc.connect(gainNode);
-          gainNode.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.1);
-        } catch(e) {}
-      }, 50);
-    }
-  };
-
   async function parseLiveQrzData() {
     try {
       const res = await fetch("/api/qrz");
@@ -570,7 +546,11 @@ export default function Page() {
       const mufM = xmlText.match(/<muf>([^<]*)/i) || xmlText.match(/<calculatedmuf>([^<]*)/i);
       const fof2M = xmlText.match(/<fof2>([^<]*)/i);
 
-      if (sfiM) setSfi(parseInt(sfiM[1].trim()) || 145);
+      let extractedSfi = 145;
+      if (sfiM) {
+        extractedSfi = parseInt(sfiM[1].trim()) || 145;
+        setSfi(extractedSfi);
+      }
       if (sspotsM) setSunspots(sspotsM[1].trim() || "98");
       if (aM) setAIndex(aM[1].trim() || "10");
       if (kM) setKIndex(parseInt(kM[1].trim()) || 1);
@@ -578,8 +558,29 @@ export default function Page() {
       if (condM) setConditions(condM[1].trim().toUpperCase() || "NORMAL / QUIET");
       if (sigNoiseM) setSigNoise(sigNoiseM[1].trim().toUpperCase());
       if (windM) setSolarWind(windM[1].trim());
-      if (mufM) setMuf(mufM[1].trim());
-      if (fof2M) setFof2(fof2M[1].trim());
+
+      // RECTIFIED IONOSPHERIC ATMOSPHERIC FALLBACK ENGINE DISPATCH ROUTINES
+      if (mufM) {
+        const rawM = mufM[1].trim();
+        if (rawM && !rawM.toLowerCase().includes("rpt") && !rawM.toLowerCase().includes("report")) {
+          setMuf(rawM);
+        } else {
+          setMuf((extractedSfi * 0.182).toFixed(2));
+        }
+      } else {
+        setMuf((extractedSfi * 0.182).toFixed(2));
+      }
+
+      if (fof2M) {
+        const rawF = fof2M[1].trim();
+        if (rawF && !rawF.toLowerCase().includes("rpt") && !rawF.toLowerCase().includes("report")) {
+          setFof2(rawF);
+        } else {
+          setFof2((extractedSfi * 0.034).toFixed(2));
+        }
+      } else {
+        setFof2((extractedSfi * 0.034).toFixed(2));
+      }
 
       const extractBand = (band: string, time: string) => {
         const m = xmlText.match(new RegExp(`<band name="${band}" time="${time}">([^<]*)<\\/band>`, "i"));
@@ -1134,7 +1135,7 @@ US HF Band Limits:
               </div>
               <div className="data-row tactical-tooltip-trigger" data-blurb="Raw solar energy hitting the station, measured in Watts per square meter.">
                 <span className="data-label">SOLAR IRRADIANCE</span>
-                <span className="data-value txt-solar-amber">{weather.solRad} W/m²</span>
+                <span className="data-value txt-solar-amber">{weather.solRad} W/m² @</span>
               </div>
               <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none" }} data-blurb="Standardized scale measuring the intensity of sunburn-causing UV radiation.">
                 <span className="data-label">ULTRAVIOLET INDEX</span>
@@ -1189,8 +1190,8 @@ US HF Band Limits:
               <div style={{ color: "#00f2ff", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.6rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>VHF Spectrum & Ionospheric Metrics</div>
               <div className="data-row"><span className="data-label">6M Propagation (Magic Band)</span><span className={`data-value ${getColorClass(getPropRating("6M"))}`}>[{getPropRating("6M")}]</span></div>
               <div className="data-row"><span className="data-label">2M Propagation (Line-Of-Sight)</span><span className={`data-value ${getColorClass(getPropRating("2M"))}`}>[{getPropRating("2M")}]</span></div>
-              <div className="data-row"><span className="data-label">Critical Freq (foF2)</span><span className="data-value txt-neon-green">{fof2 !== "——" ? `${fof2} MHz` : "4.85 MHz"}</span></div>
-              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">Max Usable Freq (MUF)</span><span className="data-value txt-solar-amber">{muf !== "——" ? `${muf} MHz` : "28.40 MHz"}</span></div>
+              <div className="data-row"><span className="data-label">Critical Freq (foF2)</span><span className="data-value txt-neon-green">{fof2 && fof2 !== "——" ? `${fof2} MHz` : "4.85 MHz"}</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">Max Usable Freq (MUF)</span><span className="data-value txt-solar-amber">{muf && muf !== "——" ? `${muf} MHz` : "28.40 MHz"}</span></div>
             </div>
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
@@ -1384,7 +1385,7 @@ US HF Band Limits:
                         </td>
                       </tr>
                     ) : (
-                      // RENDER OUTPUT SLICE CLAMP EXECUTING THE STRETCH WINDOW 19 TOTAL ROWS FILL
+                      // RENDER OUTPUT SLICE CLAMP ADJUSTED TO EXACTLY 19 ENTRIES FOR GRID WRAP FILL 
                       logs.slice(0, 19).map((qso, index) => (
                         <tr key={index}>
                           <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
