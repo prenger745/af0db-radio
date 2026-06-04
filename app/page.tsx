@@ -182,7 +182,7 @@ export default function Page() {
 
     return () => {
       clearTimeout(telemetryTimeout);
-      clearInterval(workspaceTimeout);
+      clearTimeout(workspaceTimeout);
     };
   }, []);
 
@@ -373,7 +373,6 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        // INCREMENTED VALUE FROM 16 TO 19 VERBATIM FOR FLUSH WINDOW FILL
         const newestNineteen = sortedLogs.slice(0, 19);
         setLogs(newestNineteen);
         setIsLiveStream(true);
@@ -399,7 +398,6 @@ export default function Page() {
           currentMode: newestNineteen[0].mode || "FT8"
         });
 
-        // EXTENDED CODES TO ENCOMPASS THE EXPANDED 19 CALLSIGN PLOTS NATIVELY ONTO WEBGL GLOBE CANVAS
         const recentCallsigns = newestNineteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
 
@@ -638,6 +636,54 @@ export default function Page() {
       default: return "FAIR";
     }
   };
+
+  // RESTORED MASTER RUNTIME ENGINE HOOK: Executes telemetry routines cleanly without nested interval loops
+  useEffect(() => {
+    parseLiveQrzData();
+    fetchLiveTacticalFeeds();
+    fetchSolarData();
+    fetchLocalTacticalWeather();
+
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);        
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
+    const solarInterval = setInterval(fetchSolarData, 1800000);        
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
+
+    return () => {
+      clearInterval(qrzInterval);
+      clearInterval(feedInterval);
+      clearInterval(solarInterval);
+      clearInterval(weatherInterval);
+    };
+  }, []);
+
+  // RESTORED LABELS REGISTRATION HOOK: Pins coordinates directly onto the WebGL globe structure
+  useEffect(() => {
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
+
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: "", 
+      color: "#00ff66", 
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
+
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
+  }, [geoArcs, potaSpots]);
 
   // GLOBAL MATRIX RESOLUTION RUNNER - Lifted securely above execution block parameters
   const propArray = getCalculatedPropagationArray();
