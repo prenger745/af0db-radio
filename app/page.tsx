@@ -586,6 +586,9 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
+  // GLOBAL SCOPE MATRIX RESOLUTION INTERFACE - Solves TypeScript variable shadowing bounds
+  const propArray = getCalculatedPropagationArray();
+
   return (
     <div className="app-container">
       <style dangerouslySetInnerHTML={{__html: `
@@ -665,9 +668,9 @@ export default function Page() {
 
         @media (min-width: 1024px) { 
           /* Row 1 Architecture: Left WX alongside Main Globe / Rig metrics and Right Shack gear */
-          .row-upper { grid-template-columns: minmax(320px, 24%) 1fr minmax(300px, 25%); }
+          .workspace-row.row-upper { grid-template-columns: minmax(320px, 24%) 1fr minmax(300px, 25%); }
           /* Row 2 Architecture: Space solar parameters alongside raw ADIF ledger feed and side metrics tracking */
-          .row-lower { grid-template-columns: minmax(320px, 24%) 1fr minmax(300px, 25%); }
+          .workspace-row.row-lower { grid-template-columns: minmax(320px, 24%) 1fr minmax(300px, 25%); }
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
@@ -1027,6 +1030,7 @@ export default function Page() {
                 border: "1px solid rgba(0, 255, 102, 0.25)"
               }}
             >
+              {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
               <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                   <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors, alongside a live global feed of other POTA operators." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
@@ -1100,7 +1104,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Upper Right: Shack Gear Component Terminal */}
+          {/* Item Right: Shack Gear Layout Stack Container */}
           <div className="mobile-unwrap">
             <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-dxcc" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
               <div className="aligned-metric-label">Countries DXCC</div>
