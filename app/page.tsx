@@ -633,9 +633,57 @@ export default function Page() {
       case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
       case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
       case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-default: return "FAIR";
+      default: return "FAIR";
     }
   };
+
+  // RESTORED MASTER RUNTIME ENGINE HOOK: Executes telemetry routines on interval clock
+  useEffect(() => {
+    parseLiveQrzData();
+    fetchLiveTacticalFeeds();
+    fetchSolarData();
+    fetchLocalTacticalWeather();
+
+    const qrzInterval = setInterval(parseLiveQrzData, 300000);        
+    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
+    const solarInterval = setInterval(fetchSolarData, 1800000);        
+    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
+
+    return () => {
+      clearInterval(qrzInterval);
+      clearInterval(feedInterval);
+      clearInterval(solarInterval);
+      clearInterval(weatherInterval);
+    };
+  }, []);
+
+  // RESTORED LABELS REGISTRATION HOOK: Pins coordinates directly onto the WebGL globe structure
+  useEffect(() => {
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
+
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: "", 
+      color: "#00ff66", 
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
+
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
+  }, [geoArcs, potaSpots]);
 
   // GLOBAL MATRIX RESOLUTION RUNNER - Lifted securely above execution block parameters
   const propArray = getCalculatedPropagationArray();
@@ -1051,7 +1099,7 @@ US HF Band Limits:
                 <span className="data-label">THERMAL GRADIENT</span>
                 <span className="data-value">{weather.temp}°F</span>
               </div>
-              <div className="data-row tactical-tooltip-trigger" data-blurb="Percentage of airborne moisture relative to its maximum capacity.">
+              <div className="data-row tactical-tooltip-trigger" data-blurb="Percentage of airborne moisture relative to its maximum its capacity.">
                 <span className="data-label">RELATIVE HUMIDITY</span>
                 <span className="data-value txt-neon-green">{weather.humidity}% RH</span>
               </div>
@@ -1137,7 +1185,7 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Split-Grid Column Layout - LOCKED ALIGNMENT TO STRETCH TO AUTO-MATCH VIEWPORT HEIGHT BASES */}
+        {/* Master Right Split-Grid Column Layout Verbatim from Prompt 3 */}
         <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr minmax(300px, 32%)", gap: "1.5rem", width: "100%", alignItems: "stretch", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
@@ -1414,7 +1462,6 @@ US HF Band Limits:
 
           </div>
 
-          {/* Sub-Column 2 Ends Here */}
         </div>
 
       </main>
