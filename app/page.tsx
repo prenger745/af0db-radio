@@ -586,69 +586,6 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
-  useEffect(() => {
-    parseLiveQrzData();
-    fetchLiveTacticalFeeds();
-    fetchSolarData();
-    fetchLocalTacticalWeather();
-
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);        
-    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
-    const solarInterval = setInterval(fetchSolarData, 1800000);        
-    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
-
-    return () => {
-      clearInterval(qrzInterval);
-      clearInterval(feedInterval);
-      clearInterval(solarInterval);
-      clearInterval(weatherInterval);
-    };
-  }, []);
-
-  useEffect(() => {
-    const qrzLabels = geoArcs.map(arc => ({
-      lat: arc.lat,
-      lng: arc.lng,
-      text: arc.text,
-      color: arc.color,
-      type: "qrz",
-      gridKey: arc.gridKey,
-      country: arc.country,
-      operators: arc.operators
-    }));
-
-    const potaLabels = potaSpots.map(spot => ({
-      lat: spot.lat,
-      lng: spot.lng,
-      text: "", 
-      color: "#00ff66", 
-      type: "pota",
-      gridKey: spot.reference,
-      country: "United States",
-      operators: spot.activator,
-      details: spot
-    }));
-
-    setGlobeLabels([...qrzLabels, ...potaLabels]);
-  }, [geoArcs, potaSpots]);
-
-  const getPropRating = (band: string) => {
-    const timeKey = isNight ? "night" : "day";
-    switch (band) {
-      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
-      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
-      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
-      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-      default: return "FAIR";
-    }
-  };
-
-  const getColorClass = (rating: string) => {
-    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
-    if (rating === "FAIR") return "txt-solar-amber";
-    return "rst-r-box";
-  };
-
   // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
   const getCalculatedPropagationArray = () => {
     const parsedSunspots = parseInt(sunspots) || 0;
@@ -683,6 +620,24 @@ export default function Page() {
     };
   };
 
+  const getColorClass = (rating: string) => {
+    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+    if (rating === "FAIR") return "txt-solar-amber";
+    return "rst-r-box";
+  };
+
+  const getPropRating = (band: string) => {
+    const timeKey = isNight ? "night" : "day";
+    switch (band) {
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
+    }
+  };
+
+  // GLOBAL MATRIX RESOLUTION RUNNER - Lifted securely above execution block parameters
   const propArray = getCalculatedPropagationArray();
 
   return (
@@ -754,9 +709,18 @@ export default function Page() {
         }
         .deck-workspace.active { opacity: 1; }
         
+        .right-side-subgrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+          width: 100%;
+          align-items: start;
+        }
+
         @media (min-width: 1024px) { 
           /* Safe fluid fractional layout tracks accurately across ultra-wides and mobile laptop panels alike */
           .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; gap: 1.5rem; } 
+          .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 33%); }
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
@@ -1307,8 +1271,8 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Complete Live Log Ledger */}
-            <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0.68rem", minHeight: isMobileScreen ? "auto" : "896px" }}>
+            {/* Complete Live Log Ledger - FIXED TOP OFFSET ALIGNMENT MISMATCH */}
+            <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0px", minHeight: isMobileScreen ? "auto" : "896px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
                   <History style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE LOOK AT MOST RECENT QSOs
@@ -1391,13 +1355,13 @@ US HF Band Limits:
             </div>
 
             {/* Card 4: Live POTA spots scroller register */}
-            <div className="terminal-panel panel-pota" style={{ marginTop: isMobileScreen ? "0px" : "11px", display: "flex", flexDirection: "column", height: isMobileScreen ? "auto" : "440px" }}>
+            <div className="terminal-panel panel-pota" style={{ display: "flex", flexDirection: "column", height: "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
                   <Signal style={{ width: "16px", height: "16px", color: "#00ff66" }} /> LIVE POTA SPOTS NET
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
+              <div className="ticker-scroller-box" style={{ flex: 1 }}>
                 {potaSpots.length === 0 ? (
                   <div style={{ fontSize: "0.75rem", color: "#4e6e58", padding: "1rem" }}>Fetching live park grid channels...</div>
                 ) : (
@@ -1425,7 +1389,7 @@ US HF Band Limits:
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
                 </button>
               </div>
-              <div className="ticker-scroller-box" style={{ flex: 1, minHeight: isMobileScreen ? "140px" : "auto" }}>
+              <div className="ticker-scroller-box" style={{ flex: 1 }}>
                 {pskSpots.length === 0 ? (
                   <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
                     &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
@@ -1445,12 +1409,8 @@ US HF Band Limits:
                 )}
               </div>
             </div>
-
           </div>
-
-          {/* Sub-Column 2 Ends Here */}
         </div>
-
       </main>
     </div>
   );
