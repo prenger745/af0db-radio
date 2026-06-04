@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, Sliders, ChevronRight, Sun, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, ChevronRight, Sun, Volume2, VolumeX } from "lucide-react";
 
 // NEXT 14 WEBGL DYNAMIC LAYOUT ENGINE
 const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.default), {
@@ -258,6 +258,30 @@ export default function Page() {
     } catch (e) {}
   };
 
+  const handleToggleAudioSystem = () => {
+    const freshState = !audioEnabled;
+    setAudioEnabled(freshState);
+    if (freshState) {
+      setTimeout(() => {
+        try {
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1000, ctx.currentTime);
+          gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } catch(e) {}
+      }, 50);
+    }
+  };
+
   async function parseLiveQrzData() {
     try {
       const res = await fetch("/api/qrz");
@@ -383,7 +407,6 @@ export default function Page() {
           currentMode: newestNineteen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestNineteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
         
         newestNineteen.forEach((qso, idx) => {
@@ -559,7 +582,6 @@ export default function Page() {
       if (sigNoiseM) setSigNoise(sigNoiseM[1].trim().toUpperCase());
       if (windM) setSolarWind(windM[1].trim());
 
-      // RECTIFIED IONOSPHERIC ATMOSPHERIC FALLBACK ENGINE DISPATCH ROUTINES
       if (mufM) {
         const rawM = mufM[1].trim();
         if (rawM && !rawM.toLowerCase().includes("rpt") && !rawM.toLowerCase().includes("report")) {
@@ -808,7 +830,7 @@ export default function Page() {
             letter-spacing: -0.05em; 
           }
           .header-status-box { 
-            align-self: flex-start; 
+            align-start; 
           }
 
           .deck-workspace { display: flex !important; flex-direction: column !important; gap: 0 !important; }
@@ -1135,7 +1157,7 @@ US HF Band Limits:
               </div>
               <div className="data-row tactical-tooltip-trigger" data-blurb="Raw solar energy hitting the station, measured in Watts per square meter.">
                 <span className="data-label">SOLAR IRRADIANCE</span>
-                <span className="data-value txt-solar-amber">{weather.solRad} W/m² @</span>
+                <span className="data-value txt-solar-amber">{weather.solRad} W/m²</span>
               </div>
               <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none" }} data-blurb="Standardized scale measuring the intensity of sunburn-causing UV radiation.">
                 <span className="data-label">ULTRAVIOLET INDEX</span>
