@@ -84,14 +84,14 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
           setDisplayedText(text.substring(0, index + 1));
           index++;
         } else {
-          clearInterval(timer);
+          timer && clearInterval(timer);
         }
       }, speed);
     }, delay);
 
     return () => {
       clearTimeout(startTimeout);
-      clearInterval(timer);
+      timer && clearInterval(timer);
     };
   }, [text, speed, delay]);
 
@@ -342,7 +342,6 @@ export default function Page() {
           }
         }
 
-        // GRAB POSITION Telemetry elements directly on initial parse loop context parameters
         if ((decimalLat === 0 && decimalLng === 0) && itemGrid && itemGrid.length >= 4) {
           const g = itemGrid.toUpperCase();
           const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
@@ -406,13 +405,13 @@ export default function Page() {
           currentMode: newestNineteen[0].mode || "FT8"
         });
 
-        // 1:1 CORRELATION DECK VECTOR GENERATOR ARRAY MATRIX
         const generatedArcs: any[] = [];
-        newestNineteen.forEach((qso) => {
+        
+        // INJECTED DYNAMIC GEOSPATIAL JITTER LOOP MECHANICS VERBATIM TO DE-STACK IDENTICAL COORDINATES
+        newestNineteen.forEach((qso, idx) => {
           let exactLat = qso.lat || 0;
           let exactLng = qso.lng || 0;
 
-          // Smart fallback routing ensures data anomalies force vector pins instead of dropping out silently
           if (exactLat === 0 && exactLng === 0) {
             const c = (qso.country || "").toUpperCase();
             if (c.includes("USA") || c.includes("UNITED STATES")) { exactLat = 39.8283; exactLng = -98.5795; }
@@ -424,8 +423,12 @@ export default function Page() {
             else if (c.includes("SPAIN")) { exactLat = 40.4637; exactLng = -3.7492; }
             else if (c.includes("ENGLAND") || c.includes("UNITED KINGDOM")) { exactLat = 55.3781; exactLng = -3.4360; }
             else if (c.includes("AUSTRALIA")) { exactLat = -25.2744; exactLng = 133.7751; }
-            else { exactLat = 30.0; exactLng = 15.0; } // Regional grid fallback layout default coordinate bounds
+            else { exactLat = 30.0; exactLng = 15.0; } 
           }
+
+          // Micro-nudging equations keep duplicate coordinates separated and individual vectors distinctly visible
+          const visualLat = exactLat + (Math.sin(idx) * 0.08);
+          const visualLng = exactLng + (Math.cos(idx) * 0.08);
 
           const checkCall = qso.callsign.toUpperCase().replace(/Ø/g, "0");
           const isUSAPrefix = checkCall.startsWith("W") || checkCall.startsWith("K") || checkCall.startsWith("N") || checkCall.startsWith("AA");
@@ -435,10 +438,10 @@ export default function Page() {
           generatedArcs.push({
             startLat: 38.6158,
             startLng: -95.2686,
-            lat: exactLat,
-            lng: exactLng,
-            endLat: exactLat,
-            endLng: exactLng,
+            lat: visualLat,
+            lng: visualLng,
+            endLat: visualLat,
+            endLng: visualLng,
             color: assignedTargetColor,
             gridKey: qso.grid,
             territory: territoryType,
@@ -775,7 +778,7 @@ export default function Page() {
           /* Safe fluid fractional layout tracks accurately across ultra-wides and mobile laptop panels alike */
           .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; gap: 1.5rem; } 
           /* CRITICAL RESPONSIVE ALIGNMENT UPGRADE: Changed alignItems to stretch to auto-lock baseline heights as requested verbatim for file notlining up.png */
-          .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 33%); alignItems: stretch; }
+          .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 32%); alignItems: stretch; }
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
@@ -897,8 +900,6 @@ export default function Page() {
           visibility: visible;
         }
 
-        .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #ffaa00; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem; }
-        
         /* NATIVE ROW RE-DENSING RECTIFICATION LAYER: Fixed padding compression and white-space clamping to stop 15" text wraps */
         .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.38rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; position: relative; }
         .data-label { color: #688a73 !important; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
@@ -923,7 +924,6 @@ export default function Page() {
         .txt-aviation-blue { color: #00f2ff; text-shadow: 0 0 4px rgba(0,242,255,0.3); }
         .status-bracket { font-size: 0.75rem; color: #334a3b; font-weight: 600; }
         .status-text { color: #00ff66; font-weight: 700; }
-        .badge-mode-tactical { border: 1px solid rgba(0, 255, 102, 0.4); color: #00ff66; font-size: 10px; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(0,255,102,0.03); }
         .badge-mode-tactical { border: 1px solid rgba(0, 255, 102, 0.4); color: #00ff66; font-size: 10px; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(0,255,102,0.03); }
         .rst-s-box { color: #00ff66; font-weight: 600; }
         .rst-r-box { color: #ff3333; font-weight: 600; }
