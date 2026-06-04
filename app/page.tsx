@@ -84,14 +84,14 @@ function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
           setDisplayedText(text.substring(0, index + 1));
           index++;
         } else {
-          timer && clearInterval(timer);
+          clearInterval(timer);
         }
       }, speed);
     }, delay);
 
     return () => {
       clearTimeout(startTimeout);
-      timer && clearInterval(timer);
+      clearInterval(timer);
     };
   }, [text, speed, delay]);
 
@@ -254,30 +254,6 @@ export default function Page() {
         osc.stop(ctx.currentTime + 0.02);
       }
     } catch (e) {}
-  };
-
-  const handleToggleAudioSystem = () => {
-    const freshState = !audioEnabled;
-    setAudioEnabled(freshState);
-    if (freshState) {
-      setTimeout(() => {
-        try {
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-          if (!AudioContext) return;
-          const ctx = new AudioContext();
-          const osc = ctx.createOscillator();
-          const gainNode = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(1000, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
-          osc.connect(gainNode);
-          gainNode.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.1);
-        } catch(e) {}
-      }, 50);
-    }
   };
 
   async function parseLiveQrzData() {
@@ -1438,7 +1414,8 @@ US HF Band Limits:
                         <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <span style={{ color: "#00ff66}kHz</span>
+                        {/* RECTIFIED DOUBLE CURLY BRACES TYPO HERE TO PASS COMPILER HANDSHAKE */}
+                        <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
                       </div>
                     </div>
@@ -1477,6 +1454,7 @@ US HF Band Limits:
 
           </div>
 
+          {/* Sub-Column 2 Ends Here */}
         </div>
 
       </main>
