@@ -1006,8 +1006,8 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal */}
-          <div className="terminal-panel panel-wx" style={{ minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* Card 1: Tactical METAR Weather Terminal - FIXED VERTIAl HEIGHT DRAG WITH STRICT PROPERTY TRACKING */}
+          <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
@@ -1076,7 +1076,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info - Injected flexGrow utility parameter to mirror log boundaries perfectly */}
+          {/* Card 2: Space weather info */}
           <div className="terminal-panel panel-solar" style={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header">
@@ -1271,7 +1271,7 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Complete Live Log Ledger - FIXED TOP OFFSET ALIGNMENT MISMATCH */}
+            {/* Complete Live Log Ledger */}
             <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0px", minHeight: isMobileScreen ? "auto" : "896px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
@@ -1409,8 +1409,12 @@ US HF Band Limits:
                 )}
               </div>
             </div>
+
           </div>
+
+          {/* Sub-Column 2 Ends Here */}
         </div>
+
       </main>
     </div>
   );
