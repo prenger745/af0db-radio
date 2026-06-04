@@ -373,11 +373,12 @@ export default function Page() {
       });
 
       if (sortedLogs.length > 0) {
-        const newestSixteen = sortedLogs.slice(0, 16);
-        setLogs(newestSixteen);
+        // INCREMENTED VALUE FROM 16 TO 19 VERBATIM FOR FLUSH WINDOW FILL
+        const newestNineteen = sortedLogs.slice(0, 19);
+        setLogs(newestNineteen);
         setIsLiveStream(true);
 
-        const rawBand = newestSixteen[0].band ? newestSixteen[0].band : "20M";
+        const rawBand = newestNineteen[0].band ? newestNineteen[0].band : "20M";
         const displayBand = rawBand.toUpperCase().endsWith("M") 
           ? `${rawBand.substring(0, rawBand.length - 1)} Meters` 
           : `${rawBand} Meters`;
@@ -395,10 +396,11 @@ export default function Page() {
           confirmed: finalCalculatedConfirmed.toString(),
           dxcc: finalCalculatedDxcc.toString(),
           currentBand: displayBand,
-          currentMode: newestSixteen[0].mode || "FT8"
+          currentMode: newestNineteen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestSixteen.map(q => q.callsign.replace(/Ø/g, "0"));
+        // EXTENDED CODES TO ENCOMPASS THE EXPANDED 19 CALLSIGN PLOTS NATIVELY ONTO WEBGL GLOBE CANVAS
+        const recentCallsigns = newestNineteen.map(q => q.callsign.replace(/Ø/g, "0"));
         const generatedArcs: any[] = [];
 
         rawGeoCoordinates.forEach((coord: any) => {
@@ -636,54 +638,6 @@ export default function Page() {
       default: return "FAIR";
     }
   };
-
-  // RESTORED MASTER RUNTIME ENGINE HOOK: Executes telemetry routines on interval clock
-  useEffect(() => {
-    parseLiveQrzData();
-    fetchLiveTacticalFeeds();
-    fetchSolarData();
-    fetchLocalTacticalWeather();
-
-    const qrzInterval = setInterval(parseLiveQrzData, 300000);        
-    const feedInterval = setInterval(fetchLiveTacticalFeeds, 60000);   
-    const solarInterval = setInterval(fetchSolarData, 1800000);        
-    const weatherInterval = setInterval(fetchLocalTacticalWeather, 300000); 
-
-    return () => {
-      clearInterval(qrzInterval);
-      clearInterval(feedInterval);
-      clearInterval(solarInterval);
-      clearInterval(weatherInterval);
-    };
-  }, []);
-
-  // RESTORED LABELS REGISTRATION HOOK: Pins coordinates directly onto the WebGL globe structure
-  useEffect(() => {
-    const qrzLabels = geoArcs.map(arc => ({
-      lat: arc.lat,
-      lng: arc.lng,
-      text: arc.text,
-      color: arc.color,
-      type: "qrz",
-      gridKey: arc.gridKey,
-      country: arc.country,
-      operators: arc.operators
-    }));
-
-    const potaLabels = potaSpots.map(spot => ({
-      lat: spot.lat,
-      lng: spot.lng,
-      text: "", 
-      color: "#00ff66", 
-      type: "pota",
-      gridKey: spot.reference,
-      country: "United States",
-      operators: spot.activator,
-      details: spot
-    }));
-
-    setGlobeLabels([...qrzLabels, ...potaLabels]);
-  }, [geoArcs, potaSpots]);
 
   // GLOBAL MATRIX RESOLUTION RUNNER - Lifted securely above execution block parameters
   const propArray = getCalculatedPropagationArray();
@@ -1056,7 +1010,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - FIXED VERTICAL HEIGHT DRAG WITH STRICT PROPERTY TRACKING */}
+          {/* Card 1: Tactical METAR Weather Terminal - SECURED HEIGHT VALUE PREVENTS DOWNWARD SYSTEM EXPANSIONS */}
           <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1350,7 +1304,8 @@ US HF Band Limits:
                         </td>
                       </tr>
                     ) : (
-                      logs.slice(0, 16).map((qso, index) => (
+                      // RENDER OUTPUT SLICE CLAMP ADJUSTED TO EXACTLY 19 ENTRIES FOR GRID WRAP FILL 
+                      logs.slice(0, 19).map((qso, index) => (
                         <tr key={index}>
                           <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
                             {qso.callsign}
@@ -1462,6 +1417,7 @@ US HF Band Limits:
 
           </div>
 
+          {/* Sub-Column 2 Ends Here */}
         </div>
 
       </main>
