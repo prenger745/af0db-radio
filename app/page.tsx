@@ -586,7 +586,7 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
-  // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE - Placed strictly above execution sequence to satisfy compiler parameters
+  // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE
   const getCalculatedPropagationArray = () => {
     const parsedSunspots = parseInt(sunspots) || 0;
     const baseIonization = Math.min(100, Math.max(0, (sfi - 65) * 1.1 + parsedSunspots * 0.15));
@@ -620,7 +620,24 @@ export default function Page() {
     };
   };
 
-  // GLOBAL SCOPE MATRIX RESOLUTION INTERFACE - Solves TypeScript variable shadowing bounds
+  const getColorClass = (rating: string) => {
+    if (rating === "GREAT" || rating === "GOOD") return "txt-neon-green";
+    if (rating === "FAIR") return "txt-solar-amber";
+    return "rst-r-box";
+  };
+
+  const getPropRating = (band: string) => {
+    const timeKey = isNight ? "night" : "day";
+    switch (band) {
+      case "80M": case "40M": return bandConds[`80m-40m-${timeKey}`] || "FAIR";
+      case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
+      case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
+      case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
+      default: return "FAIR";
+    }
+  };
+
+  // GLOBAL SCO MATRIX RESOLUTION RUNNER - Lifted safely above the layout block bounds
   const propArray = getCalculatedPropagationArray();
 
   return (
@@ -1151,7 +1168,7 @@ export default function Page() {
                 </button>
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
               </div>
-              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTWA, KS</span></div>
+              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
               <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
               <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
               <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
