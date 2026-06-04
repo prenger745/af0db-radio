@@ -27,6 +27,8 @@ interface QSO {
   lotwRcvd?: string;
   eqslRcvd?: string;
   qrzRcvd?: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface StationMetrics {
@@ -296,7 +298,6 @@ export default function Page() {
 
       let adifContent = cleanText.includes("ADIF=") ? cleanText.split(/ADIF=/i)[1] : cleanText;
       const allParsedLogs: QSO[] = [];
-      const rawGeoCoordinates: any[] = [];
       
       const records = adifContent.split(/<eor>/i);
 
@@ -325,22 +326,6 @@ export default function Page() {
         const rawLatStr = extractTag("lat");
         const rawLngStr = extractTag("lon");
 
-        allParsedLogs.push({
-          callsign: call.toUpperCase().replace(/0/g, "Ø"),
-          date: fD,
-          time: fT,
-          band: extractTag("band") || "—",
-          mode: extractTag("mode") || "—",
-          rstS: extractTag("rst_sent") || "59",
-          rstR: extractTag("rst_rcvd") || "59",
-          grid: itemGrid,
-          country: countryString,
-          qslRcvd: qslStatus,
-          lotwRcvd: lotwStatus,
-          eqslRcvd: eqslStatus,
-          qrzRcvd: qrzStatus
-        });
-
         let decimalLat = 0;
         let decimalLng = 0;
 
@@ -357,10 +342,33 @@ export default function Page() {
           }
         }
 
-        rawGeoCoordinates.push({
-          callsign: call,
+        // GRAB POSITION Telemetry elements directly on initial parse loop context parameters
+        if ((decimalLat === 0 && decimalLng === 0) && itemGrid && itemGrid.length >= 4) {
+          const g = itemGrid.toUpperCase();
+          const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+          const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+          const lonSquare = parseInt(g.charAt(2)) * 2;
+          const latSquare = parseInt(g.charAt(3)) * 1;
+          if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
+            decimalLng = lonField + lonSquare + 1;
+            decimalLat = latField + latSquare + 0.5;
+          }
+        }
+
+        allParsedLogs.push({
+          callsign: call.toUpperCase().replace(/0/g, "Ø"),
+          date: fD,
+          time: fT,
+          band: extractTag("band") || "—",
+          mode: extractTag("mode") || "—",
+          rstS: extractTag("rst_sent") || "59",
+          rstR: extractTag("rst_rcvd") || "59",
           grid: itemGrid,
           country: countryString,
+          qslRcvd: qslStatus,
+          lotwRcvd: lotwStatus,
+          eqslRcvd: eqslStatus,
+          qrzRcvd: qrzStatus,
           lat: decimalLat,
           lng: decimalLng
         });
@@ -398,30 +406,28 @@ export default function Page() {
           currentMode: newestNineteen[0].mode || "FT8"
         });
 
-        const recentCallsigns = newestNineteen.map(q => q.callsign.replace(/Ø/g, "0"));
+        // 1:1 CORRELATION DECK VECTOR GENERATOR ARRAY MATRIX
         const generatedArcs: any[] = [];
+        newestNineteen.forEach((qso) => {
+          let exactLat = qso.lat || 0;
+          let exactLng = qso.lng || 0;
 
-        rawGeoCoordinates.forEach((coord: any) => {
-          const checkCall = coord.callsign.toUpperCase();
-          if (!recentCallsigns.includes(checkCall)) return;
-
-          let exactLat = coord.lat;
-          let exactLng = coord.lng;
-
-          if ((exactLat === 0 && exactLng === 0) && coord.grid && coord.grid.length >= 4) {
-            const g = coord.grid.toUpperCase();
-            const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
-            const latField = (g.charCodeAt(1) - 65) * 10 - 90;
-            const lonSquare = parseInt(g.charAt(2)) * 2;
-            const latSquare = parseInt(g.charAt(3)) * 1;
-            if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-              exactLng = lonField + lonSquare + 1;
-              exactLat = latField + latSquare + 0.5;
-            }
+          // Smart fallback routing ensures data anomalies force vector pins instead of dropping out silently
+          if (exactLat === 0 && exactLng === 0) {
+            const c = (qso.country || "").toUpperCase();
+            if (c.includes("USA") || c.includes("UNITED STATES")) { exactLat = 39.8283; exactLng = -98.5795; }
+            else if (c.includes("CANADA")) { exactLat = 56.1304; exactLng = -106.3468; }
+            else if (c.includes("JAPAN")) { exactLat = 36.2048; exactLng = 138.2529; }
+            else if (c.includes("GERMANY")) { exactLat = 51.1657; exactLng = 10.4515; }
+            else if (c.includes("ITALY")) { exactLat = 41.8719; exactLng = 12.5674; }
+            else if (c.includes("FRANCE")) { exactLat = 46.2276; exactLng = 2.2137; }
+            else if (c.includes("SPAIN")) { exactLat = 40.4637; exactLng = -3.7492; }
+            else if (c.includes("ENGLAND") || c.includes("UNITED KINGDOM")) { exactLat = 55.3781; exactLng = -3.4360; }
+            else if (c.includes("AUSTRALIA")) { exactLat = -25.2744; exactLng = 133.7751; }
+            else { exactLat = 30.0; exactLng = 15.0; } // Regional grid fallback layout default coordinate bounds
           }
 
-          if (exactLat === 0 && exactLng === 0) return;
-
+          const checkCall = qso.callsign.toUpperCase().replace(/Ø/g, "0");
           const isUSAPrefix = checkCall.startsWith("W") || checkCall.startsWith("K") || checkCall.startsWith("N") || checkCall.startsWith("AA");
           const assignedTargetColor = isUSAPrefix ? "#00f2ff" : "#ff9100";
           const territoryType = isUSAPrefix ? "DOMESTIC (USA)" : "INTERNATIONAL (DX)";
@@ -434,12 +440,12 @@ export default function Page() {
             endLat: exactLat,
             endLng: exactLng,
             color: assignedTargetColor,
-            gridKey: coord.grid,
+            gridKey: qso.grid,
             territory: territoryType,
-            country: coord.country || "Unknown DXCC",
-            operators: checkCall.replace(/0/g, "Ø"),
+            country: qso.country || "Unknown DXCC",
+            operators: qso.callsign,
             type: "qrz",
-            text: `+ ${checkCall.replace(/0/g, "Ø")}`
+            text: `+ ${qso.callsign}`
           });
         });
 
