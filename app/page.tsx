@@ -586,6 +586,40 @@ export default function Page() {
     } catch (err) { console.warn(err); }
   }
 
+  // AUTOMATED REAL-TIME RAY TRACING PROPAGATION SCORE LOGIC ENGINE - Placed strictly above execution sequence to satisfy compiler parameters
+  const getCalculatedPropagationArray = () => {
+    const parsedSunspots = parseInt(sunspots) || 0;
+    const baseIonization = Math.min(100, Math.max(0, (sfi - 65) * 1.1 + parsedSunspots * 0.15));
+    const finalIonization = Math.round(baseIonization);
+
+    const windSpeedVal = parseFloat(solarWind) || 400;
+    const baseStormPenalty = kIndex * 12 + (windSpeedVal > 500 ? (windSpeedVal - 500) * 0.08 : 0);
+    const finalAttenuation = Math.min(100, Math.round(baseStormPenalty));
+
+    const noiseScaleInt = parseInt(sigNoise.replace(/[^0-9]/g, "")) || 1;
+    const calculatedNet = Math.round(finalIonization - finalAttenuation - noiseScaleInt * 3);
+    const finalNetScore = Math.min(100, Math.max(0, calculatedNet));
+
+    let displayString = "DX_PATH_OPTIMAL";
+    let textClass = "txt-neon-green";
+
+    if (finalNetScore < 40) {
+      displayString = "BAND_BLACKOUT";
+      textClass = "rst-r-box";
+    } else if (finalNetScore < 75) {
+      displayString = "PATH_DEGRADED";
+      textClass = "txt-solar-amber";
+    }
+
+    return {
+      ionization: finalIonization,
+      attenuation: finalAttenuation,
+      netValue: finalNetScore,
+      statusText: displayString,
+      colorClass: textClass
+    };
+  };
+
   // GLOBAL SCOPE MATRIX RESOLUTION INTERFACE - Solves TypeScript variable shadowing bounds
   const propArray = getCalculatedPropagationArray();
 
@@ -1117,7 +1151,7 @@ export default function Page() {
                 </button>
                 <ChevronRight style={{ width: "14px", height: "14px", color: "#223b2b" }} />
               </div>
-              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTTAWA, KS</span></div>
+              <div className="data-row"><span className="data-label">STATION QTH</span><span className="data-value">OTWA, KS</span></div>
               <div className="data-row"><span className="data-label">MAIN RIG</span><span className="data-value">YAESU BASE-RIG FT-991</span></div>
               <div className="data-row"><span className="data-label">ANTENNA Array</span><span className="data-value">ISOTRON 20M</span></div>
               <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">ARCH SUITE</span><span className="data-value">XUBUNTU/HAM</span></div>
