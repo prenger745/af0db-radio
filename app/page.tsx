@@ -717,11 +717,23 @@ export default function Page() {
           align-items: start;
         }
 
-        @media (min-width: 1024px) { 
-          /* Row 1 Architecture: Left WX alongside Main Globe / Rig metrics and Right Shack gear */
+        /* TARGETED LAPTOP DISPLAY MECHANICS: Fluid 2-Column layout optimization under 1440px wide */
+        @media (min-width: 1024px) and (max-width: 1439px) {
+          .workspace-row.row-upper { grid-template-columns: 1fr 1fr; }
+          .workspace-row.row-lower { grid-template-columns: 1fr 1fr; }
+          .panel-wx { min-height: 380px !important; }
+          .panel-gear { min-height: auto !important; grid-column: span 2; }
+          .panel-solar { grid-column: span 1; }
+          .panel-logs { grid-column: span 1; }
+          .panel-pota-psk-wrapper { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+          .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
+        }
+
+        /* TARGETED ULTRA-WIDE DESKTOP CODES: Native Fluid 3-Column distribution rules */
+        @media (min-width: 1440px) { 
           .workspace-row.row-upper { grid-template-columns: minmax(320px, 24%) 1fr minmax(300px, 25%); }
-          /* Row 2 Architecture: Space solar parameters alongside raw ADIF ledger feed and side metrics tracking */
           .workspace-row.row-lower { grid-template-columns: minmax(320px, 24%) 1fr minmax(300px, 25%); }
+          .panel-pota-psk-wrapper { display: contents; }
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
@@ -1267,8 +1279,8 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Lower Right: Side POTA & PSK parameters stack alignment */}
-          <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          {/* Lower Right: Side POTA & PSK parameters stack alignment Wrapper */}
+          <div className="panel-pota-psk-wrapper">
             
             {/* Live POTA spots scroller register */}
             <div className="terminal-panel panel-pota" style={{ display: "flex", flexDirection: "column", height: "300px" }}>
