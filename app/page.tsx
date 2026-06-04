@@ -407,7 +407,6 @@ export default function Page() {
 
         const generatedArcs: any[] = [];
         
-        // INJECTED DYNAMIC GEOSPATIAL JITTER LOOP MECHANICS VERBATIM TO DE-STACK IDENTICAL COORDINATES
         newestNineteen.forEach((qso, idx) => {
           let exactLat = qso.lat || 0;
           let exactLng = qso.lng || 0;
@@ -426,7 +425,6 @@ export default function Page() {
             else { exactLat = 30.0; exactLng = 15.0; } 
           }
 
-          // Micro-nudging equations keep duplicate coordinates separated and individual vectors distinctly visible
           const visualLat = exactLat + (Math.sin(idx) * 0.08);
           const visualLng = exactLng + (Math.cos(idx) * 0.08);
 
@@ -1273,6 +1271,16 @@ US HF Band Limits:
                     arcStartAltitude={0.012}
                     arcEndAltitude={0.012}
                     
+                    // INJECTED INTEGRATED RAY TRACING ARC HOVER OVERLAYS TO MITIGATE SECTOR STACK COLLISIONS
+                    arcLabel={(d: any) => `
+                      <div class="scene-tooltip">
+                        <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT TRACE</div>
+                        <div>GRID SECTOR: <b>${d.gridKey || "—"}</b></div>
+                        <div>COUNTRY: <b>${d.country}</b></div>
+                        <div>OPERATORS: <b>${d.operators}</b></div>
+                      </div>
+                    `}
+                    
                     ringsData={geoArcs}
                     ringColor="color"
                     ringMaxRadius={2.2}
@@ -1430,7 +1438,7 @@ US HF Band Limits:
                         <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
+                        <span style={{ color: "#00ff66}kHz</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
                       </div>
                     </div>
@@ -1469,7 +1477,6 @@ US HF Band Limits:
 
           </div>
 
-          {/* Sub-Column 2 Ends Here */}
         </div>
 
       </main>
