@@ -633,7 +633,7 @@ export default function Page() {
       case "30M": case "20M": return bandConds[`30m-20m-${timeKey}`] || "FAIR";
       case "17M": case "15M": return bandConds[`17m-15m-${timeKey}`] || "FAIR";
       case "12M": case "10M": return bandConds[`12m-10m-${timeKey}`] || "FAIR";
-      default: return "FAIR";
+default: return "FAIR";
     }
   };
 
@@ -720,7 +720,8 @@ export default function Page() {
         @media (min-width: 1024px) { 
           /* Safe fluid fractional layout tracks accurately across ultra-wides and mobile laptop panels alike */
           .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; gap: 1.5rem; } 
-          .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 33%); }
+          /* CRITICAL RESPONSIVE ALIGNMENT UPGRADE: Changed alignItems to stretch to auto-lock baseline heights as requested verbatim for file notlining up.png */
+          .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 33%); alignItems: stretch; }
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
@@ -844,8 +845,9 @@ export default function Page() {
 
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #ffaa00; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem; }
         
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; position: relative; }
-        .data-label { color: #688a73 !important; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        /* NATIVE ROW RE-DENSING RECTIFICATION LAYER: Fixed padding compression and white-space clamping to stop 15" text wraps */
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.38rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; position: relative; }
+        .data-label { color: #688a73 !important; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
         .data-value { font-weight: 600; text-align: right; color: #d0edd9; }
         
         .forced-row-reset { background: transparent !important; padding-left: 0 !important; padding-right: 0 !important; border-radius: 0 !important; }
@@ -1006,7 +1008,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - FIXED VERTIAl HEIGHT DRAG WITH STRICT PROPERTY TRACKING */}
+          {/* Card 1: Tactical METAR Weather Terminal - FIXED VERTICAL HEIGHT DRAG WITH STRICT PROPERTY TRACKING */}
           <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1076,7 +1078,7 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info */}
+          {/* Card 2: Space weather info - Injected flexGrow utility parameter to mirror log boundaries perfectly */}
           <div className="terminal-panel panel-solar" style={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header">
@@ -1135,8 +1137,8 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Split-Grid Column Layout Verbatim from Prompt 3 */}
-        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr minmax(300px, 32%)", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        {/* Master Right Split-Grid Column Layout - LOCKED ALIGNMENT TO STRETCH TO AUTO-MATCH VIEWPORT HEIGHT BASES */}
+        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr minmax(300px, 32%)", gap: "1.5rem", width: "100%", alignItems: "stretch", minWidth: 0 }}>
           
           {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
@@ -1330,7 +1332,7 @@ US HF Band Limits:
           </div>
 
           {/* Sub-Column 2: Far Right Stack */}
-          <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0, height: "100%" }}>
             
             {/* Aligned Box 5: Countries DXCC with tooltip integration */}
             <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-dxcc" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
@@ -1383,7 +1385,7 @@ US HF Band Limits:
             </div>
 
             {/* Card 5: PSK Reporter footprint register */}
-            <div className="terminal-panel panel-psk" style={{ display: "flex", flexDirection: "column", height: "440px" }}>
+            <div className="terminal-panel panel-psk" style={{ display: "flex", flexDirection: "column", flex: 1, height: "auto", minHeight: "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
                   <Laptop style={{ width: "16px", height: "16px", color: "#a855f7" }} /> PSK FOOTPRINT REGISTRY (FT8)
