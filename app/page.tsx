@@ -256,6 +256,30 @@ export default function Page() {
     } catch (e) {}
   };
 
+  const handleToggleAudioSystem = () => {
+    const freshState = !audioEnabled;
+    setAudioEnabled(freshState);
+    if (freshState) {
+      setTimeout(() => {
+        try {
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1000, ctx.currentTime);
+          gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } catch(e) {}
+      }, 50);
+    }
+  };
+
   async function parseLiveQrzData() {
     try {
       const res = await fetch("/api/qrz");
@@ -668,7 +692,7 @@ export default function Page() {
     setGlobeLabels([...qrzLabels, ...potaLabels]);
   }, [geoArcs, potaSpots]);
 
-  // GLOBAL MATRIX RESOLUTION RUNNER - Lifted securely above execution block parameters
+  // GLOBAL SCOPE MATRIX RESOLUTION INTERFACE
   const propArray = getCalculatedPropagationArray();
 
   return (
@@ -1414,7 +1438,7 @@ US HF Band Limits:
                         <span style={{ color: "#ffffff" }}>{spot.reference}</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        {/* RECTIFIED DOUBLE CURLY BRACES TYPO HERE TO PASS COMPILER HANDSHAKE */}
+                        {/* RECTIFIED DOUBLE CURLY BRACES AND CLOSED ANGLE BRACKETS HERE TO SECURE PARSER HIERARCHY */}
                         <span style={{ color: "#00ff66" }}>{spot.frequency} kHz</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>{spot.time}</span>
                       </div>
