@@ -744,6 +744,7 @@ export default function Page() {
           align-self: center;
         }
 
+        /* FLUID GRIDS RESPONSIVE LAYOUT MATRIX ENGINE */
         .deck-workspace { 
           display: grid; 
           grid-template-columns: 1fr; 
@@ -754,11 +755,13 @@ export default function Page() {
         .deck-workspace.active { opacity: 1; }
         
         @media (min-width: 1024px) { 
-          .deck-workspace { grid-template-columns: 390px 1fr; gap: 1.5rem; } 
+          /* Changed from 390px fixed left column to clean fluid fractional allocations */
+          .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; gap: 1.5rem; } 
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
+          .right-side-subgrid { display: grid; grid-template-columns: 1fr minmax(300px, 32%); gap: 1.5rem; width: 100%; align-items: start; }
         }
 
-        /* PURE CSS MOBILE REORDERING (DESKTOP IS COMPLETELY UNAFFECTED) */
+        /* PURE CSS MOBILE REORDERING (DESKTOP AND LAPTOPS ARE ADVANCED RESPONSIVE FLUID) */
         @media (max-width: 1023px) {
           .app-container { padding: 0.75rem; }
           
@@ -1238,8 +1241,8 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Row Split-Grid Wrapper */}
-        <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr 390px", gap: "1.5rem", width: "100%", alignItems: "start", minWidth: 0 }}>
+        {/* Master Fluid Right Column Sub-Grid Wrapper */}
+        <div className="mobile-unwrap right-side-subgrid">
           
           {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
