@@ -680,7 +680,6 @@ export default function Page() {
     }
   };
 
-  // RESTORED MASTER RUNTIME ENGINE HOOK: Executes telemetry routines cleanly without nested interval loops
   useEffect(() => {
     parseLiveQrzData();
     fetchLiveTacticalFeeds();
@@ -700,7 +699,6 @@ export default function Page() {
     };
   }, []);
 
-  // RESTORED LABELS REGISTRATION HOOK: Pins coordinates directly onto the WebGL globe structure
   useEffect(() => {
     const qrzLabels = geoArcs.map(arc => ({
       lat: arc.lat,
@@ -728,7 +726,6 @@ export default function Page() {
     setGlobeLabels([...qrzLabels, ...potaLabels]);
   }, [geoArcs, potaSpots]);
 
-  // GLOBAL SCOPE MATRIX RESOLUTION INTERFACE
   const propArray = getCalculatedPropagationArray();
 
   return (
@@ -809,50 +806,12 @@ export default function Page() {
         }
 
         @media (min-width: 1024px) { 
-          /* Safe fluid fractional layout tracks accurately across ultra-wides and mobile laptop panels alike */
           .deck-workspace { grid-template-columns: minmax(320px, 24%) 1fr; gap: 1.5rem; } 
-          /* CRITICAL RESPONSIVE ALIGNMENT UPGRADE: Changed alignItems to stretch to auto-lock baseline heights as requested verbatim for file notlining up.png */
           .right-side-subgrid { grid-template-columns: 1fr minmax(300px, 32%); alignItems: stretch; }
           .triple-box-grid { grid-template-columns: repeat(3, 1fr); display: grid; gap: 0.75rem; }
         }
 
-        /* PURE CSS MOBILE REORDERING ARCHITECTURE */
-        @media (max-width: 1023px) {
-          .app-container { padding: 0.75rem; }
-          
-          .tactical-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-          }
-          .header-h1 { 
-            font-size: 0.9rem; 
-            letter-spacing: -0.05em; 
-          }
-          .header-status-box { 
-            align-start; 
-          }
-
-          .deck-workspace { display: flex !important; flex-direction: column !important; gap: 0 !important; }
-          .mobile-unwrap { display: contents !important; }
-          
-          .terminal-panel, .aligned-metric-box { margin-top: 0 !important; margin-bottom: 1rem !important; }
-          .log-table-wrapper { width: 100%; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
-          
-          .panel-gear { order: 1 !important; }
-          .panel-active-band { order: 2 !important; margin-bottom: 0.75rem !important; }
-          .panel-triple { order: 3 !important; margin-bottom: 0.75rem !important; display: flex !important; flex-direction: column !important; gap: 0.75rem !important; }
-          .panel-triple .aligned-metric-box { margin-bottom: 0 !important; }
-          
-          .panel-dxcc { order: 4 !important; }
-          .panel-globe { order: 5 !important; }
-          .panel-logs { order: 6 !important; }
-          .panel-wx { order: 7 !important; }
-          .panel-solar { order: 8 !important; }
-          .panel-pota { order: 9 !important; }
-          .panel-psk { order: 10 !important; margin-bottom: 2rem !important; }
-        }
-
+        /* CRITICAL MOBILE INTERFACE RE-ELEVATION TRIGGER OVERRIDES */
         .terminal-panel {
           background: #060907;
           border: 1px solid rgba(0, 255, 102, 0.2);
@@ -866,6 +825,11 @@ export default function Page() {
         }
         @media (min-width: 640px) { .terminal-panel { padding: 1.25rem; } }
 
+        /* Injected dynamic stacking elevations lift container layers clear of lower panels when active */
+        .terminal-panel:hover, .aligned-metric-box:hover {
+          z-index: 90 !important;
+        }
+
         .terminal-panel::before {
           content: "+";
           position: absolute;
@@ -875,7 +839,6 @@ export default function Page() {
 
         .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 255, 102, 0.15); padding-bottom: 0.75rem; margin-bottom: 1rem; }
         
-        /* Tactical Responsive CSS Tooltip System configuration */
         .tactical-tooltip-trigger {
           position: relative;
           cursor: help;
@@ -934,7 +897,6 @@ export default function Page() {
           visibility: visible;
         }
 
-        /* NATIVE ROW RE-DENSING RECTIFICATION LAYER: Fixed padding compression and white-space clamping to stop 15" text wraps */
         .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.38rem 0; border-bottom: 1px solid rgba(0, 255, 102, 0.05); font-size: 0.8rem; background: transparent !important; position: relative; }
         .data-label { color: #688a73 !important; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
         .data-value { font-weight: 600; text-align: right; color: #d0edd9; }
@@ -949,8 +911,29 @@ export default function Page() {
         .matrix-table tr:nth-child(even) { background: #080c09; }
         .matrix-table tr:hover { background: rgba(0, 255, 102, 0.05); }
 
-        @media (max-width: 580px) {
-          .hide-on-mobile-cell { display: none !important; }
+        @media (max-width: 1023px) {
+          .app-container { padding: 0.75rem; }
+          .tactical-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+          .header-h1 { font-size: 0.9rem; letter-spacing: -0.05em; }
+          .deck-workspace { display: flex !important; flex-direction: column !important; gap: 0 !important; }
+          .mobile-unwrap { display: contents !important; }
+          .terminal-panel, .aligned-metric-box { margin-top: 0 !important; margin-bottom: 1rem !important; }
+          .log-table-wrapper { width: 100%; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
+          
+          .panel-gear { order: 1 !important; }
+          .panel-active-band { order: 2 !important; margin-bottom: 0.75rem !important; }
+          .panel-triple { order: 3 !important; margin-bottom: 0.75rem !important; display: flex !important; flex-direction: column !important; gap: 0.75rem !important; }
+          .panel-triple .aligned-metric-box { margin-bottom: 0 !important; }
+          
+          .panel-dxcc { order: 4 !important; }
+          .panel-globe { order: 5 !important; }
+          .panel-logs { order: 6 !important; }
+          .panel-wx { order: 7 !important; }
+          .panel-solar { order: 8 !important; }
+          .panel-pota { order: 9 !important; }
+          .panel-psk { order: 10 !important; margin-bottom: 2rem !important; }
+          
+          .tactical-tooltip-trigger::after { width: 240px !important; left: 50% !important; transform: translateX(-50%) !important; }
         }
 
         .txt-neon-green { color: #00ff66; text-shadow: 0 0 6px rgba(0,255,102,0.4); }
@@ -983,54 +966,12 @@ export default function Page() {
           animation: blink 0.9s step-start infinite;
           margin-left: 2px;
         }
-        @keyframes blink {
-          50% { opacity: 0; }
-        }
-        @media (min-width: 1024px) {
-          .panel-header-weather { display: flex; align-items: center; justify-content: space-between; }
-        }
-        
-        .hud-pulse {
-          animation: pulse-glow 2s infinite ease-in-out;
-          font-weight: 700;
-        }
-        @keyframes pulse-glow {
-          0%, 100% { opacity: 0.3; color: #334a3b; }
-          50% { opacity: 1; color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.6); }
-        }
-        
-        .ticker-scroller-box {
-          height: 120px;
-          overflow-y: auto;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(0, 255, 102, 0.2) transparent;
-        }
-
-        .aligned-metric-box {
-          border: 1px solid rgba(0, 255, 102, 0.2);
-          border-radius: 4px;
-          background: #060907;
-          padding: 0.5rem 0.75rem;
-          margin-bottom: 0.75rem;
-          box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.03);
-          position: relative;
-        }
-        .aligned-metric-label {
-          font-size: 0.6rem;
-          color: #688a73;
-          text-transform: uppercase;
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          white-space: nowrap;
-        }
-        .aligned-metric-value {
-          font-size: 1.15rem;
-          font-weight: 800;
-          margin-top: 0.1rem;
-        }
+        @keyframes blink { 50% { opacity: 0; } }
+        .hud-pulse { animation: pulse-glow 2s infinite ease-in-out; font-weight: 700; }
+        @keyframes pulse-glow { 0%, 100% { opacity: 0.3; color: #334a3b; } 50% { opacity: 1; color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.6); } }
+        .ticker-scroller-box { height: 120px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(0, 255, 102, 0.2) transparent; }
       `}} />
 
-      {/* Header */}
       <header className="tactical-header">
         <div>
           <h1 className="header-h1">
@@ -1049,7 +990,6 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Vibe Coded Tactical Core Status Banner */}
       <section style={{ background: "rgba(0, 255, 102, 0.02)", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "4px", padding: "0.5rem 0.75rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.08em", color: "#4e6e58", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <span style={{ color: "#00ff66", display: "flex", alignItems: "center", gap: "0.35rem" }}>
@@ -1069,13 +1009,10 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Main Workspace Split Grid Layout */}
       <main className={`deck-workspace ${showWorkspace ? "active" : ""}`} style={{ minWidth: 0 }}>
         
-        {/* Left Column Stack (Weather Stations Only) - Added structural Flex tracking to absorb leftover vertical canvas rows */}
         <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0, height: "100%" }}>
           
-          {/* Aligned Box 1: Active Band */}
           <div 
             className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-active-band" 
             data-blurb={`The current HF band Dan is operating on.
@@ -1096,8 +1033,8 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - SECURED HEIGHT VALUE PREVENTS DOWNWARD SYSTEM EXPANSIONS */}
-          <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* Card 1: Tactical METAR Weather Terminal - RESTORED TO OVERFLOW VISIBLE VERBATIM TO PREVENT PHONE BOUNDARY BOX CLIPPING */}
+          <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "visible", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
                 <button className="tactical-tooltip-trigger" data-blurb="Real-time weather telemetry streamed directly from Dan's backyard weather station, the Ecowitt WS-90.">
@@ -1106,7 +1043,6 @@ US HF Band Limits:
                 <span style={{ fontSize: "9px", color: "rgba(0, 255, 102, 0.4)", textTransform: "uppercase", whiteSpace: "nowrap" }}>[ Ecowitt WS-90 ]</span>
               </div>
               
-              {/* Real-time Dynamic ASCII Sky Graph Segment */}
               <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "3px", padding: "0.5rem", marginBottom: "0.75rem", fontFamily: "monospace", fontSize: "10px", color: "#00ff66", display: "flex", gap: "1rem", alignItems: "center", justifyItems: "center" }}>
                 <pre style={{ margin: 0, fontSize: "9px", lineHeight: "1.1", color: "#00ff66" }}>
                   {weather.iconCode >= 60 ? `
@@ -1166,7 +1102,6 @@ US HF Band Limits:
             </div>
           </div>
 
-          {/* Card 2: Space weather info - Injected flexGrow utility parameter to mirror log boundaries perfectly */}
           <div className="terminal-panel panel-solar" style={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header">
@@ -1175,7 +1110,6 @@ US HF Band Limits:
                 </button>
               </div>
 
-              {/* INTEGRATED IONOSPHERIC PROPAGATION ASSESSMENT SCORE HUD DISPLAY HEADER */}
               <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.25)", borderRadius: "3px", padding: "0.6rem 0.75rem", marginBottom: "0.85rem", fontSize: "10px", fontFamily: "monospace" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                   <span style={{ color: "#688a73", fontWeight: 700 }}>NET PROPAGATION MATRIX:</span>
@@ -1208,7 +1142,6 @@ US HF Band Limits:
               <div className="data-row"><span className="data-label">12M Propagation</span><span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span></div>
               <div className="data-row"><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
 
-              {/* INJECTED VHF SPECTRUM OPENINGS & REAL-TIME IONOSPHERIC DATA MATRIX */}
               <div style={{ color: "#00f2ff", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.6rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>VHF Spectrum & Ionospheric Metrics</div>
               <div className="data-row"><span className="data-label">6M Propagation (Magic Band)</span><span className={`data-value ${getColorClass(getPropRating("6M"))}`}>[{getPropRating("6M")}]</span></div>
               <div className="data-row"><span className="data-label">2M Propagation (Line-Of-Sight)</span><span className={`data-value ${getColorClass(getPropRating("2M"))}`}>[{getPropRating("2M")}]</span></div>
@@ -1232,13 +1165,10 @@ US HF Band Limits:
 
         </div>
 
-        {/* Master Right Split-Grid Column Layout Verbatim from Prompt 3 */}
         <div className="mobile-unwrap" style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "1fr minmax(300px, 32%)", gap: "1.5rem", width: "100%", alignItems: "stretch", minWidth: 0 }}>
           
-          {/* Sub-Column 1: Center Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
             
-            {/* Aligned Telemetry Triple-Box Grid Header with injected CSS Tooltips */}
             <div className="triple-box-grid panel-triple">
               <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip" data-blurb="The current transmission type or digital modulation method Dan's transceiver is using to broadcast.">
                 <div className="aligned-metric-label">Rig Mode</div>
@@ -1254,7 +1184,6 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* 3D WebGL Globe Canvas */}
             <div 
               ref={containerRef}
               className="terminal-panel panel-globe" 
@@ -1269,7 +1198,6 @@ US HF Band Limits:
                 border: "1px solid rgba(0, 255, 102, 0.25)"
               }}
             >
-              {/* Legend Overlay HUD wrapping the downward-tooltip modified button trigger */}
               <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                   <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors, alongside a live global feed of other POTA operators." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
@@ -1314,7 +1242,6 @@ US HF Band Limits:
                     arcStartAltitude={0.012}
                     arcEndAltitude={0.012}
                     
-                    // INJECTED INTEGRATED RAY TRACING ARC HOVER OVERLAYS TO MITIGATE SECTOR STACK COLLISIONS
                     arcLabel={(d: any) => `
                       <div class="scene-tooltip">
                         <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT TRACE</div>
@@ -1378,7 +1305,6 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Complete Live Log Ledger */}
             <div className="terminal-panel panel-logs" style={{ display: "flex", flexDirection: "column", flex: 1, marginTop: "0px", minHeight: isMobileScreen ? "auto" : "896px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="Dan's secure real-time logbook feed streaming his most recent two-way radio contacts directly from the QRZ API database." style={{ color: "#00ff66" }}>
@@ -1407,7 +1333,6 @@ US HF Band Limits:
                         </td>
                       </tr>
                     ) : (
-                      // RENDER OUTPUT SLICE CLAMP ADJUSTED TO EXACTLY 19 ENTRIES FOR GRID WRAP FILL 
                       logs.slice(0, 19).map((qso, index) => (
                         <tr key={index}>
                           <td style={{ fontWeight: "700", color: "#ffffff", fontSize: "0.9rem" }} className="panel-mono-data">
@@ -1437,16 +1362,13 @@ US HF Band Limits:
 
           </div>
 
-          {/* Sub-Column 2: Far Right Stack */}
           <div className="mobile-unwrap" style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0, height: "100%" }}>
             
-            {/* Aligned Box 5: Countries DXCC with tooltip integration */}
             <div className="aligned-metric-box tactical-tooltip-trigger downward-tooltip panel-dxcc" data-blurb="The total number of unique global political entities and islands Dan has successfully worked and confirmed.">
               <div className="aligned-metric-label">Countries DXCC</div>
               <div className="aligned-metric-value" style={{ color: "#a3e335" }}>{stats.dxcc}</div>
             </div>
 
-            {/* Card 3: Shack Gear */}
             <div className="terminal-panel panel-gear" style={isMobileScreen ? {} : { minHeight: "460px", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
               <div>
                 <div className="panel-header">
@@ -1462,7 +1384,6 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Card 4: Live POTA spots scroller register */}
             <div className="terminal-panel panel-pota" style={{ display: "flex", flexDirection: "column", height: "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live spotting list tracking active radio operators transmitting from State and National Parks globally.">
@@ -1490,7 +1411,6 @@ US HF Band Limits:
               </div>
             </div>
 
-            {/* Card 5: PSK Reporter footprint register */}
             <div className="terminal-panel panel-psk" style={{ display: "flex", flexDirection: "column", flex: 1, height: "auto", minHeight: "440px" }}>
               <div className="panel-header">
                 <button className="tactical-tooltip-trigger" data-blurb="A live log of remote stations around the world that have successfully heard and decoded Dan's FT8 digital signals." style={{ color: "#a855f7" }}>
@@ -1520,7 +1440,6 @@ US HF Band Limits:
 
           </div>
 
-          {/* Sub-Column 2 Ends Here */}
         </div>
 
       </main>
