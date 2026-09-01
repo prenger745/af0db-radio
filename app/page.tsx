@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, ChevronRight, Sun, Volume2, VolumeX } from "lucide-react";
-import BandConditionDashboard from "@/components/BandConditionDashboard";
 
 // NEXT 14 WEBGL DYNAMIC LAYOUT ENGINE
 const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.default), {
@@ -307,7 +306,7 @@ export default function Page() {
       for (const record of records) {
         if (!record.trim()) continue;
         const extractTag = (tag: string) => {
-          const m = record.match(new RegExp(`<${tag}:d+>([^<]*)`, "i"));
+          const m = record.match(new RegExp(`<${tag}:\\d+>([^<]*)`, "i"));
           return m ? m[1].trim() : "";
         };
 
@@ -606,7 +605,7 @@ export default function Page() {
       }
 
       const extractBand = (band: string, time: string) => {
-        const m = xmlText.match(new RegExp(`<band name="${band}" time="${time}">([^<]*)</band>`, "i"));
+        const m = xmlText.match(new RegExp(`<band name="${band}" time="${time}">([^<]*)<\\/band>`, "i"));
         return m ? m[1].toUpperCase() : "FAIR";
       };
 
@@ -1034,6 +1033,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
+          {/* Card 1: Tactical METAR Weather Terminal - RESTORED TO OVERFLOW VISIBLE VERBATIM TO PREVENT PHONE BOUNDARY BOX CLIPPING */}
           <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "visible", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1046,9 +1046,9 @@ US HF Band Limits:
               <div style={{ background: "#020403", border: "1px dashed rgba(0, 255, 102, 0.15)", borderRadius: "3px", padding: "0.5rem", marginBottom: "0.75rem", fontFamily: "monospace", fontSize: "10px", color: "#00ff66", display: "flex", gap: "1rem", alignItems: "center", justifyItems: "center" }}>
                 <pre style={{ margin: 0, fontSize: "9px", lineHeight: "1.1", color: "#00ff66" }}>
                   {weather.iconCode >= 60 ? `
-       |  /
+     \\  |  /
     --  Oo  --
-     /  |  
+     /  |  \\
    .---.---.
   (         )
    '-------'
@@ -1130,14 +1130,23 @@ US HF Band Limits:
               <div className="data-row tactical-tooltip-trigger" data-blurb="The baseline signal-to-noise ratio (S-meter rating) across the HF spectrum. S0-S1 means absolute quiet DX copy; S7-S9 means solar noise is masking weak voice stations."><span className="data-label">NOISE FIELD</span><span className="data-value txt-solar-amber">{sigNoise}</span></div>
               <div className="data-row tactical-tooltip-trigger" style={{ borderBottom: "none", marginBottom: "0.5rem" }} data-blurb="The general atmospheric stability layout. NORMAL/QUIET indicates a locked magnetosphere ideal for long-distance greyline skips; ACTIVE warns that paths may degrade."><span className="data-label">GEOMAG FIELD</span><span className="data-value txt-neon-green" style={{ fontSize: "0.75rem" }}>{conditions}</span></div>
               
-              {/* REPLACED VERBOSE BAND LIST WITH NEW 1-10 MATRIX & 10-DAY FORECAST */}
-              <BandConditionDashboard 
-                sfi={sfi} 
-                kIndex={kIndex} 
-                aIndex={parseInt(aIndex) || 10} 
-                solarWind={solarWind} 
-                isNight={isNight} 
-              />
+              <div style={{ color: "#ffaa00", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.75rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>HF Band Real-Time Profiles</div>
+              <div className="data-row"><span className="data-label">160M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">80M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">60M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">40M Propagation</span><span className={`data-value ${getColorClass(getPropRating("80M"))}`}>[{getPropRating("80M")}]</span></div>
+              <div className="data-row"><span className="data-label">30M Propagation</span><span className={`data-value ${getColorClass(getPropRating("30M"))}`}>[{getPropRating("30M")}]</span></div>
+              <div className="data-row forced-row-reset"><span className="data-label forced-label-reset">20M Propagation</span><span className={`data-value ${getColorClass(getPropRating("20M"))}`}>[{getPropRating("20M")}]</span></div>
+              <div className="data-row"><span className="data-label">17M Propagation</span><span className={`data-value ${getColorClass(getPropRating("17M"))}`}>[{getPropRating("17M")}]</span></div>
+              <div className="data-row"><span className="data-label">15M Propagation</span><span className={`data-value ${getColorClass(getPropRating("15M"))}`}>[{getPropRating("15M")}]</span></div>
+              <div className="data-row"><span className="data-label">12M Propagation</span><span className={`data-value ${getColorClass(getPropRating("12M"))}`}>[{getPropRating("12M")}]</span></div>
+              <div className="data-row"><span className="data-label">10M Propagation</span><span className={`data-value ${getColorClass(getPropRating("10M"))}`}>[{getPropRating("10M")}]</span></div>
+
+              <div style={{ color: "#00f2ff", fontSize: "0.7rem", fontWeight: "700", borderTop: "1px dashed rgba(0, 255, 102, 0.15)", paddingTop: "0.6rem", paddingBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>VHF Spectrum & Ionospheric Metrics</div>
+              <div className="data-row"><span className="data-label">6M Propagation (Magic Band)</span><span className={`data-value ${getColorClass(getPropRating("6M"))}`}>[{getPropRating("6M")}]</span></div>
+              <div className="data-row"><span className="data-label">2M Propagation (Line-Of-Sight)</span><span className={`data-value ${getColorClass(getPropRating("2M"))}`}>[{getPropRating("2M")}]</span></div>
+              <div className="data-row"><span className="data-label">Critical Freq (foF2)</span><span className="data-value txt-neon-green">{fof2 && fof2 !== "——" ? `${fof2} MHz` : "4.85 MHz"}</span></div>
+              <div className="data-row" style={{ borderBottom: "none" }}><span className="data-label">Max Usable Freq (MUF)</span><span className="data-value txt-solar-amber">{muf && muf !== "——" ? `${muf} MHz` : "28.40 MHz"}</span></div>
             </div>
 
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(0, 255, 102, 0.08)", textAlign: "right", fontSize: "9px" }}>
