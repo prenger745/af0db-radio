@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 interface PskSpot {
   receiverCall: string;
   grid: string;
@@ -46,7 +48,7 @@ function gridToLatLng(grid: string): { lat: number; lng: number } | null {
 }
 
 function getAttr(tag: string, name: string): string {
-  const match = tag.match(new RegExp(`${name}="([^"]*)"`, "i"));
+  const match = tag.match(new RegExp(`${name}=["']([^"']*)["']`, "i"));
   return match ? match[1].trim() : "";
 }
 
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
 
   const now = Date.now();
   const cached = pskCache.get(callsign);
-  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+  if (cached && cached.spots.length > 0 && now - cached.timestamp < CACHE_TTL_MS) {
     return NextResponse.json(
       { spots: cached.spots, cached: true },
       {
@@ -69,28 +71,30 @@ export async function GET(request: NextRequest) {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 7000);
+  const timeout = setTimeout(() => controller.abort(), 14000);
 
   try {
     const url = `https://retrieve.pskreporter.info/query?senderCallsign=${encodeURIComponent(
       callsign
-    )}&flowStartSeconds=-7200&rronly=1&noactive=1&rptlimit=50`;
+    )}&flowStartSeconds=-21600&rronly=1&noactive=1&rptlimit=50&appcontact=af0db@af0db.radio`;
 
     const res = await fetch(url, {
       signal: controller.signal,
+      cache: "no-store",
       headers: {
-        "User-Agent": "AF0DB-Station-Dashboard/1.0 (https://af0db.radio)",
+        "User-Agent": "AF0DB-Station-Dashboard/1.0 (+https://af0db.radio)",
         Accept: "application/xml, text/xml, */*",
       },
-      next: { revalidate: 300 },
     });
 
     clearTimeout(timeout);
 
     if (!res.ok) {
-      console.warn(`PSKReporter upstream returned HTTP ${res.status}`);
       return NextResponse.json(
-        { spots: cached?.spots || [], rateLimited: res.status === 503 || res.status === 429 },
+        {
+          spots: cached?.spots || [],
+          debug: { upstreamStatus: res.status, callsign },
+        },
         { status: 200 }
       );
     }
@@ -108,11 +112,9 @@ export async function GET(request: NextRequest) {
       const flowStart = parseInt(getAttr(tag, "flowStartSeconds"), 10);
 
       if (!receiverCall || seen.has(receiverCall)) continue;
-      const coords = gridToLatLng(grid);
-      if (!coords) continue;
-
       seen.add(receiverCall);
 
+      const coords = gridToLatLng(grid) || { lat: 39.8283, lng: -98.5795 };
       const snrNum = parseInt(snrRaw, 10);
       const snr = isNaN(snrNum)
         ? "—"
@@ -124,7 +126,7 @@ export async function GET(request: NextRequest) {
 
       spots.push({
         receiverCall,
-        grid,
+        grid: grid || "—",
         lat: coords.lat,
         lng: coords.lng,
         snr,
@@ -132,20 +134,28 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    pskCache.set(callsign, { timestamp: now, spots });
+    if (spots.length > 0) {
+      pskCache.set(callsign, { timestamp: now, spots });
+    }
 
     return NextResponse.json(
-      { spots, cached: false },
+      {
+        spots,
+        cached: false,
+        debug: { upstreamStatus: res.status, rawReports: reportMatches.length },
+      },
       {
         status: 200,
         headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60" },
       }
     );
-  } catch (err) {
+  } catch (err: any) {
     clearTimeout(timeout);
-    console.warn("PSKReporter fetch error:", err);
     return NextResponse.json(
-      { spots: cached?.spots || [], offline: true },
+      {
+        spots: cached?.spots || [],
+        debug: { error: err?.name || err?.message || "fetch_failed" },
+      },
       { status: 200 }
     );
   }
