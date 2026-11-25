@@ -173,13 +173,13 @@ export default function Page() {
   }, [audioEnabled]);
 
   useEffect(() => {
-    const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 800);
-    const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 1200);
+    const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 1800);
+    const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 2400);
 
     const loadLandmasses = async () => {
       const urls = [
-        "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson",
-        "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
+        "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
+        "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson"
       ];
       for (const url of urls) {
         try {
@@ -219,13 +219,11 @@ export default function Page() {
     handleResize();
     window.addEventListener("resize", handleResize);
     
-    const t = setTimeout(handleResize, 500);
-    const t2 = setTimeout(handleResize, 1500);
+    const t = setTimeout(handleResize, 1000);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(t);
-      clearTimeout(t2);
     };
   }, [logs, showWorkspace]);
 
@@ -1046,7 +1044,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal */}
+          {/* Card 1: Tactical METAR Weather Terminal - RESTORED TO OVERFLOW VISIBLE VERBATIM TO PREVENT PHONE BOUNDARY BOX CLIPPING */}
           <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "visible", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1231,27 +1229,25 @@ US HF Band Limits:
                 </div>
               </div>
               
-              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: isMobileScreen ? "scale(0.82) translateY(20px)" : "scale(0.82)", transformOrigin: "center center" }}>
+              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: isMobileScreen ? "scale(0.72) translateY(35px)" : "scale(0.72)", transformOrigin: "center center" }}>
                 {showWorkspace && (
                   <GlobeEngine
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
-                    globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-                    bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                     
                     polygonsData={landmasses}
-                    polygonCapColor={() => "rgba(7, 26, 13, 0.65)"} 
+                    polygonCapColor={() => "#07120a"} 
                     polygonSideColor={() => "#020403"} 
-                    polygonStrokeColor={() => "#00ff66"} 
-                    polygonAltitude={0.008}
+                    polygonStrokeColor={() => "#183620"} 
+                    polygonAltitude={0.01}
                     
                     arcsData={geoArcs}
                     arcColor="color"
                     arcDashLength={0.45}
                     arcDashGap={0.1}
                     arcDashAnimateTime={1400} 
-                    arcStroke={0.55}
+                    arcStroke={0.5}
                     arcsTransitionDuration={0}
                     arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
                     arcStartAltitude={0.012}
@@ -1275,12 +1271,12 @@ US HF Band Limits:
                     
                     showAtmosphere={true}
                     atmosphereColor="#00ff66"
-                    atmosphereAltitude={0.14}
+                    atmosphereAltitude={0.12}
 
                     labelsData={[...globeLabels, ...globePoints]}
                     labelText={(d: any) => d.text || ""}
                     labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
-                    labelSize={0.5}
+                    labelSize={0.45}
                     labelDotRadius={0.35} 
                     labelAltitude={0.014}
                     labelResolution={3}
