@@ -57,6 +57,9 @@ interface AppPskSpot {
   lng: number;
   snr: string;
   time: string;
+  band?: string;
+  mode?: string;
+  ts?: number;
 }
 
 interface OperationalWeather {
@@ -69,6 +72,28 @@ interface OperationalWeather {
   uvi: string;       
   condition: string;
   iconCode: number;
+}
+
+function maidenheadToLatLng(grid: string): { lat: number; lng: number } | null {
+  if (!grid || grid.length < 4) return null;
+  const g = grid.toUpperCase();
+  const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+  const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+  const lonSquare = parseInt(g.charAt(2), 10) * 2;
+  const latSquare = parseInt(g.charAt(3), 10) * 1;
+  if (isNaN(lonField) || isNaN(latField) || isNaN(lonSquare) || isNaN(latSquare)) return null;
+
+  let lng = lonField + lonSquare + 1;
+  let lat = latField + latSquare + 0.5;
+  if (g.length >= 6) {
+    const lonSub = (g.charCodeAt(4) - 65) * (2 / 24);
+    const latSub = (g.charCodeAt(5) - 65) * (1 / 24);
+    if (!isNaN(lonSub) && !isNaN(latSub)) {
+      lng = lonField + lonSquare + lonSub + 1 / 24;
+      lat = latField + latSquare + latSub + 1 / 48;
+    }
+  }
+  return { lat, lng };
 }
 
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
@@ -147,6 +172,7 @@ export default function Page() {
 
   const [potaSpots, setPotaSpots] = useState<PotaSpot[]>([]);
   const [pskSpots, setPSKSpots] = useState<AppPskSpot[]>([]);
+  const [pskConnected, setPskConnected] = useState<boolean>(false);
   const [globeLabels, setGlobeLabels] = useState<any[]>([]);
   const [globePoints, setGlobePoints] = useState<any[]>([]);
   
@@ -226,6 +252,185 @@ export default function Page() {
       clearTimeout(t);
     };
   }, [logs, showWorkspace]);
+
+  // LIVE BROWSER-TO-PSKREPORTER MQTT OVER WEBSOCKETS (Bypasses Vercel 403)
+  useEffect(() => {
+    const STORAGE_KEY = "af0db_psk_spots_v1";
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+
+    // Restore recent spots from localStorage
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed: AppPskSpot[] = JSON.parse(saved);
+        const cutoff = Date.now() - TWO_HOURS_MS;
+        const fresh = parsed.filter((s) => (s.ts || 0) >= cutoff);
+        if (fresh.length > 0) {
+          setPSKSpots(fresh);
+          setGlobePoints(fresh.map((spot) => ({
+            lat: spot.lat,
+            lng: spot.lng,
+            type: "psk",
+            details: spot
+          })));
+        }
+      }
+    } catch {}
+
+    let ws: WebSocket | null = null;
+    let pingTimer: ReturnType<typeof setInterval> | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let closed = false;
+    let retryDelay = 4000;
+
+    const encodeString = (str: string): number[] => {
+      const bytes = Array.from(new TextEncoder().encode(str));
+      return [(bytes.length >> 8) & 0xff, bytes.length & 0xff, ...bytes];
+    };
+
+    const encodeRemLen = (len: number): number[] => {
+      const out: number[] = [];
+      let x = len;
+      do {
+        let d = x % 128;
+        x = Math.floor(x / 128);
+        if (x > 0) d |= 0x80;
+        out.push(d);
+      } while (x > 0);
+      return out;
+    };
+
+    const connect = () => {
+      if (closed) return;
+      try {
+        ws = new WebSocket("wss://mqtt.pskreporter.info:1886/mqtt", "mqtt");
+        ws.binaryType = "arraybuffer";
+
+        const topic = "pskr/filter/v2/+/+/AF0DB/#";
+        const subBody = [0x00, 0x01, ...encodeString(topic), 0x00];
+        const subPkt = new Uint8Array([0x82, ...encodeRemLen(subBody.length), ...subBody]);
+
+        ws.onopen = () => {
+          retryDelay = 4000;
+          const clientId = `af0db-radio-AF0DB-${Math.random().toString(16).slice(2, 10)}`;
+          const varHeader = [0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x04, 0x02, 0x00, 0x3c];
+          const body = [...varHeader, ...encodeString(clientId)];
+          const connectPkt = new Uint8Array([0x10, ...encodeRemLen(body.length), ...body]);
+          ws?.send(connectPkt);
+
+          if (pingTimer) clearInterval(pingTimer);
+          pingTimer = setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(new Uint8Array([0xc0, 0x00]));
+            }
+          }, 50000);
+        };
+
+        ws.onmessage = (event) => {
+          const buf = new Uint8Array(event.data as ArrayBuffer);
+          let offset = 0;
+
+          while (offset < buf.length) {
+            const headerByte = buf[offset++];
+            const packetType = (headerByte >> 4) & 0x0f;
+
+            let multiplier = 1;
+            let remLen = 0;
+            let encodedByte = 0;
+            do {
+              if (offset >= buf.length) return;
+              encodedByte = buf[offset++];
+              remLen += (encodedByte & 0x7f) * multiplier;
+              multiplier *= 128;
+            } while ((encodedByte & 0x80) !== 0);
+
+            const packetEnd = offset + remLen;
+            if (packetEnd > buf.length) break;
+
+            if (packetType === 2) {
+              // CONNACK received -> subscribe to AF0DB reports
+              setPskConnected(true);
+              ws?.send(subPkt);
+            } else if (packetType === 3) {
+              // PUBLISH message
+              const topicLen = (buf[offset] << 8) | buf[offset + 1];
+              let payloadStart = offset + 2 + topicLen;
+              const qos = (headerByte >> 1) & 0x03;
+              if (qos > 0) payloadStart += 2;
+
+              try {
+                const text = new TextDecoder().decode(buf.subarray(payloadStart, packetEnd));
+                const data = JSON.parse(text);
+                const rcvr = String(data.rc || "").toUpperCase();
+                const grid = String(data.rl || "").toUpperCase();
+                if (rcvr) {
+                  const coords = maidenheadToLatLng(grid) || { lat: 39.8283, lng: -98.5795 };
+                  const snrNum = Number(data.rp);
+                  const snr = !isNaN(snrNum) ? `${snrNum > 0 ? "+" : ""}${snrNum} dB` : "—";
+                  const epochSec = Number(data.t_tx || data.t || Math.floor(Date.now() / 1000));
+                  const timeStr = new Date(epochSec * 1000).toISOString().substring(11, 16) + "Z";
+
+                  const newSpot: AppPskSpot = {
+                    receiverCall: rcvr,
+                    grid: grid || "—",
+                    lat: coords.lat,
+                    lng: coords.lng,
+                    snr,
+                    time: timeStr,
+                    band: data.b ? String(data.b) : undefined,
+                    mode: data.md ? String(data.md) : undefined,
+                    ts: Date.now()
+                  };
+
+                  setPSKSpots((prev) => {
+                    const cutoff = Date.now() - TWO_HOURS_MS;
+                    const filtered = prev.filter(
+                      (item) => item.receiverCall !== newSpot.receiverCall && (item.ts || 0) >= cutoff
+                    );
+                    const next = [newSpot, ...filtered].slice(0, 60);
+                    try {
+                      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+                    } catch {}
+                    setGlobePoints(next.map((spot) => ({
+                      lat: spot.lat,
+                      lng: spot.lng,
+                      type: "psk",
+                      details: spot
+                    })));
+                    return next;
+                  });
+                }
+              } catch {}
+            }
+
+            offset = packetEnd;
+          }
+        };
+
+        ws.onclose = () => {
+          setPskConnected(false);
+          if (pingTimer) clearInterval(pingTimer);
+          if (!closed) {
+            reconnectTimer = setTimeout(connect, retryDelay);
+            retryDelay = Math.min(retryDelay * 2, 60000);
+          }
+        };
+
+        ws.onerror = () => {
+          ws?.close();
+        };
+      } catch {}
+    };
+
+    connect();
+
+    return () => {
+      closed = true;
+      if (pingTimer) clearInterval(pingTimer);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
+    };
+  }, []);
 
   const playTerminalBeep = (type: "boot" | "sync") => {
     if (!audioEnabledRef.current) return;
@@ -545,22 +750,6 @@ export default function Page() {
         }
       }
     } catch (e) { console.warn("POTA Link Down", e); }
-
-    try {
-      const res = await fetch("/api/psk?callsign=AF0DB"); 
-      if (res.ok) {
-        const pskData = await res.json();
-        if (pskData && Array.isArray(pskData.spots)) {
-          setPSKSpots(pskData.spots);
-          setGlobePoints(pskData.spots.map((spot: any) => ({
-            lat: spot.lat,
-            lng: spot.lng,
-            type: "psk",
-            details: spot
-          })));
-        }
-      }
-    } catch (e) {}
   }
 
   async function fetchSolarData() {
@@ -1010,7 +1199,7 @@ export default function Page() {
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
           <span className="hide-on-mobile-cell">POTA_MONITOR: <span style={{ color: "#00ff66" }}>ONLINE ({potaSpots.length} ACTIVE)</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }} className="hide-on-mobile-cell">|</span>
-          <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#a855f7" }}>LINKED</span></span>
+          <span className="hide-on-mobile-cell">PSK_REPORTER: <span style={{ color: "#a855f7" }}>{pskConnected ? `MQTT LIVE (${pskSpots.length})` : "CONNECTING..."}</span></span>
           <span style={{ color: "rgba(0, 255, 102, 0.15)" }}>|</span>
           
           <button onClick={handleToggleAudioSystem} style={{ background: "transparent", border: "none", color: audioEnabled ? "#00ff66" : "#3c5243", cursor: "pointer", fontFamily: "monospace", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem", padding: 0, outline: "none" }}>
@@ -1044,7 +1233,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - RESTORED TO OVERFLOW VISIBLE VERBATIM TO PREVENT PHONE BOUNDARY BOX CLIPPING */}
+          {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "visible", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1432,7 +1621,9 @@ US HF Band Limits:
               <div className="ticker-scroller-box" style={{ flex: 1 }}>
                 {pskSpots.length === 0 ? (
                   <div style={{ fontSize: "0.7rem", color: "#4e6e58", padding: "1.5rem 1rem", fontStyle: "italic", textAlign: "center" }}>
-                    &gt;&gt; SCANNING FREQUENCIES... NO REMOTE DECODES DETECTED IN THE LAST 2 HOURS.
+                    {pskConnected
+                      ? ">> MQTT STREAM LIVE... LISTENING FOR REMOTE DECODES OF AFØDB."
+                      : ">> CONNECTING TO PSKREPORTER MQTT STREAM..."}
                   </div>
                 ) : (
                   pskSpots.map((spot, i) => (
@@ -1440,6 +1631,7 @@ US HF Band Limits:
                       <div>
                         RCVR: <span style={{ color: "#a855f7", fontWeight: 700 }}>{spot.receiverCall}</span>
                         <span style={{ color: "#4e6e58", marginLeft: "0.4rem" }}>({spot.grid})</span>
+                        {spot.band && <span style={{ color: "#00f2ff", marginLeft: "0.35rem", fontSize: "10px" }}>{spot.band}</span>}
                       </div>
                       <div>
                         SIG: <span style={{ color: "#a855f7" }}>{spot.snr}</span>
@@ -1447,6 +1639,9 @@ US HF Band Limits:
                     </div>
                   ))
                 )}
+              </div>
+              <div style={{ marginTop: "0.5rem", paddingTop: "0.4rem", borderTop: "1px solid rgba(168, 85, 247, 0.15)", textAlign: "right", fontSize: "9px", color: "#4e6e58" }}>
+                DATA: PSK REPORTER (N1DQ) // MQTT: M0LTE
               </div>
             </div>
 
