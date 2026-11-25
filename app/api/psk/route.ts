@@ -1,74 +1,152 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+interface PskSpot {
+  receiverCall: string;
+  grid: string;
+  lat: number;
+  lng: number;
+  snr: string;
+  time: string;
+}
 
-export async function GET(request: Request) {
+// In-memory 5-minute cache to respect PSKReporter's 5-minute rate limit
+const pskCache = new Map<string, { timestamp: number; spots: PskSpot[] }>();
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+function gridToLatLng(grid: string): { lat: number; lng: number } | null {
+  if (!grid || grid.length < 4) return null;
+  const g = grid.toUpperCase();
+  const lonField = (g.charCodeAt(0) - 65) * 20 - 180;
+  const latField = (g.charCodeAt(1) - 65) * 10 - 90;
+  const lonSquare = parseInt(g.charAt(2), 10) * 2;
+  const latSquare = parseInt(g.charAt(3), 10) * 1;
+
+  if (
+    isNaN(lonField) ||
+    isNaN(latField) ||
+    isNaN(lonSquare) ||
+    isNaN(latSquare)
+  ) {
+    return null;
+  }
+
+  let lng = lonField + lonSquare + 1;
+  let lat = latField + latSquare + 0.5;
+
+  if (g.length >= 6) {
+    const lonSub = (g.charCodeAt(4) - 65) * (2 / 24);
+    const latSub = (g.charCodeAt(5) - 65) * (1 / 24);
+    if (!isNaN(lonSub) && !isNaN(latSub)) {
+      lng = lonField + lonSquare + lonSub + 1 / 24;
+      lat = latField + latSquare + latSub + 1 / 48;
+    }
+  }
+
+  return { lat, lng };
+}
+
+function getAttr(tag: string, name: string): string {
+  const match = tag.match(new RegExp(`${name}="([^"]*)"`, "i"));
+  return match ? match[1].trim() : "";
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const callsign = (searchParams.get("callsign") || "AF0DB")
+    .toUpperCase()
+    .replace(/[^A-Z0-9/]/g, "");
+
+  const now = Date.now();
+  const cached = pskCache.get(callsign);
+  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+    return NextResponse.json(
+      { spots: cached.spots, cached: true },
+      {
+        status: 200,
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60" },
+      }
+    );
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+
   try {
-    const pskUrl = "https://retrieve.pskreporter.info/query?senderCallsign=AF0DB&flowStartSeconds=-7200&statistics=0";
-    
-    const res = await fetch(pskUrl, {
+    const url = `https://retrieve.pskreporter.info/query?senderCallsign=${encodeURIComponent(
+      callsign
+    )}&flowStartSeconds=-7200&rronly=1&noactive=1&rptlimit=50`;
+
+    const res = await fetch(url, {
+      signal: controller.signal,
       headers: {
-        "User-Agent": "AF0DB-Station-Dashboard/2.0",
-        "Accept": "application/xml"
+        "User-Agent": "AF0DB-Station-Dashboard/1.0 (https://af0db.radio)",
+        Accept: "application/xml, text/xml, */*",
       },
-      cache: "no-store"
+      next: { revalidate: 300 },
     });
 
-    if (!res.ok) throw new Error(`PSK Reporter API returned status: ${res.status}`);
-    
-    const xmlText = await res.text();
+    clearTimeout(timeout);
 
-    const spots: any[] = [];
-    
-    // COMPILER FIX: Using standard RegExp execution loop instead of matchAll iterator
-    const regex = /<receptionReport\s+([^>]+)>/g;
-    let match;
-    
-    while ((match = regex.exec(xmlText)) !== null) {
-      if (spots.length >= 15) break;
-      const attrString = match[1];
-      
-      const receiverCallM = attrString.match(/receiverCallsign="([^"]+)"/);
-      const gridM = attrString.match(/receiverLocator="([^"]+)"/);
-      const snrM = attrString.match(/sNR="([^"]+)"/);
-      const timeM = attrString.match(/reportReceiverTimestamp="([^"]+)"/);
-
-      if (receiverCallM && gridM) {
-        const grid = gridM[1].toUpperCase();
-        
-        let lat = 39.8283;
-        let lng = -98.5795;
-        if (grid.length >= 4) {
-          const lonField = (grid.charCodeAt(0) - 65) * 20 - 180;
-          const latField = (grid.charCodeAt(1) - 65) * 10 - 90;
-          const lonSquare = parseInt(grid.charAt(2)) * 2;
-          const latSquare = parseInt(grid.charAt(3)) * 1;
-          if (!isNaN(lonField) && !isNaN(latField) && !isNaN(lonSquare) && !isNaN(latSquare)) {
-            lng = lonField + lonSquare + 1;
-            lat = latField + latSquare + 0.5;
-          }
-        }
-
-        let cleanTime = "—";
-        if (timeM) {
-          const dateObj = new Date(parseInt(timeM[1]) * 1000);
-          cleanTime = dateObj.toISOString().substring(11, 16);
-        }
-
-        spots.push({
-          receiverCall: receiverCallM[1].toUpperCase().replace(/0/g, "Ø"),
-          grid: grid,
-          lat: lat,
-          lng: lng,
-          snr: snrM ? `${snrM[1]} dB` : "0 dB",
-          time: cleanTime
-        });
-      }
+    if (!res.ok) {
+      console.warn(`PSKReporter upstream returned HTTP ${res.status}`);
+      return NextResponse.json(
+        { spots: cached?.spots || [], rateLimited: res.status === 503 || res.status === 429 },
+        { status: 200 }
+      );
     }
 
-    return NextResponse.json({ spots });
-  } catch (error: any) {
-    console.error("PSK Backend Telemetry Sync Failure:", error.message);
-    return NextResponse.json({ error: "Telemetry Offline", spots: [] }, { status: 500 });
+    const xml = await res.text();
+    const reportMatches = xml.match(/<receptionReport\b[^>]*\/?>/gi) || [];
+
+    const seen = new Set<string>();
+    const spots: PskSpot[] = [];
+
+    for (const tag of reportMatches) {
+      const receiverCall = getAttr(tag, "receiverCallsign").toUpperCase();
+      const grid = getAttr(tag, "receiverLocator").toUpperCase();
+      const snrRaw = getAttr(tag, "sNR");
+      const flowStart = parseInt(getAttr(tag, "flowStartSeconds"), 10);
+
+      if (!receiverCall || seen.has(receiverCall)) continue;
+      const coords = gridToLatLng(grid);
+      if (!coords) continue;
+
+      seen.add(receiverCall);
+
+      const snrNum = parseInt(snrRaw, 10);
+      const snr = isNaN(snrNum)
+        ? "—"
+        : `${snrNum > 0 ? "+" : ""}${snrNum} dB`;
+
+      const time = !isNaN(flowStart)
+        ? new Date(flowStart * 1000).toISOString().substring(11, 16) + "Z"
+        : "—";
+
+      spots.push({
+        receiverCall,
+        grid,
+        lat: coords.lat,
+        lng: coords.lng,
+        snr,
+        time,
+      });
+    }
+
+    pskCache.set(callsign, { timestamp: now, spots });
+
+    return NextResponse.json(
+      { spots, cached: false },
+      {
+        status: 200,
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60" },
+      }
+    );
+  } catch (err) {
+    clearTimeout(timeout);
+    console.warn("PSKReporter fetch error:", err);
+    return NextResponse.json(
+      { spots: cached?.spots || [], offline: true },
+      { status: 200 }
+    );
   }
 }
