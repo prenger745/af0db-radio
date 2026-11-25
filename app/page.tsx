@@ -1235,11 +1235,12 @@ US HF Band Limits:
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
+                    showGraticules={true}
                     
                     polygonsData={landmasses}
-                    polygonCapColor={() => "#07120a"} 
+                    polygonCapColor={() => "#0d2815"} 
                     polygonSideColor={() => "#020403"} 
-                    polygonStrokeColor={() => "#183620"} 
+                    polygonStrokeColor={() => "#00ff66"} 
                     polygonAltitude={0.01}
                     
                     arcsData={geoArcs}
