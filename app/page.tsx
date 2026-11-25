@@ -151,6 +151,7 @@ export default function Page() {
   const [globePoints, setGlobePoints] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const globeRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 460 });
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
@@ -173,16 +174,27 @@ export default function Page() {
   }, [audioEnabled]);
 
   useEffect(() => {
-    const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 1800);
-    const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 2400);
+    const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 800);
+    const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 1200);
 
-    fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson")
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.features) {
-          setLandmasses(data.features);
-        }
-      }).catch(() => {});
+    const loadLandmasses = async () => {
+      const urls = [
+        "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
+        "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson"
+      ];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data && Array.isArray(data.features)) {
+            setLandmasses(data.features);
+            break;
+          }
+        } catch (e) {}
+      }
+    };
+    loadLandmasses();
 
     return () => {
       clearTimeout(telemetryTimeout);
@@ -197,9 +209,9 @@ export default function Page() {
       if (containerRef.current) {
         const mobileViewActive = window.innerWidth < 768;
         setIsMobileScreen(mobileViewActive);
-        
+        const w = containerRef.current.clientWidth || 600;
         setDimensions({
-          width: containerRef.current.clientWidth,
+          width: w,
           height: mobileViewActive ? 340 : 460
         });
       }
@@ -208,13 +220,15 @@ export default function Page() {
     handleResize();
     window.addEventListener("resize", handleResize);
     
-    const t = setTimeout(handleResize, 1000);
+    const t = setTimeout(handleResize, 500);
+    const t2 = setTimeout(handleResize, 1500);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(t);
+      clearTimeout(t2);
     };
-  }, [logs]);
+  }, [logs, showWorkspace]);
 
   const playTerminalBeep = (type: "boot" | "sync") => {
     if (!audioEnabledRef.current) return;
@@ -1033,7 +1047,7 @@ US HF Band Limits:
             <div className="aligned-metric-value" style={{ color: "#00f2ff" }}>{stats.currentBand}</div>
           </div>
 
-          {/* Card 1: Tactical METAR Weather Terminal - RESTORED TO OVERFLOW VISIBLE VERBATIM TO PREVENT PHONE BOUNDARY BOX CLIPPING */}
+          {/* Card 1: Tactical METAR Weather Terminal */}
           <div className="terminal-panel panel-wx" style={{ height: isMobileScreen ? "auto" : "460px", overflow: "visible", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div className="panel-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: isMobileScreen ? "wrap" : "nowrap" }}>
@@ -1218,17 +1232,23 @@ US HF Band Limits:
                 </div>
               </div>
               
-              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: isMobileScreen ? "scale(0.72) translateY(35px)" : "scale(0.72)", transformOrigin: "center center" }}>
+              <div style={{ width: "100%", height: "100%", cursor: "grab", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {showWorkspace && (
                   <GlobeEngine
+                    ref={globeRef}
                     width={dimensions.width}
                     height={dimensions.height}
                     backgroundColor="#020403"
+                    onGlobeReady={() => {
+                      if (globeRef.current && typeof globeRef.current.pointOfView === "function") {
+                        globeRef.current.pointOfView({ lat: 36.5, lng: -95.3, altitude: 2.1 }, 800);
+                      }
+                    }}
                     
                     polygonsData={landmasses}
-                    polygonCapColor={() => "#07120a"} 
-                    polygonSideColor={() => "#020403"} 
-                    polygonStrokeColor={() => "#183620"} 
+                    polygonCapColor={() => "#0b1f11"} 
+                    polygonSideColor={() => "#040d07"} 
+                    polygonStrokeColor={() => "#00ff66"} 
                     polygonAltitude={0.01}
                     
                     arcsData={geoArcs}
