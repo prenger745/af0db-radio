@@ -1,6 +1,17 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Radio, Laptop, Compass, History, Signal, Globe, Cpu, ChevronRight, Sun, Volume2, VolumeX } from "lucide-react";
+
+// NEXT 14 WEBGL DYNAMIC LAYOUT ENGINE
+const GlobeEngine = dynamic(() => import("react-globe.gl").then((mod) => mod.default), {
+  ssr: false,
+  loading: () => (
+    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#00ff66", fontSize: "0.75rem", fontFamily: "monospace" }}>
+      &gt;&gt; INITIALIZING CORE WEBGL GRAPHICS INTERFACE...
+    </div>
+  )
+});
 
 interface QSO {
   callsign: string;
@@ -58,404 +69,6 @@ interface OperationalWeather {
   uvi: string;       
   condition: string;
   iconCode: number;
-}
-
-// Simplified continental coastline polygons [lng, lat] for crisp, zero-dependency 3D rendering
-const CONTINENTS: number[][][] = [
-  // North America
-  [[-168,65],[-140,70],[-110,72],[-82,70],[-65,60],[-55,48],[-67,44],[-75,35],[-81,25],[-83,30],[-90,29],[-97,26],[-97,19],[-87,21],[-84,10],[-78,8],[-92,15],[-105,20],[-114,31],[-118,34],[-124,42],[-125,49],[-136,58],[-152,60],[-165,61],[-168,65]],
-  // South America
-  [[-78,9],[-70,12],[-60,8],[-50,1],[-35,-6],[-38,-15],[-42,-23],[-53,-33],[-65,-42],[-68,-54],[-74,-52],[-72,-40],[-71,-30],[-70,-18],[-81,-5],[-78,9]],
-  // Europe
-  [[-9,37],[-9,43],[-2,48],[2,51],[8,54],[10,58],[5,61],[15,68],[28,71],[42,67],[58,68],[60,55],[45,45],[35,45],[28,41],[23,37],[15,38],[12,44],[5,43],[-5,36],[-9,37]],
-  // Africa
-  [[-17,15],[-13,28],[-5,35],[10,37],[25,32],[33,31],[43,12],[51,12],[41,-2],[40,-15],[35,-25],[28,-33],[18,-34],[15,-22],[12,-6],[9,4],[2,6],[-8,5],[-17,15]],
-  // Asia
-  [[28,41],[42,42],[55,38],[68,25],[77,8],[88,22],[98,16],[104,2],[109,12],[108,21],[121,25],[122,35],[130,42],[142,53],[160,60],[178,66],[140,73],[105,76],[75,72],[60,68],[60,55],[45,45],[28,41]],
-  // Australia
-  [[114,-22],[122,-16],[131,-12],[136,-14],[142,-11],[149,-20],[153,-28],[150,-37],[141,-38],[136,-35],[129,-32],[115,-34],[114,-22]],
-  // Greenland
-  [[-52,60],[-43,60],[-22,70],[-18,81],[-45,83],[-65,76],[-56,68],[-52,60]],
-  // UK & Japan
-  [[-6,50],[1,51],[0,58],[-5,58],[-6,50]],
-  [[130,31],[136,34],[141,41],[145,44],[140,36],[130,31]]
-];
-
-function TacticalVectorGlobe({
-  arcs,
-  potaSpots,
-  pskSpots,
-  height
-}: {
-  arcs: any[];
-  potaSpots: PotaSpot[];
-  pskSpots: AppPskSpot[];
-  height: number;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rotRef = useRef({ lng: -95.3, lat: 28.0 });
-  const dragRef = useRef({ dragging: false, lastX: 0, lastY: 0, autoRotate: true });
-  const [hoveredItem, setHoveredItem] = useState<{ x: number; y: number; title: string; lines: string[]; color: string } | null>(null);
-  const projectedTargetsRef = useRef<Array<{ x: number; y: number; title: string; lines: string[]; color: string }>>([]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animId: number;
-    let dashOffset = 0;
-
-    const project = (latDeg: number, lngDeg: number, cx: number, cy: number, r: number, alt = 0) => {
-      const phi = (latDeg * Math.PI) / 180;
-      const lam = ((lngDeg - rotRef.current.lng) * Math.PI) / 180;
-      const phi0 = (rotRef.current.lat * Math.PI) / 180;
-
-      const cosPhi = Math.cos(phi);
-      const sinPhi = Math.sin(phi);
-      const cosPhi0 = Math.cos(phi0);
-      const sinPhi0 = Math.sin(phi0);
-      const cosLam = Math.cos(lam);
-      const sinLam = Math.sin(lam);
-
-      const cosC = sinPhi0 * sinPhi + cosPhi0 * cosPhi * cosLam;
-      const scale = r * (1 + alt);
-      const x = cx + scale * cosPhi * sinLam;
-      const y = cy - scale * (cosPhi0 * sinPhi - sinPhi0 * cosPhi * cosLam);
-      return { x, y, visible: cosC >= -0.05, cosC };
-    };
-
-    const render = () => {
-      const parent = canvas.parentElement;
-      const w = parent ? parent.clientWidth : 600;
-      const h = height;
-      const dpr = window.devicePixelRatio || 1;
-      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-        canvas.width = w * dpr;
-        canvas.height = h * dpr;
-      }
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, w, h);
-
-      if (dragRef.current.autoRotate && !dragRef.current.dragging) {
-        rotRef.current.lng += 0.14;
-        if (rotRef.current.lng > 180) rotRef.current.lng -= 360;
-      }
-      dashOffset = (dashOffset - 0.6) % 24;
-
-      const cx = w / 2;
-      const cy = h / 2 + 12;
-      const radius = Math.max(95, Math.min(w, h) * 0.38);
-
-      // Outer atmospheric glow
-      const glow = ctx.createRadialGradient(cx, cy, radius * 0.85, cx, cy, radius * 1.18);
-      glow.addColorStop(0, "rgba(0, 255, 102, 0.16)");
-      glow.addColorStop(1, "rgba(0, 255, 102, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 1.18, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Base globe sphere
-      const sphereGrad = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, radius * 0.1, cx, cy, radius);
-      sphereGrad.addColorStop(0, "#0b1f12");
-      sphereGrad.addColorStop(1, "#020603");
-      ctx.fillStyle = sphereGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(0, 255, 102, 0.45)";
-      ctx.lineWidth = 1.4;
-      ctx.stroke();
-
-      // Clip to globe sphere for graticule and landmasses
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.clip();
-
-      // Latitude & Longitude Graticule
-      ctx.strokeStyle = "rgba(0, 255, 102, 0.10)";
-      ctx.lineWidth = 0.8;
-      for (let lat = -60; lat <= 60; lat += 30) {
-        ctx.beginPath();
-        let started = false;
-        for (let lng = -180; lng <= 180; lng += 5) {
-          const p = project(lat, lng, cx, cy, radius);
-          if (p.visible) {
-            if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-            else ctx.lineTo(p.x, p.y);
-          } else {
-            started = false;
-          }
-        }
-        ctx.stroke();
-      }
-      for (let lng = -180; lng < 180; lng += 30) {
-        ctx.beginPath();
-        let started = false;
-        for (let lat = -85; lat <= 85; lat += 5) {
-          const p = project(lat, lng, cx, cy, radius);
-          if (p.visible) {
-            if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-            else ctx.lineTo(p.x, p.y);
-          } else {
-            started = false;
-          }
-        }
-        ctx.stroke();
-      }
-
-      // Continents
-      ctx.fillStyle = "rgba(0, 255, 102, 0.14)";
-      ctx.strokeStyle = "rgba(0, 255, 102, 0.55)";
-      ctx.lineWidth = 1.1;
-      for (const poly of CONTINENTS) {
-        ctx.beginPath();
-        let anyVisible = false;
-        poly.forEach(([lng, lat], idx) => {
-          const p = project(lat, lng, cx, cy, radius);
-          if (p.cosC > -0.2) anyVisible = true;
-          if (idx === 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
-        });
-        if (anyVisible) {
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
-
-      const targets: Array<{ x: number; y: number; title: string; lines: string[]; color: string }> = [];
-
-      // Home QTH Marker (Ottawa, KS)
-      const qth = project(38.6158, -95.2686, cx, cy, radius);
-      if (qth.visible) {
-        ctx.fillStyle = "#00ff66";
-        ctx.beginPath();
-        ctx.arc(qth.x, qth.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(0, 255, 102, 0.5)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(qth.x, qth.y, 8 + Math.sin(Date.now() / 300) * 2, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // POTA Spots (small green dots)
-      potaSpots.forEach((spot) => {
-        const pt = project(spot.lat, spot.lng, cx, cy, radius);
-        if (pt.visible) {
-          ctx.fillStyle = "rgba(0, 255, 102, 0.75)";
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 2.3, 0, Math.PI * 2);
-          ctx.fill();
-          targets.push({
-            x: pt.x,
-            y: pt.y,
-            title: "POTA ACTIVATION",
-            lines: [`CALLSIGN: ${spot.activator}`, `PARK ID: ${spot.reference}`, `FREQ: ${spot.frequency} kHz`],
-            color: "#00ff66"
-          });
-        }
-      });
-
-      // PSK Spots (purple nodes)
-      pskSpots.forEach((spot) => {
-        const pt = project(spot.lat, spot.lng, cx, cy, radius);
-        if (pt.visible) {
-          ctx.fillStyle = "#a855f7";
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-          targets.push({
-            x: pt.x,
-            y: pt.y,
-            title: "PSK RECEPTION NODE",
-            lines: [`MONITOR: ${spot.receiverCall}`, `GRID: ${spot.grid}`, `SNR: ${spot.snr}`],
-            color: "#a855f7"
-          });
-        }
-      });
-
-      // QRZ QSO Great-Circle Arcs & Callsign Labels
-      arcs.forEach((arc) => {
-        const steps = 28;
-        const startLat = (arc.startLat * Math.PI) / 180;
-        const startLng = (arc.startLng * Math.PI) / 180;
-        const endLat = (arc.lat * Math.PI) / 180;
-        const endLng = (arc.lng * Math.PI) / 180;
-
-        const d = 2 * Math.asin(Math.sqrt(
-          Math.pow(Math.sin((startLat - endLat) / 2), 2) +
-          Math.cos(startLat) * Math.cos(endLat) * Math.pow(Math.sin((startLng - endLng) / 2), 2)
-        ));
-
-        ctx.save();
-        ctx.strokeStyle = arc.color || "#00f2ff";
-        ctx.lineWidth = 1.6;
-        ctx.setLineDash([6, 4]);
-        ctx.lineDashOffset = dashOffset;
-        ctx.beginPath();
-        let penDown = false;
-
-        for (let i = 0; i <= steps; i++) {
-          const f = i / steps;
-          let latDeg = arc.startLat + (arc.lat - arc.startLat) * f;
-          let lngDeg = arc.startLng + (arc.lng - arc.startLng) * f;
-
-          if (d > 0.001) {
-            const A = Math.sin((1 - f) * d) / Math.sin(d);
-            const B = Math.sin(f * d) / Math.sin(d);
-            const x = A * Math.cos(startLat) * Math.cos(startLng) + B * Math.cos(endLat) * Math.cos(endLng);
-            const y = A * Math.cos(startLat) * Math.sin(startLng) + B * Math.cos(endLat) * Math.sin(endLng);
-            const z = A * Math.sin(startLat) + B * Math.sin(endLat);
-            latDeg = (Math.atan2(z, Math.sqrt(x * x + y * y)) * 180) / Math.PI;
-            lngDeg = (Math.atan2(y, x) * 180) / Math.PI;
-          }
-
-          const arcAlt = Math.sin(f * Math.PI) * Math.min(0.28, Math.max(0.05, d * 0.14));
-          const p = project(latDeg, lngDeg, cx, cy, radius, arcAlt);
-          if (p.visible) {
-            if (!penDown) { ctx.moveTo(p.x, p.y); penDown = true; }
-            else ctx.lineTo(p.x, p.y);
-          } else {
-            penDown = false;
-          }
-        }
-        ctx.stroke();
-        ctx.restore();
-
-        // Endpoint beacon + callsign tag
-        const endPt = project(arc.lat, arc.lng, cx, cy, radius);
-        if (endPt.visible) {
-          ctx.fillStyle = arc.color || "#00f2ff";
-          ctx.beginPath();
-          ctx.arc(endPt.x, endPt.y, 3.2, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.font = "bold 10px monospace";
-          ctx.fillStyle = arc.color || "#00f2ff";
-          ctx.fillText(arc.operators, endPt.x + 6, endPt.y + 3);
-
-          targets.push({
-            x: endPt.x,
-            y: endPt.y,
-            title: "LOGGED CONTACT TRACE",
-            lines: [
-              `CALLSIGN: ${arc.operators}`,
-              `GRID SECTOR: ${arc.gridKey || "—"}`,
-              `COUNTRY: ${arc.country || "Unknown"}`
-            ],
-            color: arc.color || "#00f2ff"
-          });
-        }
-      });
-
-      projectedTargetsRef.current = targets;
-      ctx.restore();
-      animId = requestAnimationFrame(render);
-    };
-
-    animId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animId);
-  }, [arcs, potaSpots, pskSpots, height]);
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    dragRef.current.dragging = true;
-    dragRef.current.autoRotate = false;
-    dragRef.current.lastX = e.clientX;
-    dragRef.current.lastY = e.clientY;
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
-    if (dragRef.current.dragging) {
-      const dx = e.clientX - dragRef.current.lastX;
-      const dy = e.clientY - dragRef.current.lastY;
-      dragRef.current.lastX = e.clientX;
-      dragRef.current.lastY = e.clientY;
-      rotRef.current.lng -= dx * 0.45;
-      rotRef.current.lat = Math.max(-75, Math.min(75, rotRef.current.lat + dy * 0.35));
-      setHoveredItem(null);
-      return;
-    }
-
-    let closest = null;
-    let minDist = 14;
-    for (const t of projectedTargetsRef.current) {
-      const dist = Math.hypot(t.x - mx, t.y - my);
-      if (dist < minDist) {
-        minDist = dist;
-        closest = t;
-      }
-    }
-    setHoveredItem(closest);
-  };
-
-  const handlePointerUp = () => {
-    dragRef.current.dragging = false;
-  };
-
-  return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      <canvas
-        ref={canvasRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={() => { dragRef.current.dragging = false; setHoveredItem(null); }}
-        style={{ width: "100%", height: "100%", display: "block", cursor: "grab", touchAction: "none" }}
-      />
-      <button
-        onClick={() => {
-          rotRef.current = { lng: -95.3, lat: 28.0 };
-          dragRef.current.autoRotate = !dragRef.current.autoRotate;
-        }}
-        style={{
-          position: "absolute",
-          bottom: "0.5rem",
-          right: "0.6rem",
-          background: "rgba(0, 255, 102, 0.08)",
-          border: "1px solid rgba(0, 255, 102, 0.35)",
-          color: "#00ff66",
-          fontFamily: "monospace",
-          fontSize: "9px",
-          padding: "0.2rem 0.45rem",
-          borderRadius: "3px",
-          cursor: "pointer",
-          zIndex: 25
-        }}
-      >
-        [ CENTER QTH / SPIN ]
-      </button>
-      {hoveredItem && (
-        <div
-          className="scene-tooltip"
-          style={{
-            position: "absolute",
-            left: Math.min(hoveredItem.x + 12, 260),
-            top: Math.max(48, hoveredItem.y - 20),
-            zIndex: 30
-          }}
-        >
-          <div style={{ fontWeight: 700, color: hoveredItem.color, marginBottom: "0.25rem" }}>
-            {hoveredItem.title}
-          </div>
-          {hoveredItem.lines.map((line, idx) => (
-            <div key={idx}>{line}</div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function useTypewriter(text: string, speed: number = 35, delay: number = 400) {
@@ -530,10 +143,15 @@ export default function Page() {
   const [isNight, setIsNight] = useState<boolean>(false);
   
   const [geoArcs, setGeoArcs] = useState<any[]>([]);
+  const [landmasses, setLandmasses] = useState<any[]>([]);
+
   const [potaSpots, setPotaSpots] = useState<PotaSpot[]>([]);
   const [pskSpots, setPSKSpots] = useState<AppPskSpot[]>([]);
+  const [globeLabels, setGlobeLabels] = useState<any[]>([]);
+  const [globePoints, setGlobePoints] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 600, height: 460 });
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
@@ -558,6 +176,25 @@ export default function Page() {
     const telemetryTimeout = setTimeout(() => setShowTelemetry(true), 800);
     const workspaceTimeout = setTimeout(() => setShowWorkspace(true), 1200);
 
+    const loadLandmasses = async () => {
+      const urls = [
+        "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson",
+        "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
+      ];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data && Array.isArray(data.features)) {
+            setLandmasses(data.features);
+            break;
+          }
+        } catch (e) {}
+      }
+    };
+    loadLandmasses();
+
     return () => {
       clearTimeout(telemetryTimeout);
       clearTimeout(workspaceTimeout);
@@ -565,14 +202,32 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    
     const handleResize = () => {
-      setIsMobileScreen(window.innerWidth < 768);
+      if (containerRef.current) {
+        const mobileViewActive = window.innerWidth < 768;
+        setIsMobileScreen(mobileViewActive);
+        
+        setDimensions({
+          width: containerRef.current.clientWidth || 600,
+          height: mobileViewActive ? 340 : 460
+        });
+      }
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    
+    const t = setTimeout(handleResize, 500);
+    const t2 = setTimeout(handleResize, 1500);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
+  }, [logs, showWorkspace]);
 
   const playTerminalBeep = (type: "boot" | "sync") => {
     if (!audioEnabledRef.current) return;
@@ -899,6 +554,12 @@ export default function Page() {
         const pskData = await res.json();
         if (pskData && Array.isArray(pskData.spots)) {
           setPSKSpots(pskData.spots);
+          setGlobePoints(pskData.spots.map((spot: any) => ({
+            lat: spot.lat,
+            lng: spot.lng,
+            type: "psk",
+            details: spot
+          })));
         }
       }
     } catch (e) {}
@@ -1050,6 +711,33 @@ export default function Page() {
       clearInterval(weatherInterval);
     };
   }, []);
+
+  useEffect(() => {
+    const qrzLabels = geoArcs.map(arc => ({
+      lat: arc.lat,
+      lng: arc.lng,
+      text: arc.text,
+      color: arc.color,
+      type: "qrz",
+      gridKey: arc.gridKey,
+      country: arc.country,
+      operators: arc.operators
+    }));
+
+    const potaLabels = potaSpots.map(spot => ({
+      lat: spot.lat,
+      lng: spot.lng,
+      text: "", 
+      color: "#00ff66", 
+      type: "pota",
+      gridKey: spot.reference,
+      country: "United States",
+      operators: spot.activator,
+      details: spot
+    }));
+
+    setGlobeLabels([...qrzLabels, ...potaLabels]);
+  }, [geoArcs, potaSpots]);
 
   const propArray = getCalculatedPropagationArray();
 
@@ -1523,9 +1211,9 @@ US HF Band Limits:
                 border: "1px solid rgba(0, 255, 102, 0.25)"
               }}
             >
-              <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)", pointerEvents: "none" }}>
+              <div style={{ position: "absolute", top: "0.75rem", left: "1rem", zIndex: 20, width: "calc(100% - 2rem)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors, alongside a live global feed of other POTA operators." style={{ color: "#ffffff", fontSize: "0.75rem", pointerEvents: "auto" }}>
+                  <button className="tactical-tooltip-trigger downward-tooltip" data-blurb="An interactive 3D globe plotting Dan's secure logbook data and signal vectors, alongside a live global feed of other POTA operators." style={{ color: "#ffffff", fontSize: "0.75rem" }}>
                     <Globe style={{ width: "14px", height: "14px", color: "#00ff66" }} /> 
                     <span>GEOGRAPHIC VECTOR TELEMETRY ARRAY</span>
                     <span className="hud-pulse" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>[ HUD // TRACKER_ENGAGED ]</span>
@@ -1543,13 +1231,92 @@ US HF Band Limits:
                 </div>
               </div>
               
-              <div style={{ width: "100%", height: "100%" }}>
-                <TacticalVectorGlobe
-                  arcs={geoArcs}
-                  potaSpots={potaSpots}
-                  pskSpots={pskSpots}
-                  height={isMobileScreen ? 324 : 444}
-                />
+              <div style={{ width: "100%", height: "100%", cursor: "grab", transform: isMobileScreen ? "scale(0.82) translateY(20px)" : "scale(0.82)", transformOrigin: "center center" }}>
+                {showWorkspace && (
+                  <GlobeEngine
+                    width={dimensions.width}
+                    height={dimensions.height}
+                    backgroundColor="#020403"
+                    globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+                    bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                    
+                    polygonsData={landmasses}
+                    polygonCapColor={() => "rgba(7, 26, 13, 0.65)"} 
+                    polygonSideColor={() => "#020403"} 
+                    polygonStrokeColor={() => "#00ff66"} 
+                    polygonAltitude={0.008}
+                    
+                    arcsData={geoArcs}
+                    arcColor="color"
+                    arcDashLength={0.45}
+                    arcDashGap={0.1}
+                    arcDashAnimateTime={1400} 
+                    arcStroke={0.55}
+                    arcsTransitionDuration={0}
+                    arcAltitude={(d: any) => Math.min(0.5, Math.max(0.1, Math.abs(d.lng - d.startLng) * 0.005))}
+                    arcStartAltitude={0.012}
+                    arcEndAltitude={0.012}
+                    
+                    arcLabel={(d: any) => `
+                      <div class="scene-tooltip">
+                        <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT TRACE</div>
+                        <div>GRID SECTOR: <b>${d.gridKey || "—"}</b></div>
+                        <div>COUNTRY: <b>${d.country}</b></div>
+                        <div>OPERATORS: <b>${d.operators}</b></div>
+                      </div>
+                    `}
+                    
+                    ringsData={geoArcs}
+                    ringColor="color"
+                    ringMaxRadius={2.2}
+                    ringPropagationSpeed={1.0}
+                    ringRepeatPeriod={1600}
+                    ringAltitude={0.014}
+                    
+                    showAtmosphere={true}
+                    atmosphereColor="#00ff66"
+                    atmosphereAltitude={0.14}
+
+                    labelsData={[...globeLabels, ...globePoints]}
+                    labelText={(d: any) => d.text || ""}
+                    labelColor={(d: any) => d.type === "psk" ? "#a855f7" : (d.color || "#00ff66")}
+                    labelSize={0.5}
+                    labelDotRadius={0.35} 
+                    labelAltitude={0.014}
+                    labelResolution={3}
+                    labelsTransitionDuration={0}
+                    
+                    labelLabel={(d: any) => {
+                      if (d.type === "pota") {
+                        return `
+                          <div class="scene-tooltip">
+                            <div style="font-weight:700; color:#00ff66; margin-bottom:0.25rem;">POTA ACTIVATION</div>
+                            <div>CALLSIGN: <b>${d.operators}</b></div>
+                            <div>PARK ID: <b>${d.gridKey}</b></div>
+                          </div>
+                        `;
+                      }
+                      if (d.type === "psk") {
+                        return `
+                          <div class="scene-tooltip">
+                            <div style="font-weight:700; color:#a855f7; margin-bottom:0.25rem;">PSK RECEPTION NODE</div>
+                            <div>MONITOR: <b>${d.details.receiverCall}</b></div>
+                            <div>LOCATOR: <b>${d.details.grid}</b></div>
+                            <div>REPORTED SNR: <span style="color:#00ff66">${d.details.snr}</span></div>
+                          </div>
+                        `;
+                      }
+                      return `
+                        <div class="scene-tooltip">
+                          <div style="font-weight:700; color:${d.color}; margin-bottom:0.25rem;">LOGGED CONTACT</div>
+                          <div>GRID SECTOR: <b>${d.gridKey}</b></div>
+                          <div>COUNTRY: <b>${d.country}</b></div>
+                          <div>OPERATORS: <b>${d.operators}</b></div>
+                        </div>
+                      `;
+                    }}
+                  />
+                )}
               </div>
             </div>
 
